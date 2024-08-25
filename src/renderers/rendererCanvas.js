@@ -19,6 +19,7 @@ class RendererCanvas extends RendererBase {
     this.img.ctx.rotate(radians);
   }
   scale(scale) {
+    if (scale.x == undefined) scale = new Vec(scale, scale);
     this.img.ctx.scale(scale.x, scale.y);
   }
   resetTransform() {
@@ -32,6 +33,9 @@ class RendererCanvas extends RendererBase {
         break;
       case "stroke":
         this.img.ctx.strokeStyle = this.parseColor(value);
+        break;
+      case "lineWidth":
+        this.img.ctx.lineWidth = value;
         break;
       case "textAlign":
         this.img.ctx.textAlign = value[0];

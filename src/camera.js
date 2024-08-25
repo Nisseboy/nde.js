@@ -29,10 +29,10 @@ class Camera {
     return v._div(w / 16 * this.scale);
   }
 
-  scale() {
+  scaleTransform() {
     renderer.scale(new Vec(w / 16 * this.scale, w / 16 * this.scale));
   }
-  unScale() {
+  unScaleTransform() {
     renderer.scale(new Vec(1, 1)._div(w / 16 * this.scale));
   }
 

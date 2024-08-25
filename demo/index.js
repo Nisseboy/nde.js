@@ -17,6 +17,11 @@ function preload() {
     "Move Down": "s",
     "Move Left": "a",
     "Move Right": "d",
+
+    "Move Camera Up": "ArrowUp",
+    "Move Camera Down": "ArrowDown",
+    "Move Camera Left": "ArrowLeft",
+    "Move Camera Right": "ArrowRight",
     
     "Run": "Shift",
     "Interact": "f",
@@ -55,7 +60,8 @@ function afterRender() {
 }
 
 function beforeResize(e) {
-  //return 462; //new width
+  //return 432; //new width
+  
   return w;
 }
 function afterResize(e) {

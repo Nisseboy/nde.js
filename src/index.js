@@ -116,6 +116,7 @@ let mainImg = new Img(new Vec(1, 1));
 let unloadedAssets = [];
 
 let lastFrameTime = 0;
+let latestDts = [];
 
 document.body.onload = e => {
   setScene(new Scene());
@@ -225,13 +226,24 @@ function draw() {
   if (targetFPS != undefined && time - lastFrameTime < 1000 / targetFPS) return; 
   lastFrameTime = time;
 
+  latestDts.push(dt);
+  if (latestDts.length > 10) latestDts.shift();
+  let averageDt = latestDts.reduce((partialSum, a) => partialSum + a, 0) / latestDts.length;
+  
   hoveredButton = undefined;
   debugStats = {};
-  debugStats["fps"] = Math.round(1000 / dt);
-  
-  renderer.set("textAlign", ["left", "top"]);
+  debugStats["frameTime"] = Math.round(averageDt);
+  debugStats["fps"] = Math.round(1000 / averageDt);
+
+  if (targetFPS != undefined) {
+    debugStats["target frameTime"] = 1000 / targetFPS;
+    debugStats["target fps"] = targetFPS;
+  }
 
   let gameDt = (targetFPS == undefined) ? dt * 0.001 : 1 / targetFPS;
+
+
+  renderer.save();
 
   beforeUpdate();
   if (!transition) scene.update(gameDt);  
@@ -247,6 +259,7 @@ function draw() {
   renderer.set("fill", 255);
   renderer.set("stroke", 0);
   renderer.set("font", "16px monospace");
+  renderer.set("textAlign", ["left", "top"]);
   if (debug) {
     let n = 0;
     for (let i in debugStats) {
@@ -254,6 +267,8 @@ function draw() {
       n++;
     }
   }
+  
+  renderer.restore();
 
   renderer.display(mainImg);
 }

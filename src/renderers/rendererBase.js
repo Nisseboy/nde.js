@@ -4,6 +4,7 @@ class RendererBase {
     
     this.set("fill", 255);
     this.set("stroke", 0);
+    this.set("lineWidth", 1);
     this.set("textAlign", ["left", "top"]);
     this.set("font", "16px monospace");
     this.set("imageSmoothing", true);

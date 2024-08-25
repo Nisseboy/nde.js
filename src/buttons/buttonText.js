@@ -6,6 +6,7 @@ class ButtonText extends ButtonBase {
       fill: 255,
       stroke: 0,
       font: "16px monospace",
+      textAlign: ["left", "top"],
     };
 
     this.fillStyle(style);
@@ -17,8 +18,9 @@ class ButtonText extends ButtonBase {
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
     let size = renderer.measureText(this.text);
-    this.size = new Vec(size.width, size.emHeightDescent);
-
+    this.size = new Vec(size.width, size.emHeightAscent + size.emHeightDescent);
+    
+    
     super.render();
     
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
