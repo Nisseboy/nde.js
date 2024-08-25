@@ -18,6 +18,9 @@ class RendererCanvas extends RendererBase {
   rotate(radians) {
     this.img.ctx.rotate(radians);
   }
+  scale(scale) {
+    this.img.ctx.scale(scale.x, scale.y);
+  }
   resetTransform() {
     this.img.ctx.resetTransform();
   }
@@ -50,6 +53,13 @@ class RendererCanvas extends RendererBase {
     return this.img.ctx.measureText(text);
   }
 
+  getTransform() {
+    return this.img.ctx.getTransform();
+  }
+  setTransform(transform) {
+    this.img.ctx.setTransform(transform);
+  }
+
   save() {
     this.img.ctx.save();
   }
@@ -60,6 +70,12 @@ class RendererCanvas extends RendererBase {
   rect(pos, size) {    
     this.img.ctx.beginPath();    
     this.img.ctx.rect(pos.x, pos.y, size.x, size.y);
+    this.img.ctx.fill();
+    this.img.ctx.stroke();
+  }
+  ellipse(pos, size) {    
+    this.img.ctx.beginPath();    
+    this.img.ctx.ellipse(pos.x, pos.y, size.x, size.y, 0, 0, Math.PI * 2);
     this.img.ctx.fill();
     this.img.ctx.stroke();
   }

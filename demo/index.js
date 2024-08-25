@@ -17,6 +17,7 @@ function preload() {
     "Move Down": "s",
     "Move Left": "a",
     "Move Right": "d",
+    
     "Run": "Shift",
     "Interact": "f",
     "Pause": "Escape",
@@ -53,9 +54,10 @@ function afterRender() {
   
 }
 
-function beforeResize() {
+function beforeResize(e) {
   //return 462; //new width
+  return w;
 }
-function afterResize() {
+function afterResize(e) {
   
 }

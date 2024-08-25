@@ -3,21 +3,27 @@ import sys
 files = [
   "src/ndv.js",
   "src/img.js",
+  "src/camera.js",
+  "src/scenes/scene.js",
+
   "src/renderers/rendererBase.js",
   "src/renderers/rendererCanvas.js",
-  "src/scenes/scene.js",
+
   "src/buttons/buttonBase.js",
   "src/buttons/buttonText.js",
   "src/buttons/buttonImage.js",
+
   "src/timers/timerBase.js",
   "src/timers/timerFrames.js",
   "src/timers/timerTime.js",
+
   "src/transitions/transitionBase.js",
   "src/transitions/transitionFade.js",
   "src/transitions/transitionSlide.js",
   "src/transitions/transitionNoise.js",
+
   "src/index.js",
-]
+] 
 outputFile = "release/nde" + sys.argv[1] + ".js"
 fileHeader = '''
 /*

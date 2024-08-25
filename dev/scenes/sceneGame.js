@@ -42,17 +42,22 @@ class SceneGame extends Scene {
     renderer.set("fill", [100, 100, 50]);
     renderer.rect(new Vec(0, 0), new Vec(w, w / 16 * 9));
 
+    renderer.save();
+    cam.applyTransform();
     for (let i = 0; i < this.world.entities.length; i++) {
       let e = this.world.entities[i];
 
-      let pos = cam.to(e.pos);
-  
-      let size = cam.toScale(e._type.size);
-
-      renderer.translate(pos);
+      renderer.save();
+      renderer.translate(e.pos);
       renderer.rotate(e.dir);
-      renderer.image(tex[e._type.texture], size._mul(-0.5), size);
-      renderer.resetTransform();
+      renderer.image(tex[e._type.texture], e._type.size._mul(-0.5), e._type.size);
+      renderer.restore();
+
+      renderer.save();
+      cam.unScale();
+      renderer.ellipse(new Vec(0, 0), cam.scaleVec(new Vec(1, 1)));
+      renderer.restore();
     }
+    renderer.restore();
   }
 }

@@ -16,6 +16,7 @@ class RendererBase {
 
   translate(pos) {}
   rotate(radians) {}
+  scale(scale) {}
   resetTransform() {}
 
   measureText(text) {}
@@ -26,10 +27,14 @@ class RendererBase {
     }
   }
 
+  getTransform() {}
+  setTransform(transform) {}
+
   save() {}
   restore() {}
 
   rect(pos, size) {}
+  ellipse(pos, size) {}
   text(t, pos) {}
   image(img, pos, size) {}
 

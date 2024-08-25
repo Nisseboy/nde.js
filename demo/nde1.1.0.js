@@ -234,6 +234,86 @@ function loadImg(path) {
 
 
 
+/* src/camera.js */
+class Camera {
+  constructor(pos) {
+    this.pos = pos;
+
+    this.scale = 1;
+
+    this.dir = 0;
+  }
+
+  to(v) {
+    v = v._subV(this.pos);
+    v.addV(new Vec(8 / this.scale, 4.5 / this.scale));
+    v.mul(w / 16 * this.scale);
+
+    return v;
+  }
+  from(v) {
+    v = v._div(w / 16 * this.scale);
+    v.subV(new Vec(8 / this.scale, 4.5 / this.scale));
+    v.addV(this.pos);
+
+    return v;
+  }
+
+  scaleVec(v) {
+    return v._mul(w / 16 * this.scale);
+  }
+  unScaleVec(v) {
+    return v._div(w / 16 * this.scale);
+  }
+
+  scale() {
+    renderer.scale(new Vec(w / 16 * this.scale, w / 16 * this.scale));
+  }
+  unScale() {
+    renderer.scale(new Vec(1, 1)._div(w / 16 * this.scale));
+  }
+
+  applyTransform() {
+    renderer.scale(new Vec(w / 16, w / 16));
+    renderer.translate(new Vec(8, 4.5));
+    renderer.scale(new Vec(this.scale, this.scale));
+
+    renderer.rotate(-this.dir);
+    renderer.translate(this.pos._mul(-1));
+  }
+}
+
+
+
+
+
+/* src/scenes/scene.js */
+class Scene {
+  constructor() {
+    this.hasStarted = false;    
+  }
+
+  start() {} /* when entered */
+  stop() {} /* when exited */
+ 
+  windowResized(e) {} /* when screen resized */
+ 
+  keydown(e) {} /* when key pressed */
+  keyup(e) {} /* when key released */
+ 
+  mousemove(e) {} /* when mouse moved */
+  mousedown(e) {} /* when mouse pressed */
+  mouseup(e) {} /* when mouse released */
+  scroll(e) {} /* when mouse scrolled */
+ 
+  update(dt) {} /* called once per frame with delta time */
+  render() {} /* called after update */
+}
+
+
+
+
+
 /* src/renderers/rendererBase.js */
 class RendererBase {
   constructor() {
@@ -253,6 +333,7 @@ class RendererBase {
 
   translate(pos) {}
   rotate(radians) {}
+  scale(scale) {}
   resetTransform() {}
 
   measureText(text) {}
@@ -263,10 +344,14 @@ class RendererBase {
     }
   }
 
+  getTransform() {}
+  setTransform(transform) {}
+
   save() {}
   restore() {}
 
   rect(pos, size) {}
+  ellipse(pos, size) {}
   text(t, pos) {}
   image(img, pos, size) {}
 
@@ -301,6 +386,9 @@ class RendererCanvas extends RendererBase {
   rotate(radians) {
     this.img.ctx.rotate(radians);
   }
+  scale(scale) {
+    this.img.ctx.scale(scale.x, scale.y);
+  }
   resetTransform() {
     this.img.ctx.resetTransform();
   }
@@ -333,6 +421,13 @@ class RendererCanvas extends RendererBase {
     return this.img.ctx.measureText(text);
   }
 
+  getTransform() {
+    return this.img.ctx.getTransform();
+  }
+  setTransform(transform) {
+    this.img.ctx.setTransform(transform);
+  }
+
   save() {
     this.img.ctx.save();
   }
@@ -343,6 +438,12 @@ class RendererCanvas extends RendererBase {
   rect(pos, size) {    
     this.img.ctx.beginPath();    
     this.img.ctx.rect(pos.x, pos.y, size.x, size.y);
+    this.img.ctx.fill();
+    this.img.ctx.stroke();
+  }
+  ellipse(pos, size) {    
+    this.img.ctx.beginPath();    
+    this.img.ctx.ellipse(pos.x, pos.y, size.x, size.y, 0, 0, Math.PI * 2);
     this.img.ctx.fill();
     this.img.ctx.stroke();
   }
@@ -358,33 +459,6 @@ class RendererCanvas extends RendererBase {
   display(targetImg) {
     super.display(targetImg);
   }
-}
-
-
-
-
-
-/* src/scenes/scene.js */
-class Scene {
-  constructor() {
-    this.hasStarted = false;    
-  }
-
-  start() {} /* when entered */
-  stop() {} /* when exited */
- 
-  windowResized(e) {} /* when screen resized */
- 
-  keydown(e) {} /* when key pressed */
-  keyup(e) {} /* when key released */
- 
-  mousemove(e) {} /* when mouse moved */
-  mousedown(e) {} /* when mouse pressed */
-  mouseup(e) {} /* when mouse released */
-  scroll(e) {} /* when mouse scrolled */
- 
-  update(dt) {} /* called once per frame with delta time */
-  render() {} /* called after update */
 }
 
 
@@ -750,7 +824,6 @@ debugStats: map thats cleared each frame where you can put debug info
 
 renderer: which renderer to use, pass all drawing code into this pls, see engine/renderers/rendererBase.js for base class
 
-
 preload: called before anything else to load assets
 
 beforeSetup: called before canvas has been initialized and framerate set
@@ -768,6 +841,19 @@ getKeyCode: Get keycode from control name
 getKeyPressed: Get if key corresponding to control name is pressed
 getKeyEqual: Get if keycode is same as controlName
 
+
+
+important classes:
+SceneBase: base class of all scenes, new SceneGame()
+RendererBase: base class of all renderers, new RendererCanvas()
+TimerBase: base class of all timers, new TimerTime(seconds, callback)
+TransitionBase: base class of all transitions, new TransitionSlide(newScene, timer)
+
+Vec: vector, see ndv.js
+
+Img: image, see img.js
+
+Camera: an object that can transform points and apply transformations to renderer, new Camera(pos), see camera.js
 
 
 

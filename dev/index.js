@@ -17,6 +17,7 @@ function preload() {
     "Move Down": "s",
     "Move Left": "a",
     "Move Right": "d",
+    
     "Run": "Shift",
     "Interact": "f",
     "Pause": "Escape",

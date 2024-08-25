@@ -23,7 +23,6 @@ debugStats: map thats cleared each frame where you can put debug info
 
 renderer: which renderer to use, pass all drawing code into this pls, see engine/renderers/rendererBase.js for base class
 
-
 preload: called before anything else to load assets
 
 beforeSetup: called before canvas has been initialized and framerate set
@@ -41,6 +40,19 @@ getKeyCode: Get keycode from control name
 getKeyPressed: Get if key corresponding to control name is pressed
 getKeyEqual: Get if keycode is same as controlName
 
+
+
+important classes:
+SceneBase: base class of all scenes, new SceneGame()
+RendererBase: base class of all renderers, new RendererCanvas()
+TimerBase: base class of all timers, new TimerTime(seconds, callback)
+TransitionBase: base class of all transitions, new TransitionSlide(newScene, timer)
+
+Vec: vector, see ndv.js
+
+Img: image, see img.js
+
+Camera: an object that can transform points and apply transformations to renderer, new Camera(pos), see camera.js
 
 
 
