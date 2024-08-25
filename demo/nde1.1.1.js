@@ -266,10 +266,10 @@ class Camera {
     return v._div(w / 16 * this.scale);
   }
 
-  scale() {
+  scaleTransform() {
     renderer.scale(new Vec(w / 16 * this.scale, w / 16 * this.scale));
   }
-  unScale() {
+  unScaleTransform() {
     renderer.scale(new Vec(1, 1)._div(w / 16 * this.scale));
   }
 
@@ -321,6 +321,7 @@ class RendererBase {
     
     this.set("fill", 255);
     this.set("stroke", 0);
+    this.set("lineWidth", 1);
     this.set("textAlign", ["left", "top"]);
     this.set("font", "16px monospace");
     this.set("imageSmoothing", true);
@@ -387,6 +388,7 @@ class RendererCanvas extends RendererBase {
     this.img.ctx.rotate(radians);
   }
   scale(scale) {
+    if (scale.x == undefined) scale = new Vec(scale, scale);
     this.img.ctx.scale(scale.x, scale.y);
   }
   resetTransform() {
@@ -400,6 +402,9 @@ class RendererCanvas extends RendererBase {
         break;
       case "stroke":
         this.img.ctx.strokeStyle = this.parseColor(value);
+        break;
+      case "lineWidth":
+        this.img.ctx.lineWidth = value;
         break;
       case "textAlign":
         this.img.ctx.textAlign = value[0];
@@ -534,6 +539,7 @@ class ButtonText extends ButtonBase {
       fill: 255,
       stroke: 0,
       font: "16px monospace",
+      textAlign: ["left", "top"],
     };
 
     this.fillStyle(style);
@@ -545,8 +551,9 @@ class ButtonText extends ButtonBase {
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
     let size = renderer.measureText(this.text);
-    this.size = new Vec(size.width, size.emHeightDescent);
-
+    this.size = new Vec(size.width, size.emHeightAscent + size.emHeightDescent);
+    
+    
     super.render();
     
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
@@ -917,6 +924,7 @@ let mainImg = new Img(new Vec(1, 1));
 let unloadedAssets = [];
 
 let lastFrameTime = 0;
+let latestDts = [];
 
 document.body.onload = e => {
   setScene(new Scene());
@@ -1026,13 +1034,24 @@ function draw() {
   if (targetFPS != undefined && time - lastFrameTime < 1000 / targetFPS) return; 
   lastFrameTime = time;
 
+  latestDts.push(dt);
+  if (latestDts.length > 10) latestDts.shift();
+  let averageDt = latestDts.reduce((partialSum, a) => partialSum + a, 0) / latestDts.length;
+  
   hoveredButton = undefined;
   debugStats = {};
-  debugStats["fps"] = Math.round(1000 / dt);
-  
-  renderer.set("textAlign", ["left", "top"]);
+  debugStats["frameTime"] = Math.round(averageDt);
+  debugStats["fps"] = Math.round(1000 / averageDt);
+
+  if (targetFPS != undefined) {
+    debugStats["target frameTime"] = 1000 / targetFPS;
+    debugStats["target fps"] = targetFPS;
+  }
 
   let gameDt = (targetFPS == undefined) ? dt * 0.001 : 1 / targetFPS;
+
+
+  renderer.save();
 
   beforeUpdate();
   if (!transition) scene.update(gameDt);  
@@ -1048,6 +1067,7 @@ function draw() {
   renderer.set("fill", 255);
   renderer.set("stroke", 0);
   renderer.set("font", "16px monospace");
+  renderer.set("textAlign", ["left", "top"]);
   if (debug) {
     let n = 0;
     for (let i in debugStats) {
@@ -1055,6 +1075,8 @@ function draw() {
       n++;
     }
   }
+  
+  renderer.restore();
 
   renderer.display(mainImg);
 }
