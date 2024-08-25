@@ -954,6 +954,7 @@ function setup() {
   
   afterSetup();
 
+  lastFrameTime = performance.now();
   requestAnimationFrame(draw);
 }
 
