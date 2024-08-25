@@ -10,7 +10,7 @@ function preload() {
 
   debug = true;
 
-  //targetFPS = 60;
+  //targetFPS = 30;
 
   controls = {
     "Move Up": "w",

@@ -224,9 +224,16 @@ function draw() {
   let time = performance.now();
   let dt = Math.min(time - lastFrameTime, 200);
 
-  if (targetFPS != undefined && time - lastFrameTime < 1000 / targetFPS) return; 
+  if (targetFPS != undefined) {
+    if (time - lastFrameTime < 1000 / targetFPS) return; 
+  }
+
   lastFrameTime = time;
 
+  updateGame(dt);
+}
+
+function updateGame(dt) {
   latestDts.push(dt);
   if (latestDts.length > 10) latestDts.shift();
   let averageDt = latestDts.reduce((partialSum, a) => partialSum + a, 0) / latestDts.length;
