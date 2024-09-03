@@ -37,11 +37,14 @@ class ButtonBase {
 
   render() {
     this.hovered = false;
+
+    let mousePoint = new DOMPoint(mouse.x, mouse.y);
+    let transformedMousePoint = mousePoint.matrixTransform(renderer.getTransform().inverse());
     if (
-      mouse.x > this.pos.x && 
-      mouse.x < this.pos.x + this.size.x + this.style.padding * 2 &&
-      mouse.y > this.pos.y && 
-      mouse.y < this.pos.y + this.size.y + this.style.padding * 2
+      transformedMousePoint.x > this.pos.x && 
+      transformedMousePoint.x < this.pos.x + this.size.x + this.style.padding * 2 &&
+      transformedMousePoint.y > this.pos.y && 
+      transformedMousePoint.y < this.pos.y + this.size.y + this.style.padding * 2
     ) {
       this.hovered = true;
       hoveredButton = this;

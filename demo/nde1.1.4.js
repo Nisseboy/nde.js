@@ -509,11 +509,14 @@ class ButtonBase {
 
   render() {
     this.hovered = false;
+
+    let mousePoint = new DOMPoint(mouse.x, mouse.y);
+    let transformedMousePoint = mousePoint.matrixTransform(renderer.getTransform().inverse());
     if (
-      mouse.x > this.pos.x && 
-      mouse.x < this.pos.x + this.size.x + this.style.padding * 2 &&
-      mouse.y > this.pos.y && 
-      mouse.y < this.pos.y + this.size.y + this.style.padding * 2
+      transformedMousePoint.x > this.pos.x && 
+      transformedMousePoint.x < this.pos.x + this.size.x + this.style.padding * 2 &&
+      transformedMousePoint.y > this.pos.y && 
+      transformedMousePoint.y < this.pos.y + this.size.y + this.style.padding * 2
     ) {
       this.hovered = true;
       hoveredButton = this;
@@ -550,7 +553,8 @@ class ButtonText extends ButtonBase {
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
     let size = renderer.measureText(this.text);
-    this.size = new Vec(size.width, size.emHeightAscent + size.emHeightDescent);
+    
+    this.size = new Vec(size.width, size.fontBoundingBoxAscent + size.fontBoundingBoxDescent );
     
     
     super.render();
@@ -1025,10 +1029,11 @@ function getKeyEqual(keyCode, controlName) {
   return keyCode.toLowerCase() == getKeyCode(controlName);
 }
 
-function draw() {
+function draw(time) {
   requestAnimationFrame(draw);
 
-  let time = performance.now();
+  if (time == undefined) time = performance.now();
+  
   let dt = Math.min(time - lastFrameTime, 200);
 
   if (targetFPS != undefined) {

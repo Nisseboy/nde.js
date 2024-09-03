@@ -18,7 +18,8 @@ class ButtonText extends ButtonBase {
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
     let size = renderer.measureText(this.text);
-    this.size = new Vec(size.width, size.emHeightAscent + size.emHeightDescent);
+    
+    this.size = new Vec(size.width, size.fontBoundingBoxAscent + size.fontBoundingBoxDescent );
     
     
     super.render();

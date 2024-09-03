@@ -218,10 +218,11 @@ function getKeyEqual(keyCode, controlName) {
   return keyCode.toLowerCase() == getKeyCode(controlName);
 }
 
-function draw() {
+function draw(time) {
   requestAnimationFrame(draw);
 
-  let time = performance.now();
+  if (time == undefined) time = performance.now();
+  
   let dt = Math.min(time - lastFrameTime, 200);
 
   if (targetFPS != undefined) {
