@@ -59,27 +59,24 @@ Camera: an object that can transform points and apply transformations to rendere
 Recommended project structure:
 
 Project:
-  engine:
+  nde.js
+  scenes:
+    sceneGame.js
+    sceneMainMenu.js
     ...
-  game:
-    scenes:
-      sceneGame.js
-      sceneMainMenu.js
-      ...
-    buttons:
-      buttomCustom.js
-      ...
-    timers:
-      timerCustom.js
-      ...
-    transitions:
-      transitionCustom.js
-      ...
-    renderers:
-      rendererCustom.js
-      ...
-    index.js
+  buttons:
+    buttomCustom.js
     ...
+  timers:
+    timerCustom.js
+    ...
+  transitions:
+    transitionCustom.js
+    ...
+  renderers:
+    rendererCustom.js
+    ...
+  index.js
   index.html
   style.css
   ...
@@ -196,24 +193,45 @@ document.addEventListener("mousedown", e => {
     if (!transition) hoveredButton.callback();
     return;
   }
+
+  pressed["mouse" + e.button] = true;
+
   if (!transition) scene.mousedown(e);
 });
 document.addEventListener("mouseup", e => {
+  delete pressed["mouse" + e.button];
+
   if (!transition) scene.mouseup(e);
 });
-document.addEventListener("scroll", e => {
-  if (!transition) scene.scroll(e);
+document.addEventListener("wheel", e => {
+  if (!transition) scene.wheel(e);
 });
 
-/* Get keycode from control name */
+/**
+ * Gets keycode of a control
+ * 
+ * @param {string} controlName
+ * @return {string} keyCode
+ */
 function getKeyCode(controlName) {
   return controls[controlName].toLowerCase();
 }
-/* Get if key corresponding to control name is pressed */
+/**
+ * Gets if a key is pressed
+ * 
+ * @param {string} controlName
+ * @return {boolean} pressed
+ */
 function getKeyPressed(controlName) {
   return !!pressed[getKeyCode(controlName)];
 }
-/* Get if keycode is same as controlName */
+/**
+ * Gets if keycode is equal to control keycode
+ * 
+ * @param {string} keyCode
+ * @param {string} controlName
+ * @return {boolean} equal
+ */
 function getKeyEqual(keyCode, controlName) {
   return keyCode.toLowerCase() == getKeyCode(controlName);
 }
@@ -226,7 +244,7 @@ function draw(time) {
   let dt = Math.min(time - lastFrameTime, 200);
 
   if (targetFPS != undefined) {
-    if (time - lastFrameTime < 1000 / targetFPS) return; 
+    if ((time + 0.1) - lastFrameTime < 1000 / targetFPS) return; 
   }
 
   lastFrameTime = time;

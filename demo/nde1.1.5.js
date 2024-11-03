@@ -23,7 +23,6 @@ generally operations on vectors follow this style:
 
 */
 
-
 class Vec {
   constructor(x, y, z, w) {
     this.x = x;
@@ -32,9 +31,19 @@ class Vec {
     this.w = w;
   }
 
+  /**
+   * Creates a copy of this vector
+   * 
+   * @return {Vec} new vector
+   */
   copy() {
     return new Vec(this.x, this.y, this.z, this.w);
   }
+  /**
+   * Creates an array representation of this vector
+   * 
+   * @return {Array<number>} array
+   */
   toArray() {
     let a = [];
     if (this.x != undefined) a.push(this.x);
@@ -44,7 +53,12 @@ class Vec {
     
     return a;
   }
-  format() {
+  /**
+   * Creates a string representation of this vector
+   * 
+   * @return {string} formatted string
+   */
+  toString() {
     let a = "(";
     if (this.x != undefined) a += this.x;
     if (this.y != undefined) a += ", " + this.y;
@@ -53,6 +67,12 @@ class Vec {
     
     return a + ")";
   }
+  /**
+   * Sets each axis of this vector to each axis of v
+   * 
+   * @param {Vec} v
+   * @return {Vec} this
+   */
   from(v) {
     this.x = v.x;
     this.y = v.y;
@@ -60,7 +80,16 @@ class Vec {
     this.w = v.w;
     return this;
   }
-  set(x, y, z, w) {
+  /**
+   * Sets each axis of this vector
+   * 
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
+   * @param {number} w
+   * @return {Vec} this
+   */
+  set(x = undefined, y = undefined, z = undefined, w = undefined) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -68,6 +97,11 @@ class Vec {
     return this;
   }
 
+  /**
+   * Return the square length of this vector
+   * 
+   * @return {number} Square length
+   */
   sqMag() {
     let m = 0;
     if (this.x) m += this.x ** 2;
@@ -76,13 +110,44 @@ class Vec {
     if (this.w) m += this.w ** 2;
     return m;
   }
+  /**
+   * Return the length of this vector
+   * 
+   * @return {number} Length
+   */
   mag() {
     return Math.sqrt(this.sqMag());
   }
 
+  
+  /**
+   * Floors each axis of this vector
+   * 
+   * @return {Vec} this
+   */
+  floor() {
+    if (this.x) this.x = Math.floor(this.x);
+    if (this.y) this.y = Math.floor(this.y);
+    if (this.z) this.z = Math.floor(this.z);
+    if (this.w) this.w = Math.floor(this.w);
+    return this;
+  }
+
+  /**
+   * Adds each axis of this vector by val
+   * 
+   * @param {number} val Term
+   * @return {Vec} this
+   */
   add(val) {
     return this.addV(new Vec(val, val, val, val));
   }
+  /**
+   * Adds each axis of this vector by each axis of v
+   * 
+   * @param {Vec} v Terms
+   * @return {Vec} this
+   */
   addV(v) {
     if (this.x != undefined && v.x != undefined) this.x += v.x;
     if (this.y != undefined && v.y != undefined) this.y += v.y;
@@ -92,9 +157,21 @@ class Vec {
     return this;
   }
 
+  /**
+   * Subtracts each axis of this vector by val
+   * 
+   * @param {number} val Subtrahend
+   * @return {Vec} this
+   */
   sub(val) {
     return this.subV(new Vec(val, val, val, val));
   }
+  /**
+   * Subtracts each axis of this vector by each axis of v
+   * 
+   * @param {Vec} v Subtrahends
+   * @return {Vec} this
+   */
   subV(v) {
     if (this.x != undefined && v.x != undefined) this.x -= v.x;
     if (this.y != undefined && v.y != undefined) this.y -= v.y;
@@ -104,9 +181,21 @@ class Vec {
     return this;
   }
 
+  /**
+   * Multiplies each axis of this vector by val
+   * 
+   * @param {number} val Factor
+   * @return {Vec} this
+   */
   mul(val) {
     return this.mulV(new Vec(val, val, val, val));
   }
+  /**
+   * Multiplies each axis of this vector by each axis of v
+   * 
+   * @param {Vec} v Factors
+   * @return {Vec} this
+   */
   mulV(v) {
     if (this.x != undefined && v.x != undefined) this.x *= v.x;
     if (this.y != undefined && v.y != undefined) this.y *= v.y;
@@ -116,10 +205,22 @@ class Vec {
     return this;
   }
 
+  /**
+   * Divides each axis of this vector val
+   * 
+   * @param {number} val Divisor
+   * @return {Vec} this
+   */
   div(val) {
     val = 1 / val;
     return this.mulV(new Vec(val, val, val, val));
   }
+  /**
+   * Divides each axis of this vector by each axis of v
+   * 
+   * @param {Vec} v Divisors
+   * @return {Vec} this
+   */
   divV(v) {
     if (this.x != undefined && v.x != undefined) this.x /= v.x;
     if (this.y != undefined && v.y != undefined) this.y /= v.y;
@@ -129,6 +230,12 @@ class Vec {
     return this;
   }
 
+  /**
+   * Rotates this vector on the Y axis
+   * 
+   * @param {number} angle Angle in radians to rotate
+   * @return {Vec} this
+   */
   rotateYAxis(angle) {
     let x = this.x;
     let z = this.z;
@@ -139,6 +246,12 @@ class Vec {
     return this;
   }
 
+  /**
+   * Rotates this vector on the Z axis
+   * 
+   * @param {number} angle Angle in radians to rotate
+   * @return {Vec} this
+   */
   rotateZAxis(angle) {
     let x = this.x;
     let y = this.y;
@@ -149,15 +262,23 @@ class Vec {
     return this;
   }
 
+  /**
+   * Sets this vector to interpolation of this vector and v2
+   * 
+   * @param {Vec} v2
+   * @param {number} i
+   * @return {Vec} this
+   */
   mix(v2, i) {
-    let n = new Vec();
-    if (this.x != undefined) n.x = this.x + (v2.x - this.x) * i;
-    if (this.y != undefined) n.y = this.y + (v2.y - this.y) * i;
-    if (this.z != undefined) n.z = this.z + (v2.z - this.z) * i;
-    if (this.w != undefined) n.w = this.w + (v2.w - this.w) * i;
-    return n;
+    if (this.x != undefined) this.x = this.x + (v2.x - this.x) * i;
+    if (this.y != undefined) this.y = this.y + (v2.y - this.y) * i;
+    if (this.z != undefined) this.z = this.z + (v2.z - this.z) * i;
+    if (this.w != undefined) this.w = this.w + (v2.w - this.w) * i;
+    return this;
   }
 
+
+  _floor() {return this.copy().floor()}
 
   _add(val) {return this.copy().add(val)}
   _addV(v) {return this.copy().addV(v)}
@@ -176,6 +297,8 @@ class Vec {
 
   _mix(v2, i) {return this.copy().mix(v2, i)}
 }
+
+
 
 
 
@@ -244,6 +367,12 @@ class Camera {
     this.dir = 0;
   }
 
+  /**
+   * Transforms world pos to screen pos
+   * 
+   * @param {Vec} v World pos
+   * @return {Vec} Screen pos
+   */
   to(v) {
     v = v._subV(this.pos);
     v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 / 16 * 9));
@@ -251,6 +380,12 @@ class Camera {
 
     return v;
   }
+  /**
+   * Transforms screen pos to world pos
+   * 
+   * @param {Vec} v Screen pos
+   * @return {Vec} World pos
+   */
   from(v) {
     v = v._div(w / this.w);
     v.subV(new Vec(this.w / 2, this.w / 2 / 16 * 9));
@@ -259,20 +394,41 @@ class Camera {
     return v;
   }
 
+  /**
+   * Scales all axes of a vector to camera scale
+   * 
+   * @param {Vec} v Unscaled vector
+   * @return {Vec} Scaled vector
+   */
   scaleVec(v) {
     return v._mul(w / this.w);
   }
+  /**
+   * Scales all axes of a vector from camera scale
+   * 
+   * @param {Vec} v Scaled vector
+   * @return {Vec} Unscaled vector
+   */
   unScaleVec(v) {
     return v._div(w / this.w);
   }
 
+  /**
+   * Scales renderer transform
+   */
   scaleTransform() {
     renderer.scale(new Vec(w / this.w, w / this.w));
   }
+  /**
+   * Unscales renderer transform
+   */
   unScaleTransform() {
     renderer.scale(new Vec(1, 1)._div(w / this.w));
   }
 
+  /**
+   * Applies camera transform to renderer
+   */
   applyTransform() {
     this.scaleTransform();
     renderer.translate(new Vec(this.w / 2, this.w / 2 / 16 * 9));
@@ -292,22 +448,68 @@ class Scene {
     this.hasStarted = false;    
   }
 
-  start() {} /* when entered */
-  stop() {} /* when exited */
+  
+/**
+ * Scene started
+ */
+  start() {}
+  
+/**
+ * Scene stopped
+ */
+  stop() {}
  
-  windowResized(e) {} /* when screen resized */
+/**
+ * @param {UIEvent} e
+ */
+  windowResized(e) {}
  
-  keydown(e) {} /* when key pressed */
-  keyup(e) {} /* when key released */
+/**
+ * @param {KeyboardEvent} e
+ */
+  keydown(e) {}
+  
+/**
+ * @param {KeyboardEvent} e
+ */
+  keyup(e) {}
  
-  mousemove(e) {} /* when mouse moved */
-  mousedown(e) {} /* when mouse pressed */
-  mouseup(e) {} /* when mouse released */
-  scroll(e) {} /* when mouse scrolled */
+/**
+ * @param {MouseEvent} e
+ */
+  mousemove(e) {}
+  
+/**
+ * @param {MouseEvent} e
+ */
+  mousedown(e) {}
+  
+/**
+ * @param {MouseEvent} e
+ */
+  mouseup(e) {}
+  
+/**
+ * Mouse scrolled
+ * 
+ * @param {WheelEvent} e
+ */
+  wheel(e) {}
  
-  update(dt) {} /* called once per frame with delta time */
-  render() {} /* called after update */
+/**
+ * Update scene here, called every frame
+ * 
+ * @param {number} dt Time in seconds since last frame
+ */
+  update(dt) {}
+  
+/**
+ * Render scene here, called after update
+ */
+  render() {}
 }
+
+
 
 
 
@@ -870,27 +1072,24 @@ Camera: an object that can transform points and apply transformations to rendere
 Recommended project structure:
 
 Project:
-  engine:
+  nde.js
+  scenes:
+    sceneGame.js
+    sceneMainMenu.js
     ...
-  game:
-    scenes:
-      sceneGame.js
-      sceneMainMenu.js
-      ...
-    buttons:
-      buttomCustom.js
-      ...
-    timers:
-      timerCustom.js
-      ...
-    transitions:
-      transitionCustom.js
-      ...
-    renderers:
-      rendererCustom.js
-      ...
-    index.js
+  buttons:
+    buttomCustom.js
     ...
+  timers:
+    timerCustom.js
+    ...
+  transitions:
+    transitionCustom.js
+    ...
+  renderers:
+    rendererCustom.js
+    ...
+  index.js
   index.html
   style.css
   ...
@@ -1007,24 +1206,45 @@ document.addEventListener("mousedown", e => {
     if (!transition) hoveredButton.callback();
     return;
   }
+
+  pressed["mouse" + e.button] = true;
+
   if (!transition) scene.mousedown(e);
 });
 document.addEventListener("mouseup", e => {
+  delete pressed["mouse" + e.button];
+
   if (!transition) scene.mouseup(e);
 });
-document.addEventListener("scroll", e => {
-  if (!transition) scene.scroll(e);
+document.addEventListener("wheel", e => {
+  if (!transition) scene.wheel(e);
 });
 
-/* Get keycode from control name */
+/**
+ * Gets keycode of a control
+ * 
+ * @param {string} controlName
+ * @return {string} keyCode
+ */
 function getKeyCode(controlName) {
   return controls[controlName].toLowerCase();
 }
-/* Get if key corresponding to control name is pressed */
+/**
+ * Gets if a key is pressed
+ * 
+ * @param {string} controlName
+ * @return {boolean} pressed
+ */
 function getKeyPressed(controlName) {
   return !!pressed[getKeyCode(controlName)];
 }
-/* Get if keycode is same as controlName */
+/**
+ * Gets if keycode is equal to control keycode
+ * 
+ * @param {string} keyCode
+ * @param {string} controlName
+ * @return {boolean} equal
+ */
 function getKeyEqual(keyCode, controlName) {
   return keyCode.toLowerCase() == getKeyCode(controlName);
 }
@@ -1037,7 +1257,7 @@ function draw(time) {
   let dt = Math.min(time - lastFrameTime, 200);
 
   if (targetFPS != undefined) {
-    if (time - lastFrameTime < 1000 / targetFPS) return; 
+    if ((time + 0.1) - lastFrameTime < 1000 / targetFPS) return; 
   }
 
   lastFrameTime = time;

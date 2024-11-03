@@ -3,19 +3,64 @@ class Scene {
     this.hasStarted = false;    
   }
 
-  start() {} /* when entered */
-  stop() {} /* when exited */
+  
+/**
+ * Scene started
+ */
+  start() {}
+  
+/**
+ * Scene stopped
+ */
+  stop() {}
  
-  windowResized(e) {} /* when screen resized */
+/**
+ * @param {UIEvent} e
+ */
+  windowResized(e) {}
  
-  keydown(e) {} /* when key pressed */
-  keyup(e) {} /* when key released */
+/**
+ * @param {KeyboardEvent} e
+ */
+  keydown(e) {}
+  
+/**
+ * @param {KeyboardEvent} e
+ */
+  keyup(e) {}
  
-  mousemove(e) {} /* when mouse moved */
-  mousedown(e) {} /* when mouse pressed */
-  mouseup(e) {} /* when mouse released */
-  scroll(e) {} /* when mouse scrolled */
+/**
+ * @param {MouseEvent} e
+ */
+  mousemove(e) {}
+  
+/**
+ * @param {MouseEvent} e
+ */
+  mousedown(e) {}
+  
+/**
+ * @param {MouseEvent} e
+ */
+  mouseup(e) {}
+  
+/**
+ * Mouse scrolled
+ * 
+ * @param {WheelEvent} e
+ */
+  wheel(e) {}
  
-  update(dt) {} /* called once per frame with delta time */
-  render() {} /* called after update */
+/**
+ * Update scene here, called every frame
+ * 
+ * @param {number} dt Time in seconds since last frame
+ */
+  update(dt) {}
+  
+/**
+ * Render scene here, called after update
+ */
+  render() {}
 }
+

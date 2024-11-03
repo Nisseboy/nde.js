@@ -3,6 +3,7 @@ class SceneGame extends Scene {
     super();
 
     this.cam = new Camera(new Vec(0, 0));
+    this.cam.w = 16;
   }
   loadWorld() {
     this.world = new World();
