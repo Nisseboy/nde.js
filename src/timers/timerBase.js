@@ -6,7 +6,7 @@ class TimerBase {
 
     this.callback = callback;
 
-    timers.push(this);
+    nde.timers.push(this);
   }
 
   tick(dt) {
@@ -15,8 +15,8 @@ class TimerBase {
   }
   
   stop() {
-    let index = timers.indexOf(this);
-    if (index != -1) timers.splice(index, 1);
+    let index = nde.timers.indexOf(this);
+    if (index != -1) nde.timers.splice(index, 1);
   }
 
   reset() {
@@ -24,9 +24,9 @@ class TimerBase {
     this.elapsedTime = 0;
     this.progress = 0;
 
-    let index = timers.indexOf(this);
-    if (index != -1) timers.splice(index, 1);
+    let index = nde.timers.indexOf(this);
+    if (index != -1) nde.timers.splice(index, 1);
 
-    timers.push(this);
+    nde.timers.push(this);
   }
 }

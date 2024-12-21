@@ -2,6 +2,7 @@ class RendererBase {
   constructor() {
     this.img = new Img(new Vec(1, 1));
     
+    
     this.set("fill", 255);
     this.set("stroke", 0);
     this.set("lineWidth", 1);

@@ -20,28 +20,3 @@ class Img {
     this.canvas.height = size.y;
   }
 }
-
-function loadImg(path) {
-  let img = new Img(new Vec(1, 1));
-  img.loading = true;
-  img.path = path;
-  unloadedAssets.push(img);
-
-  let image = new Image();
-  image.src = path;
-
-  image.onload = e => {
-    img.resize(new Vec(image.width, image.height));
-    img.ctx.drawImage(image, 0, 0);
-    img.loading = false;
-
-    unloadedAssets.splice(unloadedAssets.indexOf(img));
-  };
-  image.onerror = e => {
-    console.error(`"${path}" not found`);
-
-    unloadedAssets.splice(unloadedAssets.indexOf(img));
-  };
-
-  return img;
-}

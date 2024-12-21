@@ -1,18 +1,17 @@
-let scenes = {
-  game: new SceneGame(), 
-  mainMenu: new SceneMainMenu(),
-};
+let nde;
+let scenes;
+let renderer;
 
-function preload() {
-  renderer = new RendererCanvas();
-
+document.body.onload = e => {
+  nde = new NDE(document.getElementsByTagName("main")[0]);
+  renderer = nde.renderer;
   preloadTextures();
 
-  debug = true;
+  nde.debug = true;
 
   //targetFPS = 60;
 
-  controls = {
+  nde.controls = {
     "Move Up": "w",
     "Move Down": "s",
     "Move Left": "a",
@@ -28,42 +27,30 @@ function preload() {
     "Pause": "Escape",
     "Debug Mode": "l",
   };
-}
-document.addEventListener("keydown", e => {
-  if (getKeyEqual(e.key,"Debug Mode")) debug = !debug;
-});
 
-function beforeSetup() {
+  scenes = {
+    game: new SceneGame(), 
+    mainMenu: new SceneMainMenu(),
+  };
 
-}
-function afterSetup() {
-  initEntityTypes();
+  nde.registerEvent("keydown", e => {
+    if (nde.getKeyEqual(e.key,"Debug Mode")) nde.debug = !nde.debug;
+  });
 
-  scenes.game.loadWorld();
+  nde.registerEvent("afterSetup", () => {
+    initEntityTypes();
+    scenes.game.loadWorld();
+    nde.setScene(scenes.mainMenu);
+  });
 
-  setScene(scenes.mainMenu);
-}
+  nde.registerEvent("update", dt => {
+    renderer.set("font", "16px monospace");
+    renderer.set("imageSmoothing", false);
+  });
 
-function beforeUpdate() {
-  renderer.set("font", "16px monospace");
-  renderer.set("imageSmoothing", false);
-}
-function afterUpdate() {
-  
-}
-
-function beforeRender() {
-  
-}
-function afterRender() {
-  
-}
-
-function beforeResize(e) {
-  //return 432; //new width
-  
-  return w;
-}
-function afterResize(e) {
-  
-}
+  nde.registerEvent("resize", e => {
+    //return 432; //new width
+    
+    return nde.w;
+  });
+};

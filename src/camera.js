@@ -5,6 +5,8 @@ class Camera {
     this.w = 16;
 
     this.dir = 0;
+
+    this.renderW;
   }
 
   /**
@@ -16,7 +18,7 @@ class Camera {
   to(v) {
     v = v._subV(this.pos);
     v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 / 16 * 9));
-    v.mul(w / this.w);
+    v.mul(this.renderW / this.w);
 
     return v;
   }
@@ -27,7 +29,7 @@ class Camera {
    * @return {Vec} World pos
    */
   from(v) {
-    v = v._div(w / this.w);
+    v = v._div(this.renderW / this.w);
     v.subV(new Vec(this.w / 2, this.w / 2 / 16 * 9));
     v.addV(this.pos);
 
@@ -41,7 +43,7 @@ class Camera {
    * @return {Vec} Scaled vector
    */
   scaleVec(v) {
-    return v._mul(w / this.w);
+    return v._mul(this.renderW / this.w);
   }
   /**
    * Scales all axes of a vector from camera scale
@@ -50,20 +52,20 @@ class Camera {
    * @return {Vec} Unscaled vector
    */
   unScaleVec(v) {
-    return v._div(w / this.w);
+    return v._div(this.renderW / this.w);
   }
 
   /**
    * Scales renderer transform
    */
   scaleTransform() {
-    renderer.scale(new Vec(w / this.w, w / this.w));
+    renderer.scale(new Vec(this.renderW / this.w, this.renderW / this.w));
   }
   /**
    * Unscales renderer transform
    */
   unScaleTransform() {
-    renderer.scale(new Vec(1, 1)._div(w / this.w));
+    renderer.scale(new Vec(1, 1)._div(this.renderW / this.w));
   }
 
   /**

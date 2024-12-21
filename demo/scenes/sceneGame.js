@@ -4,6 +4,7 @@ class SceneGame extends Scene {
 
     this.cam = new Camera(new Vec(0, 0));
     this.cam.w = 16;
+    this.cam.renderW = nde.w;
   }
   loadWorld() {
     this.world = new World();
@@ -16,8 +17,8 @@ class SceneGame extends Scene {
   }
 
   keydown(e) {
-    if (getKeyEqual(e.key,"Pause")) {
-      transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
+    if (nde.getKeyEqual(e.key,"Pause")) {
+      nde.transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
     }
   }
 
@@ -26,14 +27,14 @@ class SceneGame extends Scene {
     //this.cam.pos = this.car.pos.copy();
     
     player.movement = new Vec(
-      getKeyPressed("Move Right") - getKeyPressed("Move Left"),
-      getKeyPressed("Move Down") - getKeyPressed("Move Up"),
+      nde.getKeyPressed("Move Right") - nde.getKeyPressed("Move Left"),
+      nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
     );
-    player.speedMult = getKeyPressed("Run") ? 2.5 : 1
+    player.speedMult = nde.getKeyPressed("Run") ? 2.5 : 1
 
     this.cam.pos.addV(new Vec(
-      getKeyPressed("Move Camera Right") - getKeyPressed("Move Camera Left"),
-      getKeyPressed("Move Camera Down") - getKeyPressed("Move Camera Up"),
+      nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),
+      nde.getKeyPressed("Move Camera Down") - nde.getKeyPressed("Move Camera Up"),
     ).mul(dt * 5));
 
     for (let i = 0; i < this.world.entities.length; i++) {
@@ -44,11 +45,12 @@ class SceneGame extends Scene {
 
   render() {
     let cam = this.cam;
+    cam.renderW = nde.w;
 
     renderer.save();
 
     renderer.set("fill", [100, 100, 50]);
-    renderer.rect(new Vec(0, 0), new Vec(w, w / 16 * 9));
+    renderer.rect(new Vec(0, 0), new Vec(nde.w, nde.w / 16 * 9));
 
     renderer.restore();
 
@@ -80,6 +82,8 @@ class SceneGame extends Scene {
     renderer.set("fill", 255);
     renderer.text("[w a s d shift], [arrow keys]", new Vec(0, -4.5));
 
+    console.log();
+    
     renderer.restore();
   }
 }

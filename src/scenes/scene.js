@@ -3,6 +3,19 @@ class Scene {
     this.hasStarted = false;    
   }
 
+
+  
+    
+  /**
+   * 
+   */
+  beforeSetup() {}
+    
+/**
+ * 
+ */
+  afterSetup() {}
+
   
 /**
  * Scene started
@@ -17,7 +30,7 @@ class Scene {
 /**
  * @param {UIEvent} e
  */
-  windowResized(e) {}
+  resize(e) {}
  
 /**
  * @param {KeyboardEvent} e
@@ -57,10 +70,24 @@ class Scene {
  * @param {number} dt Time in seconds since last frame
  */
   update(dt) {}
-  
+
+ 
+  /**
+   * 
+   * 
+   * @param {number} dt Time in seconds since last frame
+   */
+  afterUpdate(dt) {}
+    
 /**
  * Render scene here, called after update
  */
   render() {}
+
+    
+/**
+ * 
+ */
+  afterRender() {}
 }
 

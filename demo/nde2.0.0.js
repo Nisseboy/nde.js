@@ -74,10 +74,10 @@ class Vec {
    * @return {Vec} this
    */
   from(v) {
-    this.x = v.x;
-    this.y = v.y;
-    this.z = v.z;
-    this.w = v.w;
+    this.x = v.x != undefined ? parseFloat(v.x) : v.x;
+    this.y = v.y != undefined ? parseFloat(v.y) : v.y;
+    this.z = v.z != undefined ? parseFloat(v.z) : v.z;
+    this.w = v.w != undefined ? parseFloat(v.w) : v.w;
     return this;
   }
   /**
@@ -328,31 +328,6 @@ class Img {
   }
 }
 
-function loadImg(path) {
-  let img = new Img(new Vec(1, 1));
-  img.loading = true;
-  img.path = path;
-  unloadedAssets.push(img);
-
-  let image = new Image();
-  image.src = path;
-
-  image.onload = e => {
-    img.resize(new Vec(image.width, image.height));
-    img.ctx.drawImage(image, 0, 0);
-    img.loading = false;
-
-    unloadedAssets.splice(unloadedAssets.indexOf(img));
-  };
-  image.onerror = e => {
-    console.error(`"${path}" not found`);
-
-    unloadedAssets.splice(unloadedAssets.indexOf(img));
-  };
-
-  return img;
-}
-
 
 
 
@@ -365,6 +340,8 @@ class Camera {
     this.w = 16;
 
     this.dir = 0;
+
+    this.renderW;
   }
 
   /**
@@ -376,7 +353,7 @@ class Camera {
   to(v) {
     v = v._subV(this.pos);
     v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 / 16 * 9));
-    v.mul(w / this.w);
+    v.mul(this.renderW / this.w);
 
     return v;
   }
@@ -387,7 +364,7 @@ class Camera {
    * @return {Vec} World pos
    */
   from(v) {
-    v = v._div(w / this.w);
+    v = v._div(this.renderW / this.w);
     v.subV(new Vec(this.w / 2, this.w / 2 / 16 * 9));
     v.addV(this.pos);
 
@@ -401,7 +378,7 @@ class Camera {
    * @return {Vec} Scaled vector
    */
   scaleVec(v) {
-    return v._mul(w / this.w);
+    return v._mul(this.renderW / this.w);
   }
   /**
    * Scales all axes of a vector from camera scale
@@ -410,20 +387,20 @@ class Camera {
    * @return {Vec} Unscaled vector
    */
   unScaleVec(v) {
-    return v._div(w / this.w);
+    return v._div(this.renderW / this.w);
   }
 
   /**
    * Scales renderer transform
    */
   scaleTransform() {
-    renderer.scale(new Vec(w / this.w, w / this.w));
+    renderer.scale(new Vec(this.renderW / this.w, this.renderW / this.w));
   }
   /**
    * Unscales renderer transform
    */
   unScaleTransform() {
-    renderer.scale(new Vec(1, 1)._div(w / this.w));
+    renderer.scale(new Vec(1, 1)._div(this.renderW / this.w));
   }
 
   /**
@@ -448,6 +425,19 @@ class Scene {
     this.hasStarted = false;    
   }
 
+
+  
+    
+  /**
+   * 
+   */
+  beforeSetup() {}
+    
+/**
+ * 
+ */
+  afterSetup() {}
+
   
 /**
  * Scene started
@@ -462,7 +452,7 @@ class Scene {
 /**
  * @param {UIEvent} e
  */
-  windowResized(e) {}
+  resize(e) {}
  
 /**
  * @param {KeyboardEvent} e
@@ -502,11 +492,25 @@ class Scene {
  * @param {number} dt Time in seconds since last frame
  */
   update(dt) {}
-  
+
+ 
+  /**
+   * 
+   * 
+   * @param {number} dt Time in seconds since last frame
+   */
+  afterUpdate(dt) {}
+    
 /**
  * Render scene here, called after update
  */
   render() {}
+
+    
+/**
+ * 
+ */
+  afterRender() {}
 }
 
 
@@ -519,6 +523,7 @@ class Scene {
 class RendererBase {
   constructor() {
     this.img = new Img(new Vec(1, 1));
+    
     
     this.set("fill", 255);
     this.set("stroke", 0);
@@ -576,9 +581,9 @@ class RendererCanvas extends RendererBase {
   parseColor(...args) {
     if (args.length == 1) {
       if (typeof args[0] == "number") return `rgba(${args[0]},${args[0]},${args[0]},1)`;
-      if (typeof args[0] == "object") return `rgba(${args[0][0]},${args[0][1]},${args[0][2]},1)`;
+      if (typeof args[0] == "object") return `rgba(${args[0][0]},${args[0][1]},${args[0][2]},${args[0][3] == undefined ? 1 : args[0][3]})`;
     }
-    return `rgba(${args[0]},${args[1]},${args[2]},1)`;
+    return `rgba(${args[0]},${args[1]},${args[2]},${args[3] == undefined ? 1 : args[3]})`;
   }
 
   
@@ -712,7 +717,7 @@ class ButtonBase {
   render() {
     this.hovered = false;
 
-    let mousePoint = new DOMPoint(mouse.x, mouse.y);
+    let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
     let transformedMousePoint = mousePoint.matrixTransform(renderer.getTransform().inverse());
     if (
       transformedMousePoint.x > this.pos.x && 
@@ -721,7 +726,7 @@ class ButtonBase {
       transformedMousePoint.y < this.pos.y + this.size.y + this.style.padding * 2
     ) {
       this.hovered = true;
-      hoveredButton = this;
+      nde.hoveredButton = this;
     }
 
     renderer.applyStyles(this.hovered ? this.style.hover : this.style);
@@ -806,7 +811,7 @@ class TimerBase {
 
     this.callback = callback;
 
-    timers.push(this);
+    nde.timers.push(this);
   }
 
   tick(dt) {
@@ -815,8 +820,8 @@ class TimerBase {
   }
   
   stop() {
-    let index = timers.indexOf(this);
-    if (index != -1) timers.splice(index, 1);
+    let index = nde.timers.indexOf(this);
+    if (index != -1) nde.timers.splice(index, 1);
   }
 
   reset() {
@@ -824,10 +829,10 @@ class TimerBase {
     this.elapsedTime = 0;
     this.progress = 0;
 
-    let index = timers.indexOf(this);
-    if (index != -1) timers.splice(index, 1);
+    let index = nde.timers.indexOf(this);
+    if (index != -1) nde.timers.splice(index, 1);
 
-    timers.push(this);
+    nde.timers.push(this);
   }
 }
 
@@ -888,25 +893,25 @@ class TimerTime extends TimerBase {
 /* src/transitions/transitionBase.js */
 class TransitionBase {
   constructor(newScene, timer) {
-    this.oldImg = new Img(new Vec(w, w / 16 * 9));
+    this.oldImg = new Img(new Vec(nde.w, nde.w / 16 * 9));
     this.newImg = new Img(this.oldImg.size);
 
     this.timer = timer;
 
-    renderGame();
+    nde.fireEvent("render");
     renderer.display(this.oldImg);
 
-    setScene(newScene);
+    nde.setScene(newScene);
     newScene.update(1/60);
-    renderGame();
+    nde.fireEvent("render");
     renderer.display(this.newImg);
   }
 
   render() {
     renderer.set("fill", 0);
-    renderer.rect(new Vec(0, 0), mainImg.size);
+    renderer.rect(new Vec(0, 0), nde.mainImg.size);
 
-    if (this.timer.progress == 1) transition = undefined;
+    if (this.timer.progress == 1) nde.transition = undefined;
   }
 }
 
@@ -1036,16 +1041,23 @@ debugStats: map thats cleared each frame where you can put debug info
 
 renderer: which renderer to use, pass all drawing code into this pls, see engine/renderers/rendererBase.js for base class
 
-preload: called before anything else to load assets
 
-beforeSetup: called before canvas has been initialized and framerate set
-afterSetup: after
-beforeUpdate: called before the scene gets updated every frame
-afterUpdate: after
-beforeRender: called before the scene gets rendered every frame
-afterRender: after
-beforeResize: called before screen gets resized, you can return a value for the width here to render at a lower resolution
-afterResize: after
+
+Events:
+beforeSetup
+afterSetup
+keydown
+keyup
+mousemove
+mousedown
+mouseup
+wheel
+resize
+update
+afterUpdate
+render
+afterRender
+
 
 
 use these to handle key input:
@@ -1096,232 +1108,279 @@ Project:
 
 */  
 
+class NDE {
+  constructor(mainElem) {
+    this.scene = undefined;
+    this.w = undefined;
+    this.targetFPS = undefined;
+    this.hoveredButton = undefined;
+    this.transition = undefined;
+    this.renderer = new RendererCanvas();
 
+    this.events = {};
 
-let scene;
+    this.mouse = new Vec(0, 0);
 
-let w;
+    this.controls = {};
+    this.pressed = {};
 
-let targetFPS;
+    this.timers = [];
 
-let controls = {};
-let pressed = {};
+    this.debug = false;
+    this.debugStats = {};
 
-let mouse;
-let hoveredButton;
-
-let timers = [];
-
-let transition;
-
-let debug = true;
-let debugStats = {};
-
-let renderer;
-
-
-
-let mainElem = document.getElementsByTagName("main")[0];
-let mainImg = new Img(new Vec(1, 1));
-let unloadedAssets = [];
-
-let lastFrameTime = 0;
-let latestDts = [];
-
-document.body.onload = e => {
-  setScene(new Scene());
-  mouse = new Vec(0, 0);
-
-  preload();
-
-  let i = 0;
-  let interval = setInterval(e => {
-    if (unloadedAssets.length == 0) {clearInterval(interval); setup();}
-    if (i >= 200) {clearInterval(interval); console.error("assets could not be loaded: " + unloadedAssets.map(e => e.path))}
     
-    i++;
-  }, 16);
-};
+    this.mainElem = mainElem;
+    this.mainImg = new Img(new Vec(1, 1));
+    this.unloadedAssets = [];
 
-function setup() {
-  beforeSetup();
+    this.lastFrameTime = 0;
+    this.latestDts = [];
 
-  renderer = new RendererCanvas();
-  mainElem.appendChild(mainImg.canvas);
-  windowResized();
+    this.setScene(new Scene());
 
-  renderer.set("renderer.", "16px monospace");
-  renderer.set("textAlign", ["left", "top"]);
-  renderer.set("imageSmoothing", false);
-  
-  afterSetup();
+    let i = 0;
+    let interval = setInterval(e => {
+      if (this.unloadedAssets.length == 0) {
+        clearInterval(interval);
+        
+        this.fireEvent("beforeSetup");
 
-  lastFrameTime = performance.now();
-  requestAnimationFrame(draw);
-}
+        this.mainElem.appendChild(this.mainImg.canvas);
+        this.resize();
+      
+        this.renderer.set("renderer.", "16px monospace");
+        this.renderer.set("textAlign", ["left", "top"]);
+        this.renderer.set("imageSmoothing", false);
+        
+        this.fireEvent("afterSetup");
 
-function setScene(newScene) {
-  if (scene) scene.stop();
-  scene = newScene;
-  scene.start();
-  scene.hasStarted = true;
-}
 
-function windowResized(e) {
-  w = Math.min(window.innerWidth, window.innerHeight / 9 * 16);
-  mainImg.resize(new Vec(w, w / 16 * 9));
+        
+        {
+          window.addEventListener("resize", e => {this.resize(e)});
 
-  w = beforeResize(e) || w;
-  
-  renderer.img.resize(new Vec(w, w / 16 * 9));
-  
-  if (!transition) scene.windowResized(e);
+          document.addEventListener("keydown", e => {
+            if (this.debug) console.log(e.key);
+          
+            this.pressed[e.key.toLowerCase()] = true;
+          
+            this.fireEvent("keydown", e);
+            
+          });
+          document.addEventListener("keyup", e => {
+            delete this.pressed[e.key.toLowerCase()];
+          
+            this.fireEvent("keyup", e);
+          });
+          
+          document.addEventListener("mousemove", e => {
+            this.mouse.x = e.clientX / this.mainImg.size.x * this.w;
+            this.mouse.y = e.clientY / this.mainImg.size.x * this.w;
+            
+            this.fireEvent("mousemove", e);
+          });
+          document.addEventListener("mousedown", e => {
+            if (this.hoveredButton) {
+              if (!this.transition) this.hoveredButton.callback();
+              return;
+            }
+          
+            if (this.debug) console.log("mouse" + e.button);
+          
+            this.pressed["mouse" + e.button] = true;
+          
+            this.fireEvent("mousedown", e);
+          });
+          document.addEventListener("mouseup", e => {
+            delete this.pressed["mouse" + e.button];
+          
+            this.fireEvent("mouseup", e);
+          });
+          document.addEventListener("wheel", e => {
+            this.fireEvent("wheel", e);
+          });
 
-  afterResize(e);
-}
-window.addEventListener("resize", windowResized);
+          
+          window.oncontextmenu = (e) => {
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            return false;
+          };
+        }
 
-document.addEventListener("keydown", e => {
-  if (debug) console.log(e.key);
-
-  pressed[e.key.toLowerCase()] = true;
-
-  if (!transition) scene.keydown(e);
-  
-});
-document.addEventListener("keyup", e => {
-  delete pressed[e.key.toLowerCase()];
-
-  if (!transition) scene.keyup(e);
-});
-
-document.addEventListener("mousemove", e => {
-  mouse.x = e.clientX / mainImg.size.x * w;
-  mouse.y = e.clientY / mainImg.size.x * w;
-  
-  if (!transition) scene.mousemove(e);
-});
-document.addEventListener("mousedown", e => {
-  if (hoveredButton) {
-    if (!transition) hoveredButton.callback();
-    return;
+      
+        this.lastFrameTime = performance.now();
+        requestAnimationFrame(time => {this.draw(time)});
+      }
+      if (i >= 500) {clearInterval(interval); console.error("assets could not be loaded: " + this.unloadedAssets.map(e => e.path))}
+      
+      i++;
+    }, 16);
   }
 
-  pressed["mouse" + e.button] = true;
-
-  if (!transition) scene.mousedown(e);
-});
-document.addEventListener("mouseup", e => {
-  delete pressed["mouse" + e.button];
-
-  if (!transition) scene.mouseup(e);
-});
-document.addEventListener("wheel", e => {
-  if (!transition) scene.wheel(e);
-});
-
-/**
- * Gets keycode of a control
- * 
- * @param {string} controlName
- * @return {string} keyCode
- */
-function getKeyCode(controlName) {
-  return controls[controlName].toLowerCase();
-}
-/**
- * Gets if a key is pressed
- * 
- * @param {string} controlName
- * @return {boolean} pressed
- */
-function getKeyPressed(controlName) {
-  return !!pressed[getKeyCode(controlName)];
-}
-/**
- * Gets if keycode is equal to control keycode
- * 
- * @param {string} keyCode
- * @param {string} controlName
- * @return {boolean} equal
- */
-function getKeyEqual(keyCode, controlName) {
-  return keyCode.toLowerCase() == getKeyCode(controlName);
-}
-
-function draw(time) {
-  requestAnimationFrame(draw);
-
-  if (time == undefined) time = performance.now();
-  
-  let dt = Math.min(time - lastFrameTime, 200);
-
-  if (targetFPS != undefined) {
-    if ((time + 0.1) - lastFrameTime < 1000 / targetFPS) return; 
+  setScene(newScene) {
+    if (this.scene) this.scene.stop();
+    this.scene = newScene;
+    this.scene.start();
+    this.scene.hasStarted = true;
   }
 
-  lastFrameTime = time;
-
-  updateGame(dt);
-}
-
-function updateGame(dt) {
-  latestDts.push(dt);
-  if (latestDts.length > 10) latestDts.shift();
-  let averageDt = latestDts.reduce((partialSum, a) => partialSum + a, 0) / latestDts.length;
-  
-  hoveredButton = undefined;
-  debugStats = {};
-  debugStats["frameTime"] = Math.round(averageDt);
-  debugStats["fps"] = Math.round(1000 / averageDt);
-
-  if (targetFPS != undefined) {
-    debugStats["target frameTime"] = 1000 / targetFPS;
-    debugStats["target fps"] = targetFPS;
+  registerEvent(eventName, func) {
+    if (!this.events[eventName]) this.events[eventName] = [];
+    this.events[eventName].push(func);
   }
 
-  let gameDt = (targetFPS == undefined) ? dt * 0.001 : 1 / targetFPS;
+  fireEvent(eventName, ...args) {
+    if (this.transition) return;
+    
+    let events = this.events[eventName];
+    if (events) 
+      for (let e of events) e(...args);
+    
+    this.scene[eventName](...args);
+      
+  }
 
+  resize(e) {
+    this.w = Math.min(window.innerWidth, window.innerHeight / 9 * 16);
+    this.mainImg.resize(new Vec(this.w, this.w / 16 * 9));
+  
 
-  renderer.save();
-
-  beforeUpdate();
-  if (!transition) scene.update(gameDt);  
-
-  for (let i = 0; i < timers.length; i++) timers[i].tick(gameDt);
-  afterUpdate();
-
-  beforeRender();
-  if (!transition) renderGame();
-  else transition.render();
-  afterRender();
-
-  renderer.set("fill", 255);
-  renderer.set("stroke", 0);
-  renderer.set("font", "16px monospace");
-  renderer.set("textAlign", ["left", "top"]);
-  if (debug) {
-    let n = 0;
-    for (let i in debugStats) {
-      renderer.text(`${i}: ${JSON.stringify(debugStats[i])}`, new Vec(0, n * 16));
-      n++;
+    let result = undefined;
+    if  (this.events["resize"]) {
+      for (let ee of this.events["resize"]) {
+        let res = ee(e); if (res) result = res
+      };
     }
-  }
+    this.scene.resize(e);
+
+    this.w = result || this.w;
+    
+    this.renderer.img.resize(new Vec(this.w, this.w / 16 * 9));
+    
+    if (!this.transition) this.scene.resize(e);
   
-  renderer.restore();
+    this.fireEvent("resize", e);
+  }
 
-  renderer.display(mainImg);
+  /**
+   * Gets keycode of a control
+   * 
+   * @param {string} controlName
+   * @return {string} keyCode
+   */
+  getKeyCode(controlName) {
+    return this.controls[controlName].toLowerCase();
+  }
+  /**
+   * Gets if a key is pressed
+   * 
+   * @param {string} controlName
+   * @return {boolean} pressed
+   */
+  getKeyPressed(controlName) {
+    return !!this.pressed[this.getKeyCode(controlName)];
+  }
+  /**
+   * Gets if keycode is equal to control keycode
+   * 
+   * @param {string} keyCode
+   * @param {string} controlName
+   * @return {boolean} equal
+   */
+  getKeyEqual(keyCode, controlName) {
+    return keyCode.toLowerCase() == this.getKeyCode(controlName);
+  }
+
+  draw(time) {
+    requestAnimationFrame(time => {this.draw(time)});
+  
+    if (time == undefined) time = performance.now();
+    
+    let dt = Math.min(time - this.lastFrameTime, 200);
+  
+    if (this.targetFPS != undefined) {
+      if ((time + 0.1) - this.lastFrameTime < 1000 / this.targetFPS) return; 
+    }
+  
+    this.lastFrameTime = time;
+  
+    this.updateGame(dt);
+  }
+
+  updateGame(dt) {
+    this.latestDts.push(dt);
+    if (this.latestDts.length > 10) this.latestDts.shift();
+    let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
+    
+    this.hoveredButton = undefined;
+    this.debugStats = {};
+    this.debugStats["frameTime"] = Math.round(averageDt);
+    this.debugStats["fps"] = Math.round(1000 / averageDt);
+  
+    if (this.targetFPS != undefined) {
+      this.debugStats["target frameTime"] = 1000 / this.targetFPS;
+      this.debugStats["target fps"] = this.targetFPS;
+    }
+  
+    let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
+  
+  
+    this.renderer.save();
+  
+    this.fireEvent("update", gameDt);
+    for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
+    this.fireEvent("afterUpdate", gameDt);
+  
+    this.fireEvent("render");
+    if (this.transition) this.transition.render();
+    this.fireEvent("afterRender");
+  
+    this.renderer.set("fill", 255);
+    this.renderer.set("stroke", 0);
+    this.renderer.set("font", "16px monospace");
+    this.renderer.set("textAlign", ["left", "top"]);
+    if (this.debug) {
+      let n = 0;
+      for (let i in this.debugStats) {
+        this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * 16));
+        n++;
+      }
+    }
+    
+    this.renderer.restore();
+  
+    this.renderer.display(this.mainImg);
+  }
+
+  
+
+  loadImg(path) {
+    let img = new Img(new Vec(1, 1));
+    img.loading = true;
+    img.path = path;
+    this.unloadedAssets.push(img);
+
+    let image = new Image();
+    image.src = path;
+
+    image.onload = e => {
+      img.resize(new Vec(image.width, image.height));
+      img.ctx.drawImage(image, 0, 0);
+      img.loading = false;
+
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+    };
+    image.onerror = e => {
+      console.error(`"${path}" not found`);
+
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+    };
+
+    return img;
+  }
 }
-
-function renderGame() {
-  scene.render();
-}
-
-window.oncontextmenu = (e) => {
-  e.preventDefault(); 
-  e.stopPropagation(); 
-  return false;
-};
 
 
 
