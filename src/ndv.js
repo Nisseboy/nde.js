@@ -66,10 +66,10 @@ class Vec {
    * @return {Vec} this
    */
   from(v) {
-    this.x = v.x;
-    this.y = v.y;
-    this.z = v.z;
-    this.w = v.w;
+    this.x = v.x != undefined ? parseFloat(v.x) : v.x;
+    this.y = v.y != undefined ? parseFloat(v.y) : v.y;
+    this.z = v.z != undefined ? parseFloat(v.z) : v.z;
+    this.w = v.w != undefined ? parseFloat(v.w) : v.w;
     return this;
   }
   /**

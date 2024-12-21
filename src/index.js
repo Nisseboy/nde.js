@@ -194,6 +194,8 @@ document.addEventListener("mousedown", e => {
     return;
   }
 
+  if (debug) console.log("mouse" + e.button);
+
   pressed["mouse" + e.button] = true;
 
   if (!transition) scene.mousedown(e);
