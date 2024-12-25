@@ -304,34 +304,6 @@ class Vec {
 
 
 
-/* src/img.js */
-class Img {
-  constructor(size) {
-    this.size = size.copy();
-
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = size.x;
-    this.canvas.height = size.y;
-
-    this.ctx = this.canvas.getContext("2d");
-    if (this.ctx == null) throw new Error("2d context not supported?");
-
-    this.loading = false;
-    this.path = "";
-  }
-
-  resize(size) {
-    this.size = size.copy();
-
-    this.canvas.width = size.x;
-    this.canvas.height = size.y;
-  }
-}
-
-
-
-
-
 /* src/camera.js */
 class Camera {
   constructor(pos) {
@@ -514,6 +486,45 @@ class Scene {
 }
 
 
+
+
+
+
+
+/* src/assets/asset.js */
+class Asset {
+  constructor() {
+    this.loading = false;
+    this.path = "";
+  }
+}
+
+
+
+
+
+/* src/assets/img.js */
+class Img extends Asset {
+  constructor(size) {
+    super();
+
+    this.size = size.copy();
+
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = size.x;
+    this.canvas.height = size.y;
+
+    this.ctx = this.canvas.getContext("2d");
+    if (this.ctx == null) throw new Error("2d context not supported?");
+  }
+
+  resize(size) {
+    this.size = size.copy();
+
+    this.canvas.width = size.x;
+    this.canvas.height = size.y;
+  }
+}
 
 
 
@@ -1353,8 +1364,6 @@ class NDE {
   
     this.renderer.display(this.mainImg);
   }
-
-  
 
   loadImg(path) {
     let img = new Img(new Vec(1, 1));

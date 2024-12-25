@@ -67,7 +67,7 @@ class SceneGame extends Scene {
       renderer.save();
       renderer.translate(e.pos);
       renderer.rotate(e.dir);
-      renderer.image(tex[e._type.texture], e._type.size._mul(-0.5), e._type.size);
+      renderer.image(tex[e.texture], e.size._mul(-0.5), e.size);
       renderer.restore();
     }
 

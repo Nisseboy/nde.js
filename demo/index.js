@@ -38,7 +38,6 @@ document.body.onload = e => {
   });
 
   nde.registerEvent("afterSetup", () => {
-    initEntityTypes();
     scenes.game.loadWorld();
     nde.setScene(scenes.mainMenu);
   });

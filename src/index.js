@@ -336,8 +336,6 @@ class NDE {
     this.renderer.display(this.mainImg);
   }
 
-  
-
   loadImg(path) {
     let img = new Img(new Vec(1, 1));
     img.loading = true;

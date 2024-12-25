@@ -2,9 +2,11 @@ import sys
 
 files = [
   "src/ndv.js",
-  "src/img.js",
   "src/camera.js",
   "src/scenes/scene.js",
+  
+  "src/assets/asset.js",
+  "src/assets/img.js",
 
   "src/renderers/rendererBase.js",
   "src/renderers/rendererCanvas.js",
