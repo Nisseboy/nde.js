@@ -3,7 +3,6 @@
 This is a built version of nde (Nils Delicious Engine) and is basically all the source files stitched together, go to the github for source
 
 
-
 */
 /* src/ndv.js */
 /*
@@ -591,7 +590,9 @@ class RendererCanvas extends RendererBase {
 
   parseColor(...args) {
     if (args.length == 1) {
+      if (typeof args[0] == "string") return args[0];
       if (typeof args[0] == "number") return `rgba(${args[0]},${args[0]},${args[0]},1)`;
+      if (args[0] instanceof Vec) return `rgba(${args[0].x},${args[0].y},${args[0].z},${args[0][3] == undefined ? 1 : args[0].w})`;
       if (typeof args[0] == "object") return `rgba(${args[0][0]},${args[0][1]},${args[0][2]},${args[0][3] == undefined ? 1 : args[0][3]})`;
     }
     return `rgba(${args[0]},${args[1]},${args[2]},${args[3] == undefined ? 1 : args[3]})`;
@@ -687,20 +688,20 @@ class RendererCanvas extends RendererBase {
 
 
 
-/* src/buttons/buttonBase.js */
-class ButtonBase {
-  constructor(pos, size, callback) {
+/* src/ui/UIElementBase.js */
+class UIElementBase {
+  constructor(pos, size, events) {
     this.pos = pos;
     this.size = size;
-    this.callback = callback;
+    this.events = events;
 
     this.hovered = false;
 
     this.defaultStyle = {
       padding: 0,
 
-      fill: 0,
-      stroke: 0,
+      fill: "rgba(0, 0, 0, 1)",
+      stroke: "rgba(0, 0, 0, 1)",
     };
 
     this.style = {hover: {}};
@@ -725,9 +726,19 @@ class ButtonBase {
     f(style.hover, this.style.hover, this.style);
   }
 
+  registerEvent(eventName, func) {
+    if (!this.events[eventName]) this.events[eventName] = [];
+    this.events[eventName].push(func);
+  }
+  fireEvent(eventName, ...args) {    
+    let events = this.events[eventName];
+    if (events) 
+      for (let e of events) e(...args);
+  }
+
   render() {
     this.hovered = false;
-
+    
     let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
     let transformedMousePoint = mousePoint.matrixTransform(renderer.getTransform().inverse());
     if (
@@ -737,7 +748,7 @@ class ButtonBase {
       transformedMousePoint.y < this.pos.y + this.size.y + this.style.padding * 2
     ) {
       this.hovered = true;
-      nde.hoveredButton = this;
+      nde.hoveredUIElement = this;
     }
 
     renderer.applyStyles(this.hovered ? this.style.hover : this.style);
@@ -750,14 +761,29 @@ class ButtonBase {
 
 
 
-/* src/buttons/buttonText.js */
+/* src/ui/button/buttonBase.js */
+class ButtonBase extends UIElementBase {
+  constructor(pos, size, events) {
+    super(pos, size, events);
+  }
+
+  render() {
+    super.render();  
+  }
+}
+
+
+
+
+
+/* src/ui/button/buttonText.js */
 class ButtonText extends ButtonBase {
-  constructor(pos, text, style, callback) {
-    super(pos, new Vec(0, 0), callback);
+  constructor(pos, text, style, events) {
+    super(pos, new Vec(0, 0), events);
 
     this.defaultStyle.text = {
-      fill: 255,
-      stroke: 0,
+      fill: "rgba(255, 255, 255, 1)",
+      stroke: "rgba(0, 0, 0, 1)",
       font: "16px monospace",
       textAlign: ["left", "top"],
     };
@@ -778,6 +804,7 @@ class ButtonText extends ButtonBase {
     super.render();
     
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
+    
     renderer.text(this.text, this.pos._add(this.style.padding));
   }
 }
@@ -786,10 +813,10 @@ class ButtonText extends ButtonBase {
 
 
 
-/* src/buttons/buttonImage.js */
+/* src/ui/button/buttonImage.js */
 class ButtonImage extends ButtonBase {
-  constructor(pos, size, img, style, callback) {
-    super(pos, size, callback);
+  constructor(pos, size, img, style, events) {
+    super(pos, size, events);
 
     this.defaultStyle.image = {
       imageSmoothing: true,
@@ -806,6 +833,70 @@ class ButtonImage extends ButtonBase {
     renderer.applyStyles(this.hovered ? this.style.hover.image : this.style.image);
     
     renderer.image(this.img, this.pos._add(this.style.padding), this.size);
+  }
+}
+
+
+
+
+
+/* src/ui/range/rangeBase.js */
+class RangeBase extends UIElementBase {
+  constructor(pos, size, style, min, max, value, events) {
+    super(pos, size, events);
+
+    this.defaultStyle.range = {
+      fill: "rgba(255, 255, 255, 1)",
+      stroke: "rgba(255, 255, 255, 1)",
+    };
+    
+    this.fillStyle(style);
+
+    this.rangeSize = new Vec(size.y, size.y);
+
+    this.min = min;
+    this.max = max;
+    this.value = value;
+    this.rangeSize.x = (value - min) / (max - min) * size.x;
+
+    this.rendererTransform = undefined;
+
+    this.funcA = e=>this.mousemove(e);
+    this.funcB = e=>this.mouseup(e);
+
+    this.registerEvent("mousedown", e=>{
+      this.mousemove(e);
+
+      nde.registerEvent("mousemove", this.funcA);
+      nde.registerEvent("mouseup", this.funcB);
+    });
+  }
+
+  mousemove(e) {
+    if (!nde.pressed["mouse0"]) return;
+
+    let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
+    let transformedMousePoint = mousePoint.matrixTransform(this.rendererTransform.inverse());
+    
+    let progress = Math.min(Math.max((transformedMousePoint.x - this.pos.x - this.style.padding) / this.size.x, 0), 1);
+    this.value = progress * (this.max - this.min) + this.min;
+    this.rangeSize.x = progress * this.size.x;
+  }
+
+  mouseup(e) {
+    nde.unregisterEvent("mousemove", this.funcA);
+    nde.unregisterEvent("mouseup", this.funcB);
+
+    this.fireEvent("change", this.value);
+  }
+
+  render() {
+    super.render();  
+    this.rendererTransform = renderer.getTransform();
+
+    renderer.applyStyles(this.hovered ? this.style.hover.range : this.style.range);
+
+    if (this.value > this.min) renderer.rect(this.pos._add(this.style.padding), this.rangeSize);   
   }
 }
 
@@ -1041,7 +1132,7 @@ controls: map of control names along with key codes, set by you and used in getK
 pressed: array of all the currently pressed key codes, accessed with getKeyPressed
 
 mouse: a vector of the mouse position
-hoveredButton: the currently hovered button, but you can't see which one it is sucker
+hoveredUIElement: the currently hovered ui element, but you can't see which one it is sucker
 
 timers: array of all currently active timers, to add a timer call new TimerWhatever, see engine/timers/timerWhatever.js for details
 
@@ -1124,7 +1215,7 @@ class NDE {
     this.scene = undefined;
     this.w = undefined;
     this.targetFPS = undefined;
-    this.hoveredButton = undefined;
+    this.hoveredUIElement = undefined;
     this.transition = undefined;
     this.renderer = new RendererCanvas();
 
@@ -1151,6 +1242,7 @@ class NDE {
     this.setScene(new Scene());
 
     let i = 0;
+    let lastLength = Infinity;
     let interval = setInterval(e => {
       if (this.unloadedAssets.length == 0) {
         clearInterval(interval);
@@ -1188,23 +1280,31 @@ class NDE {
           document.addEventListener("mousemove", e => {
             this.mouse.x = e.clientX / this.mainImg.size.x * this.w;
             this.mouse.y = e.clientY / this.mainImg.size.x * this.w;
+
+
+            if (this.hoveredUIElement) {
+              if (!this.transition) this.hoveredUIElement.fireEvent("mousemove", e);
+            }
             
             this.fireEvent("mousemove", e);
           });
           document.addEventListener("mousedown", e => {
-            if (this.hoveredButton) {
-              if (!this.transition) this.hoveredButton.callback();
+            this.pressed["mouse" + e.button] = true;
+
+            if (this.hoveredUIElement) {
+              if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
               return;
             }
           
             if (this.debug) console.log("mouse" + e.button);
-          
-            this.pressed["mouse" + e.button] = true;
-          
             this.fireEvent("mousedown", e);
           });
           document.addEventListener("mouseup", e => {
             delete this.pressed["mouse" + e.button];
+
+            if (this.hoveredUIElement) {
+              if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
+            }
           
             this.fireEvent("mouseup", e);
           });
@@ -1224,10 +1324,18 @@ class NDE {
         this.lastFrameTime = performance.now();
         requestAnimationFrame(time => {this.draw(time)});
       }
-      if (i >= 500) {clearInterval(interval); console.error("assets could not be loaded: " + this.unloadedAssets.map(e => e.path))}
+      if (i >= 100) {
+        if (this.unloadedAssets.length < lastLength) {
+          i = 0;
+          lastLength = this.unloadedAssets.length;
+        } else {
+          clearInterval(interval); 
+          console.error("assets could not be loaded: " + this.unloadedAssets.map(e => e.path))
+        }
+      }
       
       i++;
-    }, 16);
+    }, 50);
   }
 
   setScene(newScene) {
@@ -1240,6 +1348,19 @@ class NDE {
   registerEvent(eventName, func) {
     if (!this.events[eventName]) this.events[eventName] = [];
     this.events[eventName].push(func);
+
+    if (this.debug) console.log(`NDE: Registered an event on ${eventName}`);
+  }
+  unregisterEvent(eventName, func) {
+    let events = this.events[eventName];
+    if (!events) return false;
+
+    let index = events.indexOf(func);
+    if (index == -1) return false;
+
+    events.splice(index, 1);
+    if (this.debug) console.log(`NDE: Unregistered an event on ${eventName}`);
+    return;
   }
 
   fireEvent(eventName, ...args) {
@@ -1325,7 +1446,7 @@ class NDE {
     if (this.latestDts.length > 10) this.latestDts.shift();
     let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
     
-    this.hoveredButton = undefined;
+    this.hoveredUIElement = undefined;
     this.debugStats = {};
     this.debugStats["frameTime"] = Math.round(averageDt);
     this.debugStats["fps"] = Math.round(1000 / averageDt);
