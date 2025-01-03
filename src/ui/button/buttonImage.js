@@ -1,6 +1,6 @@
 class ButtonImage extends ButtonBase {
-  constructor(pos, size, img, style, callback) {
-    super(pos, size, callback);
+  constructor(pos, size, img, style, events) {
+    super(pos, size, events);
 
     this.defaultStyle.image = {
       imageSmoothing: true,

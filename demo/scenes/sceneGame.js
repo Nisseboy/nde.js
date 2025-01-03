@@ -81,8 +81,6 @@ class SceneGame extends Scene {
     renderer.set("textAlign", ["center", "top"]);
     renderer.set("fill", 255);
     renderer.text("[w a s d shift], [arrow keys]", new Vec(0, -4.5));
-
-    console.log();
     
     renderer.restore();
   }

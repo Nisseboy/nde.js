@@ -11,9 +11,12 @@ files = [
   "src/renderers/rendererBase.js",
   "src/renderers/rendererCanvas.js",
 
-  "src/buttons/buttonBase.js",
-  "src/buttons/buttonText.js",
-  "src/buttons/buttonImage.js",
+  "src/ui/UIElementBase.js",
+
+  "src/ui/button/buttonBase.js",
+  "src/ui/button/buttonText.js",
+  "src/ui/button/buttonImage.js",
+  "src/ui/range/rangeBase.js",
 
   "src/timers/timerBase.js",
   "src/timers/timerFrames.js",
@@ -30,7 +33,6 @@ outputFile = "release/nde" + sys.argv[1] + ".js"
 fileHeader = '''
 /*
 This is a built version of nde (Nils Delicious Engine) and is basically all the source files stitched together, go to the github for source
-
 
 
 */

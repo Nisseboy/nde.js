@@ -12,7 +12,7 @@ controls: map of control names along with key codes, set by you and used in getK
 pressed: array of all the currently pressed key codes, accessed with getKeyPressed
 
 mouse: a vector of the mouse position
-hoveredButton: the currently hovered button, but you can't see which one it is sucker
+hoveredUIElement: the currently hovered ui element, but you can't see which one it is sucker
 
 timers: array of all currently active timers, to add a timer call new TimerWhatever, see engine/timers/timerWhatever.js for details
 
@@ -95,7 +95,7 @@ class NDE {
     this.scene = undefined;
     this.w = undefined;
     this.targetFPS = undefined;
-    this.hoveredButton = undefined;
+    this.hoveredUIElement = undefined;
     this.transition = undefined;
     this.renderer = new RendererCanvas();
 
@@ -122,6 +122,7 @@ class NDE {
     this.setScene(new Scene());
 
     let i = 0;
+    let lastLength = Infinity;
     let interval = setInterval(e => {
       if (this.unloadedAssets.length == 0) {
         clearInterval(interval);
@@ -159,23 +160,31 @@ class NDE {
           document.addEventListener("mousemove", e => {
             this.mouse.x = e.clientX / this.mainImg.size.x * this.w;
             this.mouse.y = e.clientY / this.mainImg.size.x * this.w;
+
+
+            if (this.hoveredUIElement) {
+              if (!this.transition) this.hoveredUIElement.fireEvent("mousemove", e);
+            }
             
             this.fireEvent("mousemove", e);
           });
           document.addEventListener("mousedown", e => {
-            if (this.hoveredButton) {
-              if (!this.transition) this.hoveredButton.callback();
+            this.pressed["mouse" + e.button] = true;
+
+            if (this.hoveredUIElement) {
+              if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
               return;
             }
           
             if (this.debug) console.log("mouse" + e.button);
-          
-            this.pressed["mouse" + e.button] = true;
-          
             this.fireEvent("mousedown", e);
           });
           document.addEventListener("mouseup", e => {
             delete this.pressed["mouse" + e.button];
+
+            if (this.hoveredUIElement) {
+              if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
+            }
           
             this.fireEvent("mouseup", e);
           });
@@ -195,10 +204,18 @@ class NDE {
         this.lastFrameTime = performance.now();
         requestAnimationFrame(time => {this.draw(time)});
       }
-      if (i >= 500) {clearInterval(interval); console.error("assets could not be loaded: " + this.unloadedAssets.map(e => e.path))}
+      if (i >= 100) {
+        if (this.unloadedAssets.length < lastLength) {
+          i = 0;
+          lastLength = this.unloadedAssets.length;
+        } else {
+          clearInterval(interval); 
+          console.error("assets could not be loaded: " + this.unloadedAssets.map(e => e.path))
+        }
+      }
       
       i++;
-    }, 16);
+    }, 50);
   }
 
   setScene(newScene) {
@@ -211,6 +228,19 @@ class NDE {
   registerEvent(eventName, func) {
     if (!this.events[eventName]) this.events[eventName] = [];
     this.events[eventName].push(func);
+
+    if (this.debug) console.log(`NDE: Registered an event on ${eventName}`);
+  }
+  unregisterEvent(eventName, func) {
+    let events = this.events[eventName];
+    if (!events) return false;
+
+    let index = events.indexOf(func);
+    if (index == -1) return false;
+
+    events.splice(index, 1);
+    if (this.debug) console.log(`NDE: Unregistered an event on ${eventName}`);
+    return;
   }
 
   fireEvent(eventName, ...args) {
@@ -296,7 +326,7 @@ class NDE {
     if (this.latestDts.length > 10) this.latestDts.shift();
     let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
     
-    this.hoveredButton = undefined;
+    this.hoveredUIElement = undefined;
     this.debugStats = {};
     this.debugStats["frameTime"] = Math.round(averageDt);
     this.debugStats["fps"] = Math.round(1000 / averageDt);

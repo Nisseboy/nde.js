@@ -5,7 +5,9 @@ class RendererCanvas extends RendererBase {
 
   parseColor(...args) {
     if (args.length == 1) {
+      if (typeof args[0] == "string") return args[0];
       if (typeof args[0] == "number") return `rgba(${args[0]},${args[0]},${args[0]},1)`;
+      if (args[0] instanceof Vec) return `rgba(${args[0].x},${args[0].y},${args[0].z},${args[0][3] == undefined ? 1 : args[0].w})`;
       if (typeof args[0] == "object") return `rgba(${args[0][0]},${args[0][1]},${args[0][2]},${args[0][3] == undefined ? 1 : args[0][3]})`;
     }
     return `rgba(${args[0]},${args[1]},${args[2]},${args[3] == undefined ? 1 : args[3]})`;

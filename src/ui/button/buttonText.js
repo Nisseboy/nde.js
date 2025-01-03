@@ -1,10 +1,10 @@
 class ButtonText extends ButtonBase {
-  constructor(pos, text, style, callback) {
-    super(pos, new Vec(0, 0), callback);
+  constructor(pos, text, style, events) {
+    super(pos, new Vec(0, 0), events);
 
     this.defaultStyle.text = {
-      fill: 255,
-      stroke: 0,
+      fill: "rgba(255, 255, 255, 1)",
+      stroke: "rgba(0, 0, 0, 1)",
       font: "16px monospace",
       textAlign: ["left", "top"],
     };
@@ -25,6 +25,7 @@ class ButtonText extends ButtonBase {
     super.render();
     
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
+    
     renderer.text(this.text, this.pos._add(this.style.padding));
   }
 }
