@@ -5,6 +5,7 @@ class UIElementBase {
     this.events = events;
 
     this.hovered = false;
+    this.forceHover = false;
 
     this.defaultStyle = {
       padding: 0,
@@ -59,6 +60,8 @@ class UIElementBase {
       this.hovered = true;
       nde.hoveredUIElement = this;
     }
+
+    if (this.forceHover) this.hovered = true;
 
     renderer.applyStyles(this.hovered ? this.style.hover : this.style);
     

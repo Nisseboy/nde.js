@@ -17,13 +17,8 @@ class SceneMainMenu extends Scene {
     let rangeStyle = {
       padding: 10, 
 
-      range: {
-        
-      },
-
-      hover: {
-        
-      },
+      range: {},
+      hover: { range: {fill: "rgba(255, 0, 0, 1)", stroke: "rgba(255, 0, 0, 1)"}},
     };
     this.buttons = [
       new ButtonImage(new Vec(50, 50), new Vec(50, 50), tex["duck/1"], {padding: 10, image: {imageSmoothing: false}, hover: {fill: [255, 0, 0]}}, {mousedown: [function () { 
@@ -38,7 +33,7 @@ class SceneMainMenu extends Scene {
       new ButtonText(new Vec(50, 350), "Noise", buttonStyle, {mousedown: [function () {
         nde.transition = new TransitionNoise(scenes.game, new TimerTime(0.2));
       }]}),
-      new RangeBase(new Vec(50, 450), new Vec(250, 50), rangeStyle, 99, 100, 99.5, {change: [function (value) {
+      new RangeFill(new Vec(50, 450), new Vec(250, 50), rangeStyle, 50, 100, 75, {change: [function (value) {
         console.log(value);
         
       }]}),

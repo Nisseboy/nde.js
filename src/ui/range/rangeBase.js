@@ -3,11 +3,11 @@ class RangeBase extends UIElementBase {
     super(pos, size, events);
 
     this.defaultStyle.range = {
-      fill: "rgba(255, 255, 255, 1)",
-      stroke: "rgba(255, 255, 255, 1)",
+
     };
     
     this.fillStyle(style);
+    
 
     this.rangeSize = new Vec(size.y, size.y);
 
@@ -22,6 +22,8 @@ class RangeBase extends UIElementBase {
     this.funcB = e=>this.mouseup(e);
 
     this.registerEvent("mousedown", e=>{
+      this.forceHover = true;
+
       this.mousemove(e);
 
       nde.registerEvent("mousemove", this.funcA);
@@ -41,6 +43,8 @@ class RangeBase extends UIElementBase {
   }
 
   mouseup(e) {
+    this.forceHover = false;
+
     nde.unregisterEvent("mousemove", this.funcA);
     nde.unregisterEvent("mouseup", this.funcB);
 
@@ -50,9 +54,5 @@ class RangeBase extends UIElementBase {
   render() {
     super.render();  
     this.rendererTransform = renderer.getTransform();
-
-    renderer.applyStyles(this.hovered ? this.style.hover.range : this.style.range);
-
-    if (this.value > this.min) renderer.rect(this.pos._add(this.style.padding), this.rangeSize);   
   }
 }

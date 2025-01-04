@@ -17,6 +17,7 @@ files = [
   "src/ui/button/buttonText.js",
   "src/ui/button/buttonImage.js",
   "src/ui/range/rangeBase.js",
+  "src/ui/range/rangeFill.js",
 
   "src/timers/timerBase.js",
   "src/timers/timerFrames.js",
