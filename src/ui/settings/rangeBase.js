@@ -1,9 +1,10 @@
-class RangeBase extends UIElementBase {
+class RangeBase extends UIElementSetting {
   constructor(pos, size, style, min, max, value, events) {
-    super(pos, size, events);
+    super(pos, size, events, value);
 
     this.defaultStyle.range = {
-
+      fill: "rgba(255, 255, 255, 1)",
+      stroke: "rgba(255, 255, 255, 1)",
     };
     
     this.fillStyle(style);
@@ -13,8 +14,7 @@ class RangeBase extends UIElementBase {
 
     this.min = min;
     this.max = max;
-    this.value = value;
-    this.rangeSize.x = (value - min) / (max - min) * size.x;
+    this.setValue(value);
 
     this.rendererTransform = undefined;
 
@@ -38,8 +38,7 @@ class RangeBase extends UIElementBase {
     let transformedMousePoint = mousePoint.matrixTransform(this.rendererTransform.inverse());
     
     let progress = Math.min(Math.max((transformedMousePoint.x - this.pos.x - this.style.padding) / this.size.x, 0), 1);
-    this.value = progress * (this.max - this.min) + this.min;
-    this.rangeSize.x = progress * this.size.x;
+    this.setValue(progress * (this.max - this.min) + this.min);
   }
 
   mouseup(e) {
@@ -48,11 +47,25 @@ class RangeBase extends UIElementBase {
     nde.unregisterEvent("mousemove", this.funcA);
     nde.unregisterEvent("mouseup", this.funcB);
 
-    this.fireEvent("change", this.value);
+    this.change();
+  }
+
+  setValue(newValue) {
+    super.setValue(newValue);
+
+    this.rangeSize.x = (this.value - this.min) / (this.max - this.min) * this.size.x;
   }
 
   render() {
     super.render();  
     this.rendererTransform = renderer.getTransform();
+
+    this.renderContent();
+  }
+
+  renderContent() {
+    renderer.applyStyles(this.hovered ? this.style.hover.range : this.style.range);
+
+    if (this.value > this.min) renderer.rect(this.pos._add(this.style.padding), this.rangeSize);   
   }
 }

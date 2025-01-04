@@ -696,6 +696,7 @@ class UIElementBase {
     this.events = events;
 
     this.hovered = false;
+    this.forceHover = false;
 
     this.defaultStyle = {
       padding: 0,
@@ -751,6 +752,8 @@ class UIElementBase {
       nde.hoveredUIElement = this;
     }
 
+    if (this.forceHover) this.hovered = true;
+
     renderer.applyStyles(this.hovered ? this.style.hover : this.style);
     
     renderer.rect(this.pos, this.size._add(this.style.padding * 2));    
@@ -761,7 +764,7 @@ class UIElementBase {
 
 
 
-/* src/ui/button/buttonBase.js */
+/* src/ui/buttonBase.js */
 class ButtonBase extends UIElementBase {
   constructor(pos, size, events) {
     super(pos, size, events);
@@ -776,7 +779,7 @@ class ButtonBase extends UIElementBase {
 
 
 
-/* src/ui/button/buttonText.js */
+/* src/ui/buttonText.js */
 class ButtonText extends ButtonBase {
   constructor(pos, text, style, events) {
     super(pos, new Vec(0, 0), events);
@@ -813,7 +816,7 @@ class ButtonText extends ButtonBase {
 
 
 
-/* src/ui/button/buttonImage.js */
+/* src/ui/buttonImage.js */
 class ButtonImage extends ButtonBase {
   constructor(pos, size, img, style, events) {
     super(pos, size, events);
@@ -840,10 +843,89 @@ class ButtonImage extends ButtonBase {
 
 
 
-/* src/ui/range/rangeBase.js */
-class RangeBase extends UIElementBase {
-  constructor(pos, size, style, min, max, value, events) {
+/* src/ui/settings/UIElementSetting.js */
+class UIElementSetting extends UIElementBase {
+  constructor(pos, size, events, value) {
     super(pos, size, events);
+
+    this.value = value;
+  }
+
+  setValue(newValue) {
+    let old = this.value;
+    this.value = newValue;
+
+    if (old != this.value) this.fireEvent("input", this.value);
+  }
+
+  change() {
+    this.fireEvent("change", this.value);
+  }
+}
+
+
+
+
+
+/* src/ui/settings/checkboxBase.js */
+class CheckboxBase extends UIElementSetting {
+  constructor(pos, size, style, value, events) {
+    super(pos, size, events, value);
+
+
+    this.defaultStyle.checkbox = {
+      fill: "rgba(255, 255, 255, 1)",
+      stroke: "rgba(255, 255, 255, 1)",
+    };
+    
+    this.fillStyle(style);
+    
+    this.setValue(value);
+
+    this.funcA = e=>this.mouseup2(e);
+    this.registerEvent("mouseup", e=>{this.mouseup1(e)});
+    this.registerEvent("mousedown", e=>{
+      this.forceHover = true;
+
+      nde.registerEvent("mouseup", this.funcA);
+    });
+  }
+
+  mouseup1(e) {
+    if (!this.forceHover) return;
+
+    this.setValue(!this.value);
+    this.change();
+  }
+
+  mouseup2(e) {
+    this.forceHover = false;
+
+    nde.unregisterEvent("mouseup", this.funcA);
+  }
+
+  render() {
+    super.render();  
+    this.rendererTransform = renderer.getTransform();
+
+    this.renderContent();
+  }
+
+  renderContent() {
+    renderer.applyStyles(this.hovered ? this.style.hover.checkbox : this.style.checkbox);
+
+    if (this.value) renderer.rect(this.pos._add(this.style.padding), this.size);   
+  }
+}
+
+
+
+
+
+/* src/ui/settings/rangeBase.js */
+class RangeBase extends UIElementSetting {
+  constructor(pos, size, style, min, max, value, events) {
+    super(pos, size, events, value);
 
     this.defaultStyle.range = {
       fill: "rgba(255, 255, 255, 1)",
@@ -851,13 +933,13 @@ class RangeBase extends UIElementBase {
     };
     
     this.fillStyle(style);
+    
 
     this.rangeSize = new Vec(size.y, size.y);
 
     this.min = min;
     this.max = max;
-    this.value = value;
-    this.rangeSize.x = (value - min) / (max - min) * size.x;
+    this.setValue(value);
 
     this.rendererTransform = undefined;
 
@@ -865,6 +947,8 @@ class RangeBase extends UIElementBase {
     this.funcB = e=>this.mouseup(e);
 
     this.registerEvent("mousedown", e=>{
+      this.forceHover = true;
+
       this.mousemove(e);
 
       nde.registerEvent("mousemove", this.funcA);
@@ -879,21 +963,32 @@ class RangeBase extends UIElementBase {
     let transformedMousePoint = mousePoint.matrixTransform(this.rendererTransform.inverse());
     
     let progress = Math.min(Math.max((transformedMousePoint.x - this.pos.x - this.style.padding) / this.size.x, 0), 1);
-    this.value = progress * (this.max - this.min) + this.min;
-    this.rangeSize.x = progress * this.size.x;
+    this.setValue(progress * (this.max - this.min) + this.min);
   }
 
   mouseup(e) {
+    this.forceHover = false;
+
     nde.unregisterEvent("mousemove", this.funcA);
     nde.unregisterEvent("mouseup", this.funcB);
 
-    this.fireEvent("change", this.value);
+    this.change();
+  }
+
+  setValue(newValue) {
+    super.setValue(newValue);
+
+    this.rangeSize.x = (this.value - this.min) / (this.max - this.min) * this.size.x;
   }
 
   render() {
     super.render();  
     this.rendererTransform = renderer.getTransform();
 
+    this.renderContent();
+  }
+
+  renderContent() {
     renderer.applyStyles(this.hovered ? this.style.hover.range : this.style.range);
 
     if (this.value > this.min) renderer.rect(this.pos._add(this.style.padding), this.rangeSize);   
@@ -1446,6 +1541,7 @@ class NDE {
     if (this.latestDts.length > 10) this.latestDts.shift();
     let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
     
+
     this.hoveredUIElement = undefined;
     this.debugStats = {};
     this.debugStats["frameTime"] = Math.round(averageDt);

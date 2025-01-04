@@ -326,6 +326,7 @@ class NDE {
     if (this.latestDts.length > 10) this.latestDts.shift();
     let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
     
+
     this.hoveredUIElement = undefined;
     this.debugStats = {};
     this.debugStats["frameTime"] = Math.round(averageDt);

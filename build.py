@@ -12,12 +12,13 @@ files = [
   "src/renderers/rendererCanvas.js",
 
   "src/ui/UIElementBase.js",
+  "src/ui/buttonBase.js",
+  "src/ui/buttonText.js",
+  "src/ui/buttonImage.js",
 
-  "src/ui/button/buttonBase.js",
-  "src/ui/button/buttonText.js",
-  "src/ui/button/buttonImage.js",
-  "src/ui/range/rangeBase.js",
-  "src/ui/range/rangeFill.js",
+  "src/ui/settings/UIElementSetting.js",
+  "src/ui/settings/checkboxBase.js",
+  "src/ui/settings/rangeBase.js",
 
   "src/timers/timerBase.js",
   "src/timers/timerFrames.js",
