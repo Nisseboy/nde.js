@@ -869,19 +869,38 @@ class UIElementSetting extends UIElementBase {
 
 /* src/ui/settings/settingCollection.js */
 class SettingCollection extends UIElementBase {
-  constructor(pos, value, elementStyle, settingsTemplate, events) {
+  constructor(pos, value, style, settingsTemplate, events) {
     super(pos, new Vec(0, 0), events);
 
     this.value = value;
-    this.elementStyle = elementStyle;
+
+    this.defaultStyle = {
+      hover: {}, //Irrelevant
+
+      size: new Vec(500, 50),
+      gap: 10,
+      settingXOffset: 400,
+
+      text: {
+        font: "50px monospace",
+        textAlign: ["left", "top"],
+        fill: "rgba(255, 255, 255, 1)",
+      },
+
+      setting: {
+        padding: 0,
+      },
+    };
+    this.style = style;
+    this.fillStyle(style);
     this.settingsTemplate = settingsTemplate;
 
     this.elements = {};
 
     let y = 0;
     for (let i in settingsTemplate) {
-      let setting = settingsTemplate[i];      
-      this.elements[i] = new setting.type(new Vec(pos.x + elementStyle.settingXOffset, pos.y + y), setting.size?setting.size:this.elementStyle.size, setting.style?setting.style:elementStyle, ...setting.args, {
+      let setting = settingsTemplate[i];            
+      this.elements[i] = new setting.type(new Vec(pos.x + (setting.settingXOffset != undefined?setting.settingXOffset:style.settingXOffset), pos.y + y), setting.size?setting.size:this.style.size, setting.style?setting.style.setting:style.setting, ...setting.args, {
         change: [value => {
           this.value[i] = value;
           this.fireEvent("change", this.value);
@@ -892,7 +911,7 @@ class SettingCollection extends UIElementBase {
 
       this.value[i] = this.elements[i].value;
 
-      y += (setting.size?setting.size.y:elementStyle.size.y) + (setting.gap != undefined?setting.gap:elementStyle.gap) + elementStyle.padding * 2;
+      y += (setting.size?setting.size.y:style.size.y) + (setting.gap != undefined?setting.gap:style.gap) + style.setting.padding * 2;
       
     }
   }
@@ -901,9 +920,8 @@ class SettingCollection extends UIElementBase {
     for (let i in this.elements) {
       let elem = this.elements[i];
 
-      renderer.set("fill", "rgba(255, 255, 255, 1)");
-      renderer.set("font", `${this.elementStyle.size.y}px monospace`);
-      renderer.text(i, new Vec(this.pos.x, elem.pos.y));
+      renderer.applyStyles(this.style.text);
+      renderer.text(this.settingsTemplate[i].name || i, new Vec(this.pos.x, elem.pos.y));
 
       elem.render();
     }
