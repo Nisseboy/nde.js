@@ -17,6 +17,7 @@ files = [
   "src/ui/buttonImage.js",
 
   "src/ui/settings/UIElementSetting.js",
+  "src/ui/settings/settingCollection.js",
   "src/ui/settings/checkboxBase.js",
   "src/ui/settings/rangeBase.js",
 
