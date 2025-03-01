@@ -139,66 +139,7 @@ class NDE {
         this.fireEvent("afterSetup");
 
 
-        
-        {
-          window.addEventListener("resize", e => {this.resize(e)});
-
-          document.addEventListener("keydown", e => {
-            if (this.debug) console.log(e.key);
-          
-            this.pressed[e.key.toLowerCase()] = true;
-          
-            this.fireEvent("keydown", e);
-            
-          });
-          document.addEventListener("keyup", e => {
-            delete this.pressed[e.key.toLowerCase()];
-          
-            this.fireEvent("keyup", e);
-          });
-          
-          document.addEventListener("mousemove", e => {
-            this.mouse.x = e.clientX / this.mainImg.size.x * this.w;
-            this.mouse.y = e.clientY / this.mainImg.size.x * this.w;
-
-
-            if (this.hoveredUIElement) {
-              if (!this.transition) this.hoveredUIElement.fireEvent("mousemove", e);
-            }
-            
-            this.fireEvent("mousemove", e);
-          });
-          document.addEventListener("mousedown", e => {
-            this.pressed["mouse" + e.button] = true;
-
-            if (this.hoveredUIElement) {
-              if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
-              return;
-            }
-          
-            if (this.debug) console.log("mouse" + e.button);
-            this.fireEvent("mousedown", e);
-          });
-          document.addEventListener("mouseup", e => {
-            delete this.pressed["mouse" + e.button];
-
-            if (this.hoveredUIElement) {
-              if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
-            }
-          
-            this.fireEvent("mouseup", e);
-          });
-          document.addEventListener("wheel", e => {
-            this.fireEvent("wheel", e);
-          });
-
-          
-          window.oncontextmenu = (e) => {
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            return false;
-          };
-        }
+        this.setupHandlers();
 
       
         this.lastFrameTime = performance.now();
@@ -216,6 +157,66 @@ class NDE {
       
       i++;
     }, 50);
+  }
+
+  setupHandlers() {
+    window.addEventListener("resize", e => {this.resize(e)});
+
+    document.addEventListener("keydown", e => {
+      if (this.debug) console.log(e.key);
+    
+      this.pressed[e.key.toLowerCase()] = true;
+    
+      this.fireEvent("keydown", e);
+      
+    });
+    document.addEventListener("keyup", e => {
+      delete this.pressed[e.key.toLowerCase()];
+    
+      this.fireEvent("keyup", e);
+    });
+    
+    document.addEventListener("mousemove", e => {
+      this.mouse.x = e.clientX / this.mainImg.size.x * this.w;
+      this.mouse.y = e.clientY / this.mainImg.size.x * this.w;
+
+
+      if (this.hoveredUIElement) {
+        if (!this.transition) this.hoveredUIElement.fireEvent("mousemove", e);
+      }
+      
+      this.fireEvent("mousemove", e);
+    });
+    document.addEventListener("mousedown", e => {
+      this.pressed["mouse" + e.button] = true;
+
+      if (this.hoveredUIElement) {
+        if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
+        return;
+      }
+    
+      if (this.debug) console.log("mouse" + e.button);
+      this.fireEvent("mousedown", e);
+    });
+    document.addEventListener("mouseup", e => {
+      delete this.pressed["mouse" + e.button];
+
+      if (this.hoveredUIElement) {
+        if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
+      }
+    
+      this.fireEvent("mouseup", e);
+    });
+    document.addEventListener("wheel", e => {
+      this.fireEvent("wheel", e);
+    });
+
+    
+    window.oncontextmenu = (e) => {
+      e.preventDefault(); 
+      e.stopPropagation(); 
+      return false;
+    };
   }
 
   setScene(newScene) {
@@ -367,14 +368,27 @@ class NDE {
     this.renderer.display(this.mainImg);
   }
 
+  loadAssetHelper(asset, actualAsset, path) {
+    asset.loading = true;
+    asset.path = path;
+
+    actualAsset.src = path;
+
+    this.unloadedAssets.push(asset);
+
+    actualAsset.onerror = e => {
+      console.error(`"${path}" not found`);
+
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+    };
+  }
+
   loadImg(path) {
     let img = new Img(new Vec(1, 1));
-    img.loading = true;
-    img.path = path;
-    this.unloadedAssets.push(img);
-
     let image = new Image();
-    image.src = path;
+
+    this.loadAssetHelper(img, image, path);
+
 
     image.onload = e => {
       img.resize(new Vec(image.width, image.height));
@@ -383,12 +397,23 @@ class NDE {
 
       this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
     };
-    image.onerror = e => {
-      console.error(`"${path}" not found`);
-
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
-    };
 
     return img;
+  }
+
+  loadAud(path) {
+    let aud = new Aud();
+
+    this.loadAssetHelper(aud, aud.audio, path);
+
+
+    aud.audio.addEventListener("canplaythrough", () => {
+      aud.loading = false;
+      aud.duration = aud.audio.duration;
+
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud));
+    });
+
+    return aud;
   }
 }

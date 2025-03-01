@@ -8,3 +8,4 @@ function preloadTextures() {
     tex[texturePaths[i]] = nde.loadImg("assets/textures/" + texturePaths[i] + ".png");
   }
 }
+

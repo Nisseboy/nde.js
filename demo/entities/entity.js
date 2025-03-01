@@ -3,11 +3,11 @@ class Entity {
     this.pos = pos;
     this.dir = 0;
     this.speedMult = 1;
+    this.movement = new Vec(0, 0);
 
     this.type = type;
 
     this.size = undefined;
-    this.movement = undefined;
     this.stepCooldown = undefined;
     this.currentStepCooldown = undefined;
     this.speed = undefined;

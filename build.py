@@ -7,6 +7,7 @@ files = [
   
   "src/assets/asset.js",
   "src/assets/img.js",
+  "src/assets/aud.js",
 
   "src/renderers/rendererBase.js",
   "src/renderers/rendererCanvas.js",

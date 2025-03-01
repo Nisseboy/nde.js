@@ -11,7 +11,7 @@ document.body.onload = e => {
 
   nde.debug = true;
 
-  //targetFPS = 60;
+  //nde.targetFPS = 60;
 
   nde.controls = {
     "Move Up": "w",
