@@ -1,6 +1,6 @@
-class RangeBase extends UIElementSetting {
-  constructor(pos, size, style, min, max, value, events) {
-    super(pos, size, events, value);
+class SettingRange extends SettingBase {
+  constructor(pos, size, style, args, events) {
+    super(pos, size, events, args.default);
 
     this.defaultStyle.range = {
       fill: "rgba(255, 255, 255, 1)",
@@ -12,9 +12,9 @@ class RangeBase extends UIElementSetting {
 
     this.rangeSize = new Vec(size.y, size.y);
 
-    this.min = min;
-    this.max = max;
-    this.setValue(value);
+    this.min = args.min;
+    this.max = args.max;
+    this.setValue(args.default);
 
     this.rendererTransform = undefined;
 
@@ -32,8 +32,6 @@ class RangeBase extends UIElementSetting {
   }
 
   mousemove(e) {
-    if (!nde.pressed["mouse0"]) return;
-
     let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
     let transformedMousePoint = mousePoint.matrixTransform(this.rendererTransform.inverse());
     

@@ -47,10 +47,10 @@ class SceneSettings extends Scene {
       }]}),
 
       new SettingCollection(new Vec(50, 150), ndeSettings, settingCollectionStyle, {
-        overrideBackground: {type: CheckboxBase, args: [false], size: new Vec(50, 50), name: "Override Background"},
-        backgroundR: {type: RangeBase, args: [0, 255, 19], name: "Background R"},
-        backgroundG: {type: RangeBase, args: [0, 255, 19], name: "Background G", style: {setting: {padding: 10, hover: {range: {fill: "rgba(0, 255, 0, 1)", stroke: "rgba(0, 255, 0, 1)"}}}}},
-        backgroundB: {type: RangeBase, args: [0, 255, 19], name: "Background B", style: {setting: {padding: 10, hover: {range: {fill: "rgba(0, 0, 255, 1)", stroke: "rgba(0, 0, 255, 1)"}}}}},
+        overrideBackground: {type: SettingCheckbox, name: "Override Background",  args: {default: false},                style: {size: new Vec(50, 50)}},
+        backgroundR:        {type: SettingRange,    name: "Background R",         args: {default: 19, min: 0, max: 255}},
+        backgroundG:        {type: SettingRange,    name: "Background G",         args: {default: 19, min: 0, max: 255}, style: {setting: {padding: 10, hover: {range: {fill: "rgba(0, 255, 0, 1)", stroke: "rgba(0, 255, 0, 1)"}}}}},
+        backgroundB:        {type: SettingRange,    name: "Background B",         args: {default: 19, min: 0, max: 255}, style: {setting: {padding: 10, hover: {range: {fill: "rgba(0, 0, 255, 1)", stroke: "rgba(0, 0, 255, 1)"}}}}},
       }, {
         change: [function (value) {
           ndeSettings.backgroundR = Math.floor(ndeSettings.backgroundR);
@@ -59,7 +59,7 @@ class SceneSettings extends Scene {
           localStorage.setItem("ndeSettings", JSON.stringify(ndeSettings));
         }],
       }),
-    ];
+    ];    
   }
 
   keydown(e) {

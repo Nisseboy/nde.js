@@ -17,10 +17,10 @@ files = [
   "src/ui/buttonText.js",
   "src/ui/buttonImage.js",
 
-  "src/ui/settings/UIElementSetting.js",
   "src/ui/settings/settingCollection.js",
-  "src/ui/settings/checkboxBase.js",
-  "src/ui/settings/rangeBase.js",
+  "src/ui/settings/SettingBase.js",
+  "src/ui/settings/SettingCheckbox.js",
+  "src/ui/settings/SettingRange.js",
 
   "src/timers/timerBase.js",
   "src/timers/timerFrames.js",

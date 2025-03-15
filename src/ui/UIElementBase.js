@@ -20,10 +20,11 @@ class UIElementBase {
   fillStyle(style) {
     function f(style, parent, defaultStyle) {
       for (let i in defaultStyle) {
+        
         let s = style[i];
         parent[i] = s;
 
-        if (typeof s == "object" && !Array.isArray(s) && i != "hover") {
+        if (typeof s == "object" && !(s instanceof Vec) && !Array.isArray(s) && i != "hover") {
           f(s, parent[i], defaultStyle[i]);
         } else {
           if (parent[i] == undefined) parent[i] = defaultStyle[i];

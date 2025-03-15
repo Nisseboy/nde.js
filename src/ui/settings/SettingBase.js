@@ -1,4 +1,4 @@
-class UIElementSetting extends UIElementBase {
+class SettingBase extends UIElementBase {
   constructor(pos, size, events, value) {
     super(pos, size, events);
 

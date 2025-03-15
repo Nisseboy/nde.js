@@ -1,6 +1,6 @@
-class CheckboxBase extends UIElementSetting {
-  constructor(pos, size, style, value, events) {
-    super(pos, size, events, value);
+class SettingCheckbox extends SettingBase {
+  constructor(pos, size, style, args, events) {
+    super(pos, size, events, args.default);
 
 
     this.defaultStyle.checkbox = {
@@ -10,7 +10,7 @@ class CheckboxBase extends UIElementSetting {
     
     this.fillStyle(style);
     
-    this.setValue(value);
+    this.setValue(args.default);
 
     this.funcA = e=>this.mouseup2(e);
     this.registerEvent("mouseup", e=>{this.mouseup1(e)});

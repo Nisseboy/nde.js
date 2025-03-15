@@ -188,14 +188,14 @@ class NDE {
       this.fireEvent("mousemove", e);
     });
     document.addEventListener("mousedown", e => {
-      this.pressed["mouse" + e.button] = true;
-
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
         return;
       }
     
       if (this.debug) console.log("mouse" + e.button);
+
+      this.pressed["mouse" + e.button] = true;
       this.fireEvent("mousedown", e);
     });
     document.addEventListener("mouseup", e => {
@@ -204,7 +204,7 @@ class NDE {
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
       }
-    
+      
       this.fireEvent("mouseup", e);
     });
     document.addEventListener("wheel", e => {
