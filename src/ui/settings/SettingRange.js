@@ -5,6 +5,9 @@ class SettingRange extends SettingBase {
     this.defaultStyle.range = {
       fill: "rgba(255, 255, 255, 1)",
       stroke: "rgba(255, 255, 255, 1)",
+
+      numberMargin: 0.1,
+      numberWidth: 1,
     };
     
     this.fillStyle(style);

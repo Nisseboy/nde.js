@@ -29,8 +29,14 @@ class SettingCollection extends UIElementBase {
 
     let y = 0;
     for (let i in settingsTemplate) {
-      let setting = settingsTemplate[i];            
-      this.elements[i] = new setting.type(new Vec(pos.x + (setting.settingXOffset != undefined?setting.settingXOffset:style.settingXOffset), pos.y + y), (setting.style?.size)?setting.style.size:this.style.size, (setting.style?.setting)?setting.style.setting:style.setting, setting.args, {
+      let setting = settingsTemplate[i];   
+
+      let settingStyle = style;
+      if (setting.style) {
+        settingStyle = Object.assign({}, style, setting.style);
+      }
+      
+      this.elements[i] = new setting.type(new Vec(pos.x + settingStyle.settingXOffset, pos.y + y), settingStyle.size, settingStyle.setting, setting.args, {
         change: [value => {
           this.value[i] = value;
           this.fireEvent("change", this.value);
