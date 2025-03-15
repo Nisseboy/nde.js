@@ -25,8 +25,17 @@ class SceneSettings extends Scene {
         font: "50px monospace",
       },
 
+
       setting: {
         padding: 10, 
+
+        range: {
+          text: {
+            margin: 10,
+            width: 80,
+          },
+        },
+
         hover: { 
           stroke: "rgba(255, 0, 0, 1)", 
           checkbox: {
@@ -49,14 +58,16 @@ class SceneSettings extends Scene {
       new SettingCollection(new Vec(50, 150), ndeSettings, settingCollectionStyle, {
         overrideBackground: {type: SettingCheckbox, name: "Override Background",  args: {default: false},                style: {size: new Vec(50, 50)}},
         backgroundR:        {type: SettingRange,    name: "Background R",         args: {default: 19, min: 0, max: 255}},
-        backgroundG:        {type: SettingRange,    name: "Background G",         args: {default: 19, min: 0, max: 255}, style: {setting: {padding: 10, hover: {range: {fill: "rgba(0, 255, 0, 1)", stroke: "rgba(0, 255, 0, 1)"}}}}},
-        backgroundB:        {type: SettingRange,    name: "Background B",         args: {default: 19, min: 0, max: 255}, style: {setting: {padding: 10, hover: {range: {fill: "rgba(0, 0, 255, 1)", stroke: "rgba(0, 0, 255, 1)"}}}}},
+        backgroundG:        {type: SettingRange,    name: "Background G",         args: {default: 19, min: 0, max: 255}, style: {setting: {hover: {range: {fill: "rgba(0, 255, 0, 1)", stroke: "rgba(0, 255, 0, 1)"}}}}},
+        backgroundB:        {type: SettingRange,    name: "Background B",         args: {default: 19, min: 0, max: 255}, style: {setting: {hover: {range: {fill: "rgba(0, 0, 255, 1)", stroke: "rgba(0, 0, 255, 1)"}}}}},
       }, {
-        change: [function (value) {
+        input: [function (value) {
           ndeSettings.backgroundR = Math.floor(ndeSettings.backgroundR);
           ndeSettings.backgroundG = Math.floor(ndeSettings.backgroundG);
           ndeSettings.backgroundB = Math.floor(ndeSettings.backgroundB);
-          localStorage.setItem("ndeSettings", JSON.stringify(ndeSettings));
+        }],
+        change: [function (value) {
+          localStorage.setItem("ndeSettings", JSON.stringify(ndeSettings));          
         }],
       }),
     ];    

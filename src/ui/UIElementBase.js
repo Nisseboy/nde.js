@@ -18,23 +18,10 @@ class UIElementBase {
   }
 
   fillStyle(style) {
-    function f(style, parent, defaultStyle) {
-      for (let i in defaultStyle) {
-        
-        let s = style[i];
-        parent[i] = s;
+    nestedObjectAssign(this.style, this.defaultStyle, style);
 
-        if (typeof s == "object" && !(s instanceof Vec) && !Array.isArray(s) && i != "hover") {
-          f(s, parent[i], defaultStyle[i]);
-        } else {
-          if (parent[i] == undefined) parent[i] = defaultStyle[i];
-        }
-      }
-    }
-
-    f(style, this.style, this.defaultStyle);
-
-    f(style.hover, this.style.hover, this.style);
+    delete this.style.hover;
+    this.style.hover = nestedObjectAssign({}, this.style, style.hover);
   }
 
   registerEvent(eventName, func) {
@@ -47,7 +34,7 @@ class UIElementBase {
       for (let e of events) e(...args);
   }
 
-  render() {
+  checkHovered() {
     this.hovered = false;
     
     let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
@@ -63,9 +50,35 @@ class UIElementBase {
     }
 
     if (this.forceHover) this.hovered = true;
+  }
 
+  render() {
     renderer.applyStyles(this.hovered ? this.style.hover : this.style);
     
     renderer.rect(this.pos, this.size._add(this.style.padding * 2));    
   }
+}
+
+
+
+
+function nestedObjectAssign(dest, target, source) {  
+  Object.assign(dest, target, source);
+  if (target == undefined || source == undefined) return dest;
+
+  for (let key in dest) {
+    let ob = dest[key];
+    
+    if (ob instanceof Vec) {
+      dest[key] = new Vec().from(ob);
+    }
+    else if (Array.isArray(ob)) {
+      
+    }
+    else if (ob instanceof Object) {
+      dest[key] = nestedObjectAssign({}, target[key], source[key]);
+    }
+  }
+
+  return dest;
 }

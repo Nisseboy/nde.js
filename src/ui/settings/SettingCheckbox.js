@@ -35,6 +35,7 @@ class SettingCheckbox extends SettingBase {
   }
 
   render() {
+    super.checkHovered();
     super.render();  
     this.rendererTransform = renderer.getTransform();
 

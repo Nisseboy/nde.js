@@ -31,7 +31,7 @@ class SceneMainMenu extends Scene {
       new ButtonText(new Vec(50, 550), "Settings", buttonStyle, {mousedown: [function () {
         nde.transition = new TransitionSlide(scenes.settings, new TimerTime(0.2));
       }]}),
-    ];
+    ];    
   }
 
   update(dt) {

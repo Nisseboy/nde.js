@@ -4,6 +4,7 @@ class ButtonBase extends UIElementBase {
   }
 
   render() {
+    super.checkHovered();
     super.render();  
   }
 }

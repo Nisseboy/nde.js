@@ -9,7 +9,7 @@ class SettingCollection extends UIElementBase {
 
       size: new Vec(500, 50),
       gap: 10,
-      settingXOffset: 400,
+      settingXOffset: 600,
 
       text: {
         font: "50px monospace",
@@ -21,9 +21,10 @@ class SettingCollection extends UIElementBase {
         padding: 0,
       },
     };
-    this.style = style;
     this.fillStyle(style);
     this.settingsTemplate = settingsTemplate;
+
+    
 
     this.elements = {};
 
@@ -32,11 +33,15 @@ class SettingCollection extends UIElementBase {
       let setting = settingsTemplate[i];   
 
       let settingStyle = style;
-      if (setting.style) {
-        settingStyle = Object.assign({}, style, setting.style);
+      if (setting.style) {        
+        settingStyle = nestedObjectAssign({}, style, setting.style);
       }
       
       this.elements[i] = new setting.type(new Vec(pos.x + settingStyle.settingXOffset, pos.y + y), settingStyle.size, settingStyle.setting, setting.args, {
+        input: [value => {
+          this.value[i] = value;
+          this.fireEvent("input", this.value);
+        }],
         change: [value => {
           this.value[i] = value;
           this.fireEvent("change", this.value);
@@ -47,15 +52,15 @@ class SettingCollection extends UIElementBase {
 
       this.value[i] = this.elements[i].value;
 
-      y += (setting.size?setting.size.y:style.size.y) + (setting.gap != undefined?setting.gap:style.gap) + style.setting.padding * 2;
+      
+      y += settingStyle.size.y + settingStyle.gap + settingStyle.setting.padding * 2;
       
     }
   }
 
   render() {
     for (let i in this.elements) {
-      let elem = this.elements[i];
-
+      let elem = this.elements[i];      
       renderer.applyStyles(this.style.text);
       renderer.text(this.settingsTemplate[i].name || i, new Vec(this.pos.x, elem.pos.y));
 
@@ -63,3 +68,4 @@ class SettingCollection extends UIElementBase {
     }
   }
 }
+
