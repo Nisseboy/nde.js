@@ -37,16 +37,20 @@ class SettingCollection extends UIElementBase {
         settingStyle = nestedObjectAssign({}, style, setting.style);
       }
       
-      this.elements[i] = new setting.type(new Vec(pos.x + settingStyle.settingXOffset, pos.y + y), settingStyle.size, settingStyle.setting, setting.args, {
-        input: [value => {
-          this.value[i] = value;
-          this.fireEvent("input", this.value);
-        }],
-        change: [value => {
-          this.value[i] = value;
-          this.fireEvent("change", this.value);
-        }],
+      let events = setting.events || {};
+
+      if (!events.input) events.input = [];
+      if (!events.change) events.change = [];
+      events.input.push(value => {
+        this.value[i] = value;
+        this.fireEvent("input", this.value);
       });
+      events.change.push(value => {
+        this.value[i] = value;
+        this.fireEvent("change", this.value);
+      });
+      
+      this.elements[i] = new setting.type(new Vec(pos.x + settingStyle.settingXOffset, pos.y + y), settingStyle.size, settingStyle.setting, setting.args, events);
 
       if (value[i] != undefined) this.elements[i].setValue(value[i]);
 
