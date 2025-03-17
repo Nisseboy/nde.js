@@ -5,6 +5,8 @@ class SceneSettings extends Scene {
     this.cam = new Camera(new Vec(800, 450));
     this.cam.w = 1600;
     this.cam.renderW = nde.w;
+
+    this.start(); //To initialize settings
   }
 
   start() {

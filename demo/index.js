@@ -2,7 +2,7 @@ let nde;
 let scenes;
 let renderer;
 
-let ndeSettings = JSON.parse(localStorage.getItem("ndeSettings") || '{"overrideBackground":false,"backgroundR":19,"backgroundG":19,"backgroundB":19}');
+let ndeSettings = JSON.parse(localStorage.getItem("ndeSettings")) || {};
 
 document.body.onload = e => {
   nde = new NDE(document.getElementsByTagName("main")[0]);
