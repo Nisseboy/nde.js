@@ -62,9 +62,7 @@ class SceneSettings extends Scene {
         backgroundB:        {type: SettingRange,    name: "Background B",         args: {default: 19, min: 0, max: 255}, style: {setting: {hover: {range: {fill: "rgba(0, 0, 255, 1)", stroke: "rgba(0, 0, 255, 1)"}}}}},
       }, {
         input: [function (value) {
-          ndeSettings.backgroundR = Math.floor(ndeSettings.backgroundR);
-          ndeSettings.backgroundG = Math.floor(ndeSettings.backgroundG);
-          ndeSettings.backgroundB = Math.floor(ndeSettings.backgroundB);
+          
         }],
         change: [function (value) {
           localStorage.setItem("ndeSettings", JSON.stringify(ndeSettings));          
