@@ -51,8 +51,7 @@ document.body.onload = e => {
   });
 
   nde.registerEvent("resize", e => {
+    return nde.w * ndeSettings.renderResolution / 100;
     //return 432; //new width
-    
-    return nde.w;
   });
 };

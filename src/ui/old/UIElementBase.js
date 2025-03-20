@@ -58,27 +58,3 @@ class UIElementBase {
     renderer.rect(this.pos, this.size._add(this.style.padding * 2));    
   }
 }
-
-
-
-
-function nestedObjectAssign(dest, target, source) {  
-  Object.assign(dest, target, source);
-  if (target == undefined || source == undefined) return dest;
-
-  for (let key in dest) {
-    let ob = dest[key];
-    
-    if (ob instanceof Vec) {
-      dest[key] = new Vec().from(ob);
-    }
-    else if (Array.isArray(ob)) {
-      
-    }
-    else if (ob instanceof Object) {
-      dest[key] = nestedObjectAssign({}, target[key], source[key]);
-    }
-  }
-
-  return dest;
-}

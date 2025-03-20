@@ -1,0 +1,3 @@
+class UISettingRGB extends UISettingCollection {
+  
+}

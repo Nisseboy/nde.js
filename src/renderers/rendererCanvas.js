@@ -56,7 +56,13 @@ class RendererCanvas extends RendererBase {
   }
 
   measureText(text) {
-    return this.img.ctx.measureText(text);
+    text = text + "";
+
+    let size = this.img.ctx.measureText(text);
+
+    let lines = text.split("\n").length;
+    
+    return new Vec(size.width, (size.fontBoundingBoxAscent + size.fontBoundingBoxDescent) * lines);
   }
 
   getTransform() {
@@ -87,7 +93,18 @@ class RendererCanvas extends RendererBase {
   }
 
   text(t, pos) {
-    this.img.ctx.fillText(t, pos.x, pos.y);    
+    t = t + "";
+
+    let lines = t.split("\n");
+    let y = 0;
+    let step = 0;
+
+    if (lines.length > 1) step = this.measureText(lines[0]).y;
+    
+    for (let l of lines) {
+      this.img.ctx.fillText(l, pos.x, pos.y + y);   
+      y += step;
+    } 
   }
 
   image(img, pos, size) {

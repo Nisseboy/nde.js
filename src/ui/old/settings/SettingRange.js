@@ -14,8 +14,6 @@ class SettingRange extends SettingBase {
         textAlign: ["right", "middle"],
         fill: "rgba(255, 255, 255, 1)",
       },
-
-      hover: {}
     };
     
     this.fillStyle(style);
