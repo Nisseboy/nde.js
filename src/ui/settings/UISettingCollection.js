@@ -40,7 +40,7 @@ class UISettingCollection extends UISettingBase {
 
       let name = c.name;
       if (name && c.value != undefined) {
-        if (this.value[name]) c.setValue(this.value[name]);
+        if (this.value[name] != undefined) c.setValue(this.value[name]);
         else this.value[name] = c.value;
   
         c.registerEvent("input", value => {
