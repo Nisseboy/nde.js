@@ -60,6 +60,15 @@ class Vec {
     return a + ")";
   }
   /**
+   * Checks if other vector is equal to this vector
+   * 
+   * @param {Vec} other
+   * @return {boolean} isEqual
+   */
+  isEqualTo(other) {
+    return this.x == other.x && this.y == other.y && this.z == other.z && this.w == other.w
+  }
+  /**
    * Sets each axis of this vector to each axis of v
    * 
    * @param {Vec} v

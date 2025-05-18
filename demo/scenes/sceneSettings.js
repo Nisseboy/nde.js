@@ -6,76 +6,11 @@ class SceneSettings extends Scene {
     this.cam.w = 1600;
     this.cam.renderW = nde.w;
 
-    //this.start(); //To initialize settings
+    this.start(); //To initialize settings
   }
 
   start() {
-    /*
-    let buttonStyle = {
-      padding: 10, 
-
-      text: {font: "50px monospace", fill: "rgb(255, 255, 255)"}, 
-      hover: {text: {fill: "rgb(255, 0, 0)"}}
-    };
-
-
-    let settingCollectionStyle = {
-      size: new Vec(500, 50),
-      gap: 10,
-      settingXOffset: 600,
-
-      text: {
-        font: "50px monospace",
-      },
-
-
-      setting: {
-        padding: 10, 
-
-        range: {
-          text: {
-            margin: 10,
-            width: 80,
-          },
-        },
-
-        hover: { 
-          stroke: "rgba(255, 0, 0, 1)", 
-          checkbox: {
-            stroke: "rgba(255, 0, 0, 1)", 
-            fill: "rgba(255, 0, 0, 1)"
-          },
-          range: {
-            fill: "rgba(255, 0, 0, 1)", 
-            stroke: "rgba(255, 0, 0, 1)"
-          },
-        },
-      }
-    };
-
-    this.buttons = [
-      new ButtonText(new Vec(50, 50), "Back", buttonStyle, {mousedown: [function () {
-        nde.transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
-      }]}),
-
-      new SettingCollection(new Vec(50, 150), ndeSettings, settingCollectionStyle, {
-        renderResolution:   {type: SettingRange,     args: {min: 25, max: 100, default: 100, step: 1},       name: "Render Resolution", events: {change: [e=>{window.dispatchEvent(new Event('resize'));}]}},
-
-        overrideBackground: {type: SettingCheckbox, name: "Override Background",  args: {default: false},                style: {size: new Vec(50, 50)}},
-        backgroundR:        {type: SettingRange,    name: "Background R",         args: {default: 19, min: 0, max: 255}},
-        backgroundG:        {type: SettingRange,    name: "Background G",         args: {default: 19, min: 0, max: 255}, style: {setting: {hover: {range: {fill: "rgba(0, 255, 0, 1)", stroke: "rgba(0, 255, 0, 1)"}}}}},
-        backgroundB:        {type: SettingRange,    name: "Background B",         args: {default: 19, min: 0, max: 255}, style: {setting: {hover: {range: {fill: "rgba(0, 0, 255, 1)", stroke: "rgba(0, 0, 255, 1)"}}}}},
-      }, {
-        input: [function (value) {
-          
-        }],
-        change: [function (value) {
-          localStorage.setItem("ndeSettings", JSON.stringify(ndeSettings));          
-        }],
-      }),
-    ];
-    */
-   
+  
     
     let buttonStyle = {
       minSize: new Vec(50, 50),

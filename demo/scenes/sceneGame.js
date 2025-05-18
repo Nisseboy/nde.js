@@ -24,13 +24,12 @@ class SceneGame extends Scene {
 
   update(dt) {
     let player = this.player;
-    //this.cam.pos = this.car.pos.copy();
     
-    player.movement = new Vec(
+    let speedMult = nde.getKeyPressed("Run") ? 2 : 1;
+    player.move(new Vec(
       nde.getKeyPressed("Move Right") - nde.getKeyPressed("Move Left"),
       nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
-    );
-    player.speedMult = nde.getKeyPressed("Run") ? 2.5 : 1
+    ).normalize().mul(player.speed * speedMult), dt);
 
     this.cam.pos.addV(new Vec(
       nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),

@@ -108,6 +108,7 @@ class RendererCanvas extends RendererBase {
   }
 
   image(img, pos, size) {
+    super.image(img, pos, size);
     this.img.ctx.drawImage(img.canvas, pos.x, pos.y, size.x, size.y);
   }
 

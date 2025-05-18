@@ -1,5 +1,6 @@
-class World {
-  constructor() {
-    this.entities = [new Player(new Vec(0, 0))];
+class World extends Serializable {
+  constructor(type = "World") {
+    super(type);
+    this.entities = [new EntityPlayer()];
   }
 }

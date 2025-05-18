@@ -55,3 +55,14 @@ document.body.onload = e => {
     //return 432; //new width
   });
 };
+
+
+//https://gist.github.com/yomotsu/165ba9ee0dc991cb6db5
+var getDeltaAngle = function () {
+  var TAU = 2 * Math.PI;
+  var mod = function (a, n) { return ( a % n + n ) % n; } // modulo
+  var equivalent = function (a) { return mod(a + Math.PI, TAU) - Math.PI } // [-π, +π]
+  return function (current, target) {
+    return equivalent(target - current);
+  }
+}();

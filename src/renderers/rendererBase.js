@@ -38,7 +38,11 @@ class RendererBase {
   rect(pos, size) {}
   ellipse(pos, size) {}
   text(t, pos) {}
-  image(img, pos, size) {}
+  image(img, pos, size) {
+    if (!img) {
+      console.error("No image supplied to renderer.image()");
+    }
+  }
 
   display(targetImg) {
     targetImg.ctx.imageSmoothingEnabled = false;
