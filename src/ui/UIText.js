@@ -27,6 +27,8 @@ class UIText extends UIBase {
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
 
+    super.renderDebug();
+
     renderer.text(this.text, this.pos);
   }
 }

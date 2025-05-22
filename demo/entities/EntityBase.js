@@ -28,9 +28,9 @@ class EntityBase extends Serializable {
   unload() {}
 
 
-  render(pos) {
+  render() {
     renderer.save();
-    renderer.translate(pos);
+    renderer.translate(this.pos);
     if (this.dir) renderer.rotate(this.dir);
     renderer.translate(this.size._mul(-0.5));
 

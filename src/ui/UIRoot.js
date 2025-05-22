@@ -14,6 +14,8 @@ class UIRoot extends UIBase {
   }
 
   initUI() {
+    this.depth = 0;
+
     this.fitSizePass();
     this.growSizePass();
     this.positionPass();
@@ -33,14 +35,16 @@ class UIRoot extends UIBase {
 
 
   fitSizePass() {
-    this.fitSizePassHelper(this);
+    this.fitSizePassHelper(this, 0);
   }
-  fitSizePassHelper(element) {
+  fitSizePassHelper(element, depth) {
     for (let c of element.children) {
-      this.fitSizePassHelper(c);
+      this.fitSizePassHelper(c, depth + 1);
     }
 
     element.calculateSize();
+
+    this.depth = Math.max(this.depth, depth);
   }
 
 
@@ -64,14 +68,21 @@ class UIRoot extends UIBase {
     this.hoverPassHelper(this, false, transformedMousePoint);
   }
   hoverPassHelper(element, found, pt) {
-    element.hovered = element.forceHover;
+    element.hovered = false;
+    element.trueHovered = false;
+
+    let inBounds = (pt.x >= element.pos.x && 
+                    pt.x <= element.pos.x + element.size.x && 
+                    pt.y >= element.pos.y && 
+                    pt.y <= element.pos.y + element.size.y);
+    
+    element.trueHovered = inBounds;
+    element.trueHoveredBottom = inBounds;
+
     if (
       !found &&
       element.interactable && 
-      pt.x >= element.pos.x && 
-      pt.x <= element.pos.x + element.size.x && 
-      pt.y >= element.pos.y && 
-      pt.y <= element.pos.y + element.size.y) 
+      inBounds) 
     {
       nde.hoveredUIElement = element;
 
@@ -82,22 +93,31 @@ class UIRoot extends UIBase {
       element.hovered = true;
     }
 
-    if (element.forceHover) found = true;
+    if (element.forceHover) {
+      element.hovered = true;
+      found = true;
+    }
 
     for (let c of element.children) {
       this.hoverPassHelper(c, found, pt);
+
+      if (c.trueHovered) element.trueHoveredBottom = false;
     }
   }
 
 
 
   renderPass() {
-    this.renderPassHelper(this);
+    this.renderPassHelper(this, 0);
   }
-  renderPassHelper(element) {
+  renderPassHelper(element, depth) {
+    if (nde.uiDebug) {
+      element.debugColor = 255 / (this.depth + 1) * (depth + 1);
+    } else element.debugColor = undefined;
+
     element.render();
     for (let c of element.children) {
-      this.renderPassHelper(c);
+      this.renderPassHelper(c, depth + 1);
     }
   }
 }

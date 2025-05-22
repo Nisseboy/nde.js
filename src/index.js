@@ -109,6 +109,7 @@ class NDE {
     this.timers = [];
 
     this.debug = false;
+    this.uiDebug = false;
     this.debugStats = {};
 
     
@@ -353,12 +354,13 @@ class NDE {
   
     this.renderer.set("fill", 255);
     this.renderer.set("stroke", 0);
-    this.renderer.set("font", "16px monospace");
+    let textSize = 0.015 * this.w;
+    this.renderer.set("font", `${textSize}px monospace`);
     this.renderer.set("textAlign", ["left", "top"]);
     if (this.debug) {
       let n = 0;
       for (let i in this.debugStats) {
-        this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * 16));
+        this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
         n++;
       }
     }

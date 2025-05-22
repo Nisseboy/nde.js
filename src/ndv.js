@@ -326,3 +326,6 @@ class Vec {
   _mix(v2, i) {return this.copy().mix(v2, i)}
 }
 
+let vecZero = new Vec(0, 0);
+let vecHalf = new Vec(0.5, 0.5);
+let vecOne = new Vec(1, 1);

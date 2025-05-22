@@ -88,7 +88,7 @@ class SceneSettings extends Scene {
 
             new UIBase({
               style: {
-                minSize: new Vec(50, 50)
+                minSize: new Vec(60, 60)
               },
             }),
 

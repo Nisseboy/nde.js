@@ -27,8 +27,13 @@ class UIBase {
     this.interactable = false;
     
     this.hovered = false;
+    this.trueHovered = false;
+    this.trueHoveredBottom = false;
     this.pos = new Vec(0, 0);
     this.size = new Vec(1, 1);
+
+    this.debugColor = undefined;
+
   }
 
   registerEvent(eventName, func) {
@@ -223,10 +228,30 @@ class UIBase {
     }
   }
 
+  renderDebug() {
+    if (this.debugColor) {
+      renderer.set("fill", `rgb(${this.debugColor}, 0, 0)`);
+      renderer.set("stroke", `rgb(255, 255, 255)`);
+
+      if (this.trueHovered) {
+        renderer.set("fill", `rgb(${this.debugColor}, ${this.debugColor}, 0)`);
+      }
+
+      if (this.trueHoveredBottom) {
+        renderer.set("fill", `rgb(0, 255, 0)`);
+
+        nde.debugStats.uiPos = this.pos;
+        nde.debugStats.uiSize = this.size;
+      }
+    }
+  }
+
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover : this.style);
 
-    renderer.rect(this.pos, this.size);    
+    this.renderDebug();
+
+    renderer.rect(this.pos, this.size);   
   }
 }
 

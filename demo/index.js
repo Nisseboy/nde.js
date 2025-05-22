@@ -28,6 +28,7 @@ document.body.onload = e => {
     "Interact": "f",
     "Pause": "Escape",
     "Debug Mode": "l",
+    "UI Debug Mode": "k",
   };
 
   scenes = {
@@ -38,6 +39,7 @@ document.body.onload = e => {
 
   nde.registerEvent("keydown", e => {
     if (nde.getKeyEqual(e.key,"Debug Mode")) nde.debug = !nde.debug;
+    if (nde.getKeyEqual(e.key,"UI Debug Mode")) nde.uiDebug = !nde.uiDebug;
   });
 
   nde.registerEvent("afterSetup", () => {

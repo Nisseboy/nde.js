@@ -63,11 +63,7 @@ class SceneGame extends Scene {
     for (let i = 0; i < this.world.entities.length; i++) {
       let e = this.world.entities[i];
 
-      renderer.save();
-      renderer.translate(e.pos);
-      renderer.rotate(e.dir);
-      renderer.image(tex[e.texture], e.size._mul(-0.5), e.size);
-      renderer.restore();
+      e.render();
     }
 
     renderer.save();
