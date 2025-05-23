@@ -67,6 +67,15 @@ class Vec {
     return a + ")";
   }
   /**
+   * Checks if other vector is equal to this vector
+   * 
+   * @param {Vec} other
+   * @return {boolean} isEqual
+   */
+  isEqualTo(other) {
+    return this.x == other.x && this.y == other.y && this.z == other.z && this.w == other.w
+  }
+  /**
    * Sets each axis of this vector to each axis of v
    * 
    * @param {Vec} v
@@ -324,7 +333,9 @@ class Vec {
   _mix(v2, i) {return this.copy().mix(v2, i)}
 }
 
-
+let vecZero = new Vec(0, 0);
+let vecHalf = new Vec(0.5, 0.5);
+let vecOne = new Vec(1, 1);
 
 
 
@@ -523,6 +534,8 @@ class Asset {
     this.loading = false;
     this.path = "";
   }
+
+  destroy() {}
 }
 
 
@@ -566,6 +579,11 @@ class Aud extends Asset {
     this.audio = new Audio();
 
     this.instances = [];
+  }
+
+  restart() {
+    this.stop();
+    this.play();
   }
 
   play() {
@@ -638,7 +656,11 @@ class RendererBase {
   rect(pos, size) {}
   ellipse(pos, size) {}
   text(t, pos) {}
-  image(img, pos, size) {}
+  image(img, pos, size) {
+    if (!img) {
+      console.error("No image supplied to renderer.image()");
+    }
+  }
 
   display(targetImg) {
     targetImg.ctx.imageSmoothingEnabled = false;
@@ -761,6 +783,7 @@ class RendererCanvas extends RendererBase {
   }
 
   image(img, pos, size) {
+    super.image(img, pos, size);
     this.img.ctx.drawImage(img.canvas, pos.x, pos.y, size.x, size.y);
   }
 
@@ -803,8 +826,13 @@ class UIBase {
     this.interactable = false;
     
     this.hovered = false;
+    this.trueHovered = false;
+    this.trueHoveredBottom = false;
     this.pos = new Vec(0, 0);
     this.size = new Vec(1, 1);
+
+    this.debugColor = undefined;
+
   }
 
   registerEvent(eventName, func) {
@@ -999,10 +1027,30 @@ class UIBase {
     }
   }
 
+  renderDebug() {
+    if (this.debugColor) {
+      renderer.set("fill", `rgb(${this.debugColor}, 0, 0)`);
+      renderer.set("stroke", `rgb(255, 255, 255)`);
+
+      if (this.trueHovered) {
+        renderer.set("fill", `rgb(${this.debugColor}, ${this.debugColor}, 0)`);
+      }
+
+      if (this.trueHoveredBottom) {
+        renderer.set("fill", `rgb(0, 255, 0)`);
+
+        nde.debugStats.uiPos = this.pos;
+        nde.debugStats.uiSize = this.size;
+      }
+    }
+  }
+
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover : this.style);
 
-    renderer.rect(this.pos, this.size);    
+    this.renderDebug();
+
+    renderer.rect(this.pos, this.size);   
   }
 }
 
@@ -1051,6 +1099,8 @@ class UIRoot extends UIBase {
   }
 
   initUI() {
+    this.depth = 0;
+
     this.fitSizePass();
     this.growSizePass();
     this.positionPass();
@@ -1070,14 +1120,16 @@ class UIRoot extends UIBase {
 
 
   fitSizePass() {
-    this.fitSizePassHelper(this);
+    this.fitSizePassHelper(this, 0);
   }
-  fitSizePassHelper(element) {
+  fitSizePassHelper(element, depth) {
     for (let c of element.children) {
-      this.fitSizePassHelper(c);
+      this.fitSizePassHelper(c, depth + 1);
     }
 
     element.calculateSize();
+
+    this.depth = Math.max(this.depth, depth);
   }
 
 
@@ -1101,14 +1153,21 @@ class UIRoot extends UIBase {
     this.hoverPassHelper(this, false, transformedMousePoint);
   }
   hoverPassHelper(element, found, pt) {
-    element.hovered = element.forceHover;
+    element.hovered = false;
+    element.trueHovered = false;
+
+    let inBounds = (pt.x >= element.pos.x && 
+                    pt.x <= element.pos.x + element.size.x && 
+                    pt.y >= element.pos.y && 
+                    pt.y <= element.pos.y + element.size.y);
+    
+    element.trueHovered = inBounds;
+    element.trueHoveredBottom = inBounds;
+
     if (
       !found &&
       element.interactable && 
-      pt.x >= element.pos.x && 
-      pt.x <= element.pos.x + element.size.x && 
-      pt.y >= element.pos.y && 
-      pt.y <= element.pos.y + element.size.y) 
+      inBounds) 
     {
       nde.hoveredUIElement = element;
 
@@ -1119,22 +1178,31 @@ class UIRoot extends UIBase {
       element.hovered = true;
     }
 
-    if (element.forceHover) found = true;
+    if (element.forceHover) {
+      element.hovered = true;
+      found = true;
+    }
 
     for (let c of element.children) {
       this.hoverPassHelper(c, found, pt);
+
+      if (c.trueHovered) element.trueHoveredBottom = false;
     }
   }
 
 
 
   renderPass() {
-    this.renderPassHelper(this);
+    this.renderPassHelper(this, 0);
   }
-  renderPassHelper(element) {
+  renderPassHelper(element, depth) {
+    if (nde.uiDebug) {
+      element.debugColor = 255 / (this.depth + 1) * (depth + 1);
+    } else element.debugColor = undefined;
+
     element.render();
     for (let c of element.children) {
-      this.renderPassHelper(c);
+      this.renderPassHelper(c, depth + 1);
     }
   }
 }
@@ -1173,6 +1241,8 @@ class UIText extends UIBase {
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
 
+    super.renderDebug();
+
     renderer.text(this.text, this.pos);
   }
 }
@@ -1198,6 +1268,8 @@ class UIImage extends UIBase {
 
   render() {
     renderer.applyStyles(this.hovered ? this.style.hover.image : this.style.image);
+
+    super.renderDebug();
 
     renderer.image(this.image, this.pos, this.size);
   }
@@ -1323,7 +1395,7 @@ class UISettingCollection extends UISettingBase {
 
       let name = c.name;
       if (name && c.value != undefined) {
-        if (this.value[name]) c.setValue(this.value[name]);
+        if (this.value[name] != undefined) c.setValue(this.value[name]);
         else this.value[name] = c.value;
   
         c.registerEvent("input", value => {
@@ -1946,6 +2018,7 @@ class NDE {
     this.timers = [];
 
     this.debug = false;
+    this.uiDebug = false;
     this.debugStats = {};
 
     
@@ -2190,12 +2263,13 @@ class NDE {
   
     this.renderer.set("fill", 255);
     this.renderer.set("stroke", 0);
-    this.renderer.set("font", "16px monospace");
+    let textSize = 0.015 * this.w;
+    this.renderer.set("font", `${textSize}px monospace`);
     this.renderer.set("textAlign", ["left", "top"]);
     if (this.debug) {
       let n = 0;
       for (let i in this.debugStats) {
-        this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * 16));
+        this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
         n++;
       }
     }
@@ -2216,7 +2290,7 @@ class NDE {
     actualAsset.onerror = e => {
       console.error(`"${path}" not found`);
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset));
     };
   }
 

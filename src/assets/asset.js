@@ -3,4 +3,6 @@ class Asset {
     this.loading = false;
     this.path = "";
   }
+
+  destroy() {}
 }

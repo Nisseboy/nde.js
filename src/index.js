@@ -381,7 +381,7 @@ class NDE {
     actualAsset.onerror = e => {
       console.error(`"${path}" not found`);
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset));
     };
   }
 

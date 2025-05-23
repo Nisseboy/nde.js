@@ -9,6 +9,11 @@ class Aud extends Asset {
     this.instances = [];
   }
 
+  restart() {
+    this.stop();
+    this.play();
+  }
+
   play() {
     if (this.audio.paused) this.audio.play();
     else {
