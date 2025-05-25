@@ -16,12 +16,14 @@ class EntityBase extends Serializable {
   }
 
   move(movement, dt) {
-    if (movement.sqMag() == 0) return;
+    if (movement.sqMag() == 0) return false;
 
     this.pos.addV(movement._mul(dt));
     
     let diff = getDeltaAngle((Math.atan2(movement.y, movement.x)), this.dir);
     this.dir -= diff * 10 * dt;
+
+    return true;
   }
 
   load() {}

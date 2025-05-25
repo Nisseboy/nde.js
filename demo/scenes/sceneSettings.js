@@ -58,7 +58,7 @@ class SceneSettings extends Scene {
         }),
 
         new UISettingCollection({
-          value: ndeSettings,
+          value: settings,
           hasLabels: true,
 
           style: {
@@ -142,7 +142,7 @@ class SceneSettings extends Scene {
           
             }],
             change: [function (value) {
-              localStorage.setItem("ndeSettings", JSON.stringify(ndeSettings));          
+              localStorage.setItem(settingsName, JSON.stringify(settings));          
             }],
           },
         }),
@@ -169,8 +169,8 @@ class SceneSettings extends Scene {
 
     renderer.save();
 
-    renderer.set("fill", ndeSettings.overrideBackground?[ndeSettings.backgroundR, ndeSettings.backgroundG, ndeSettings.backgroundB]:19);
-    renderer.rect(new Vec(0, 0), new Vec(nde.w, nde.w / 16 * 9));
+    renderer.set("fill", settings.overrideBackground?[settings.backgroundR, settings.backgroundG, settings.backgroundB]:19);
+    renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
     
     renderer.restore();
 
@@ -179,8 +179,7 @@ class SceneSettings extends Scene {
     renderer.save();
 
     cam.applyTransform();
-    renderer.set("lineWidth", cam.unScaleVec(new Vec(1)).x);
-
+    renderer.set("lineWidth", cam.unscale(1));
     this.ui.renderUI();
 
     renderer.restore();

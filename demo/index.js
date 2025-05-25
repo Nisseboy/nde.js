@@ -2,7 +2,8 @@ let nde;
 let scenes;
 let renderer;
 
-let ndeSettings = JSON.parse(localStorage.getItem("ndeSettings")) || {};
+let settingsName = "ndeSettings";
+let settings = JSON.parse(localStorage.getItem(settingsName)) || {};
 
 document.body.onload = e => {
   nde = new NDE(document.getElementsByTagName("main")[0]);
@@ -53,7 +54,7 @@ document.body.onload = e => {
   });
 
   nde.registerEvent("resize", e => {
-    return nde.w * ndeSettings.renderResolution / 100;
+    return nde.w * settings.renderResolution / 100;
     //return 432; //new width
   });
 };

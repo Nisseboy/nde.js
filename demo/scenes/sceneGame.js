@@ -31,10 +31,12 @@ class SceneGame extends Scene {
       nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
     ).normalize().mul(player.speed * speedMult), dt);
 
+
     this.cam.pos.addV(new Vec(
       nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),
       nde.getKeyPressed("Move Camera Down") - nde.getKeyPressed("Move Camera Up"),
     ).mul(dt * 5));
+    
 
     for (let i = 0; i < this.world.entities.length; i++) {
       let e = this.world.entities[i];
@@ -48,8 +50,8 @@ class SceneGame extends Scene {
 
     renderer.save();
 
-    renderer.set("fill", [100, 100, 50]);
-    renderer.rect(new Vec(0, 0), new Vec(nde.w, nde.w / 16 * 9));
+    renderer.set("fill", "rgb(100, 100, 50)");
+    renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
 
     renderer.restore();
 
@@ -57,8 +59,8 @@ class SceneGame extends Scene {
 
     renderer.save();
 
-    cam.applyTransform();
-    renderer.set("lineWidth", cam.unScaleVec(new Vec(1)).x);
+    cam.transformRenderer();
+    renderer.set("lineWidth", cam.unscale(1));
 
     for (let i = 0; i < this.world.entities.length; i++) {
       let e = this.world.entities[i];
@@ -66,17 +68,6 @@ class SceneGame extends Scene {
       e.render();
     }
 
-    renderer.save();
-    renderer.set("fill", [200, 100, 100]);
-    renderer.ellipse(new Vec(0, 0), new Vec(0.24, 0.24));
-    renderer.restore();
-
-
-    renderer.set("font", "1px monospace");
-    renderer.set("textAlign", ["center", "top"]);
-    renderer.set("fill", 255);
-    renderer.text("[w a s d shift], [arrow keys]", new Vec(0, -4.5));
-    
     renderer.restore();
   }
 }

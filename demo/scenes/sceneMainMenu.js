@@ -110,8 +110,8 @@ class SceneMainMenu extends Scene {
 
     renderer.save();
 
-    renderer.set("fill", ndeSettings.overrideBackground?[ndeSettings.backgroundR, ndeSettings.backgroundG, ndeSettings.backgroundB]:19);
-    renderer.rect(new Vec(0, 0), new Vec(nde.w, nde.w / 16 * 9));
+    renderer.set("fill", settings.overrideBackground?[settings.backgroundR, settings.backgroundG, settings.backgroundB]:19);
+    renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
     
     renderer.restore();
 
@@ -119,9 +119,9 @@ class SceneMainMenu extends Scene {
 
     renderer.save();
 
-    cam.applyTransform();
-    renderer.set("lineWidth", cam.unScaleVec(new Vec(1)).x);
+    cam.transformRenderer();
 
+    renderer.set("lineWidth", cam.unscale(1));
     this.ui.renderUI();
 
     renderer.restore();
