@@ -144,6 +144,19 @@ class Vec {
     if (this.w) this.w = Math.floor(this.w);
     return this;
   }
+
+  /**
+   * Ceils each axis of this vector
+   * 
+   * @return {Vec} this
+   */
+  ceil() {
+    if (this.x) this.x = Math.ceil(this.x);
+    if (this.y) this.y = Math.ceil(this.y);
+    if (this.z) this.z = Math.ceil(this.z);
+    if (this.w) this.w = Math.ceil(this.w);
+    return this;
+  }
   
   /**
    * Rounds each axis of this vector
@@ -304,6 +317,7 @@ class Vec {
 
 
   _floor() {return this.copy().floor()}
+  _ceil() {return this.copy().ceil()}
   _round() {return this.copy().round()}
 
   _normalize() {return this.copy().normalize()}

@@ -1,16 +1,16 @@
 import sys
 
 files = [
-  "src/ndv.js",
-  "src/camera.js",
-  "src/scenes/scene.js",
+  "src/Vec.js",
+  "src/Camera.js",
+  "src/scenes/Scene.js",
   
-  "src/assets/asset.js",
-  "src/assets/img.js",
-  "src/assets/aud.js",
+  "src/assets/Asset.js",
+  "src/assets/Img.js",
+  "src/assets/Aud.js",
 
-  "src/renderers/rendererBase.js",
-  "src/renderers/rendererCanvas.js",
+  "src/renderers/RendererBase.js",
+  "src/renderers/RendererCanvas.js",
 
   "src/ui/UIBase.js",
   "src/ui/UIRoot.js",
@@ -26,14 +26,14 @@ files = [
   "src/ui/settings/UISettingRange.js",
   "src/ui/settings/UISettingRGB.js",
 
-  "src/timers/timerBase.js",
-  "src/timers/timerFrames.js",
-  "src/timers/timerTime.js",
+  "src/timers/TimerBase.js",
+  "src/timers/TimerFrames.js",
+  "src/timers/TimerTime.js",
 
-  "src/transitions/transitionBase.js",
-  "src/transitions/transitionFade.js",
-  "src/transitions/transitionSlide.js",
-  "src/transitions/transitionNoise.js",
+  "src/transitions/TransitionBase.js",
+  "src/transitions/TransitionFade.js",
+  "src/transitions/TransitionSlide.js",
+  "src/transitions/TransitionNoise.js",
 
   "src/index.js",
 ] 

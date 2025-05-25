@@ -4,7 +4,7 @@ This is a built version of nde (Nils Delicious Engine) and is basically all the 
 
 
 */
-/* src/ndv.js */
+/* src/Vec.js */
 /*
 
 All of these are valid:
@@ -149,6 +149,19 @@ class Vec {
     if (this.y) this.y = Math.floor(this.y);
     if (this.z) this.z = Math.floor(this.z);
     if (this.w) this.w = Math.floor(this.w);
+    return this;
+  }
+
+  /**
+   * Ceils each axis of this vector
+   * 
+   * @return {Vec} this
+   */
+  ceil() {
+    if (this.x) this.x = Math.ceil(this.x);
+    if (this.y) this.y = Math.ceil(this.y);
+    if (this.z) this.z = Math.ceil(this.z);
+    if (this.w) this.w = Math.ceil(this.w);
     return this;
   }
   
@@ -311,6 +324,7 @@ class Vec {
 
 
   _floor() {return this.copy().floor()}
+  _ceil() {return this.copy().ceil()}
   _round() {return this.copy().round()}
 
   _normalize() {return this.copy().normalize()}
@@ -341,7 +355,7 @@ let vecOne = new Vec(1, 1);
 
 
 
-/* src/camera.js */
+/* src/Camera.js */
 class Camera {
   constructor(pos) {
     this.pos = pos;
@@ -474,7 +488,7 @@ class Camera {
 
 
 
-/* src/scenes/scene.js */
+/* src/scenes/Scene.js */
 class Scene {
   constructor() {
     this.hasStarted = false;    
@@ -574,7 +588,7 @@ class Scene {
 
 
 
-/* src/assets/asset.js */
+/* src/assets/Asset.js */
 class Asset {
   constructor() {
     this.loading = false;
@@ -588,7 +602,7 @@ class Asset {
 
 
 
-/* src/assets/img.js */
+/* src/assets/Img.js */
 class Img extends Asset {
   constructor(size) {
     super();
@@ -615,7 +629,7 @@ class Img extends Asset {
 
 
 
-/* src/assets/aud.js */
+/* src/assets/Aud.js */
 class Aud extends Asset {
   constructor() {
     super();
@@ -661,7 +675,7 @@ class Aud extends Asset {
 
 
 
-/* src/renderers/rendererBase.js */
+/* src/renderers/RendererBase.js */
 class RendererBase {
   constructor() {
     this.img = new Img(new Vec(1, 1));
@@ -718,7 +732,7 @@ class RendererBase {
 
 
 
-/* src/renderers/rendererCanvas.js */
+/* src/renderers/RendererCanvas.js */
 class RendererCanvas extends RendererBase {
   constructor() {
     super();
@@ -1454,42 +1468,6 @@ class UISettingCollection extends UISettingBase {
         });
       }
     }
-return
-
-
-
-    let y = 0;
-    for (let i in template) {
-      let setting = template[i];   
-
-      let settingStyle = style;
-      if (setting.style) {        
-        settingStyle = nestedObjectAssign({}, style, setting.style);
-      }
-      
-      let events = setting.events || {};
-
-      if (!events.input) events.input = [];
-      if (!events.change) events.change = [];
-      events.input.push(value => {
-        this.value[i] = value;
-        this.fireEvent("input", this.value);
-      });
-      events.change.push(value => {
-        this.value[i] = value;
-        this.fireEvent("change", this.value);
-      });
-      
-      this.elements[i] = new setting.type(new Vec(pos.x + settingStyle.settingXOffset, pos.y + y), settingStyle.size, settingStyle.setting, setting.args, events);
-
-      if (value[i] != undefined) this.elements[i].setValue(value[i]);
-
-      this.value[i] = this.elements[i].value;
-
-      
-      y += settingStyle.size.y + settingStyle.gap + settingStyle.setting.padding * 2;
-      
-    }
   }
 
   render() {
@@ -1739,7 +1717,7 @@ class UISettingRGB extends UISettingCollection {
 
 
 
-/* src/timers/timerBase.js */
+/* src/timers/TimerBase.js */
 class TimerBase {
   constructor(callback = (timer) => {}) {
     this.elapsedFrames = 0;
@@ -1777,7 +1755,7 @@ class TimerBase {
 
 
 
-/* src/timers/timerFrames.js */
+/* src/timers/TimerFrames.js */
 class TimerFrames extends TimerBase {
   constructor(frames, callback) {
     super(callback);
@@ -1802,7 +1780,7 @@ class TimerFrames extends TimerBase {
 
 
 
-/* src/timers/timerTime.js */
+/* src/timers/TimerTime.js */
 class TimerTime extends TimerBase {
   constructor(seconds, callback) {
     super(callback);
@@ -1827,7 +1805,7 @@ class TimerTime extends TimerBase {
 
 
 
-/* src/transitions/transitionBase.js */
+/* src/transitions/TransitionBase.js */
 class TransitionBase {
   constructor(newScene, timer) {
     this.oldImg = new Img(new Vec(nde.w, nde.w / 16 * 9));
@@ -1856,7 +1834,7 @@ class TransitionBase {
 
 
 
-/* src/transitions/transitionFade.js */
+/* src/transitions/TransitionFade.js */
 class TransitionFade extends TransitionBase {
   constructor(newScene, timer) {
     super(newScene, timer);
@@ -1880,7 +1858,7 @@ class TransitionFade extends TransitionBase {
 
 
 
-/* src/transitions/transitionSlide.js */
+/* src/transitions/TransitionSlide.js */
 class TransitionSlide extends TransitionBase {
   constructor(newScene, timer) {
     super(newScene, timer);
@@ -1914,7 +1892,7 @@ class TransitionSlide extends TransitionBase {
 
 
 
-/* src/transitions/transitionNoise.js */
+/* src/transitions/TransitionNoise.js */
 class TransitionNoise extends TransitionBase {
   constructor(newScene, timer) {
     super(newScene, timer);

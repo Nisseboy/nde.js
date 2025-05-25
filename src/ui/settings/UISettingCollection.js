@@ -53,42 +53,6 @@ class UISettingCollection extends UISettingBase {
         });
       }
     }
-return
-
-
-
-    let y = 0;
-    for (let i in template) {
-      let setting = template[i];   
-
-      let settingStyle = style;
-      if (setting.style) {        
-        settingStyle = nestedObjectAssign({}, style, setting.style);
-      }
-      
-      let events = setting.events || {};
-
-      if (!events.input) events.input = [];
-      if (!events.change) events.change = [];
-      events.input.push(value => {
-        this.value[i] = value;
-        this.fireEvent("input", this.value);
-      });
-      events.change.push(value => {
-        this.value[i] = value;
-        this.fireEvent("change", this.value);
-      });
-      
-      this.elements[i] = new setting.type(new Vec(pos.x + settingStyle.settingXOffset, pos.y + y), settingStyle.size, settingStyle.setting, setting.args, events);
-
-      if (value[i] != undefined) this.elements[i].setValue(value[i]);
-
-      this.value[i] = this.elements[i].value;
-
-      
-      y += settingStyle.size.y + settingStyle.gap + settingStyle.setting.padding * 2;
-      
-    }
   }
 
   render() {
