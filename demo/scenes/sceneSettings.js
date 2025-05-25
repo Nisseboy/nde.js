@@ -19,7 +19,7 @@ class SceneSettings extends Scene {
 
       fill: "rgb(0, 0, 0)",
 
-      text: {font: "50px monospace"},
+      text: {font: "40px monospace"},
 
       hover: {
         text: {fill: "rgb(255, 0, 0)"},
@@ -35,9 +35,19 @@ class SceneSettings extends Scene {
         }},
       },
     };
+    let rangeStyle = {
+
+      hover: {
+        slider: { active: {
+          fill: "rgb(255, 0, 0)",
+          stroke: "rgb(255, 0, 0)",
+        }},
+      },
+    };
+
+
     this.ui = new UIRoot({
       pos: new Vec(50, 50),
-
 
       style: {
         direction: "column",
@@ -64,11 +74,8 @@ class SceneSettings extends Scene {
           style: {
             gap: 10,
 
-            row: {
-              gap: 10,
-            },
-            label: {...buttonStyle,
-            },
+            row: {gap: 10,},
+            label: {...buttonStyle,},
           },
 
           children: [
@@ -77,9 +84,7 @@ class SceneSettings extends Scene {
               value: 100,
               min: 25, max: 100, step: 1,
 
-              style: {...buttonStyle,
-
-              },
+              style: {...rangeStyle,},
 
               events: {
                 change: [e=>{window.dispatchEvent(new Event('resize'));}]
@@ -88,7 +93,7 @@ class SceneSettings extends Scene {
 
             new UIBase({
               style: {
-                minSize: new Vec(60, 60)
+                minSize: new Vec(50, 50)
               },
             }),
 
@@ -105,16 +110,14 @@ class SceneSettings extends Scene {
               value: 19,
               min: 0, max: 255, step: 1,
 
-              style: {...buttonStyle,
-
-              }
+              style: {...rangeStyle,},
             }),
             new UISettingRange({
               name: "backgroundG", displayName: "Background G",
               value: 19,
               min: 0, max: 255, step: 1,
 
-              style: {...buttonStyle,
+              style: {...rangeStyle,
 
                 hover: {slider: { active: {
                   fill: "rgb(0, 255, 0)",
@@ -127,7 +130,7 @@ class SceneSettings extends Scene {
               value: 19,
               min: 0, max: 255, step: 1,
 
-              style: {...buttonStyle,
+              style: {...rangeStyle,
 
                 hover: {slider: { active: {
                   fill: "rgb(0, 0, 255)",

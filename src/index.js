@@ -230,8 +230,6 @@ class NDE {
   registerEvent(eventName, func) {
     if (!this.events[eventName]) this.events[eventName] = [];
     this.events[eventName].push(func);
-
-    if (this.debug) console.log(`NDE: Registered an event on ${eventName}`);
   }
   unregisterEvent(eventName, func) {
     let events = this.events[eventName];
@@ -241,7 +239,6 @@ class NDE {
     if (index == -1) return false;
 
     events.splice(index, 1);
-    if (this.debug) console.log(`NDE: Unregistered an event on ${eventName}`);
     return;
   }
 

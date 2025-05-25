@@ -4,6 +4,7 @@ class UISettingRange extends UISettingBase {
 
     this.defaultStyle = {
       gap: 10,
+      padding: 0,
 
       slider: {
         padding: 10,
@@ -19,7 +20,6 @@ class UISettingRange extends UISettingBase {
       },
 
       number: {
-        minSize: new Vec(80, 50),
         align: new Vec(2, 1),
 
         fill: "rgb(0, 0, 0)",
@@ -28,14 +28,40 @@ class UISettingRange extends UISettingBase {
         text: {
           fill: "rgb(255, 255, 255)",
           font: "40px monospace",
-          textAlign: ["right", "middle"],
         },
       },
     };
     this.fillStyle(props.style);
-    this.style.padding = 0;
+    
+
+    this.min = props.min;
+    this.max = props.max;
+    this.step = props.step || 1;
 
 
+    this.initChildren();
+
+    this.rangeSizeTotal = new Vec(0, 0);
+    this.setValue(this.value);
+    
+
+    this.rendererTransform = undefined;
+
+    this.funcA = e=>this.mousemove(e);
+    this.funcB = e=>this.mouseup(e);
+
+    this.registerEvent("mousedown", e=>{
+      this.forceHover = true;
+
+      this.mousemove(e);
+
+      nde.registerEvent("mousemove", this.funcA);
+      nde.registerEvent("mouseup", this.funcB);
+    });
+  }
+
+
+  initChildren() {
     this.slider = new UIBase({
       style: {...this.style.slider.active,
         hover: this.style.hover.slider.active,
@@ -65,32 +91,18 @@ class UISettingRange extends UISettingBase {
 
     this.children = [this.range, this.number];
 
-    this.rangeSizeTotal = new Vec(0, 0);
+    renderer.save();
+    renderer.applyStyles(this.style.number.text);
+    let size = renderer.measureText(this.max);
+    renderer.restore();
 
-    this.min = props.min;
-    this.max = props.max;
-    this.step = props.step || 1;
-
-    this.rendererTransform = undefined;
-
-    this.funcA = e=>this.mousemove(e);
-    this.funcB = e=>this.mouseup(e);
-
-    this.registerEvent("mousedown", e=>{
-      this.forceHover = true;
-
-      this.mousemove(e);
-
-      nde.registerEvent("mousemove", this.funcA);
-      nde.registerEvent("mouseup", this.funcB);
-    });
+    this.number.style.minSize.x = size.x;
     
-    this.setValue(props.value);
   }
 
-  calculateSize() {
-    this.numberText.size.set(0, 0);
 
+
+  calculateSize() {
     super.calculateSize();
 
     this.rangeSizeTotal.from(this.range.size).sub(this.range.style.padding * 2);
@@ -121,7 +133,11 @@ class UISettingRange extends UISettingBase {
     super.setValue(Math.round(newValue / this.step) * this.step);
 
     this.sizeSlider();
+    
     this.numberText.text = this.value;
+    this.numberText.calculateSize();
+    this.number.positionChildren();
+    
   }
 
   sizeSlider() {
@@ -129,9 +145,9 @@ class UISettingRange extends UISettingBase {
     this.slider.size.y = this.rangeSizeTotal.y;
   }
 
-  render() {
-    //super.render();
-
+  render() {    
+    super.render();
+    
     this.rendererTransform = renderer.getTransform();
   }
 }

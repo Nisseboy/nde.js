@@ -15,10 +15,7 @@ class UISettingCheckbox extends UISettingBase {
     };
     this.fillStyle(props.style);
 
-
-    this.children = [new UIBase({
-      
-    })];
+    this.initChildren();
     
 
     this.funcA = e=>this.mouseupGlobal(e);
@@ -32,6 +29,13 @@ class UISettingCheckbox extends UISettingBase {
     
 
     this.setValue(props.value);
+  }
+
+  
+  initChildren() {
+    this.children = [new UIBase({
+      
+    })];
   }
 
   setValue(newValue) {

@@ -11,8 +11,6 @@ class UISettingCollection extends UISettingBase {
     };
     this.fillStyle(props.style);  
 
-
-
     this.value = props.value || {};
 
     for (let i = 0; i < this.children.length; i++) {

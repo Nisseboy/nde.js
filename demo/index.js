@@ -11,6 +11,7 @@ document.body.onload = e => {
   preloadTextures();
 
   nde.debug = true;
+  nde.uiDebug = true;
 
   //nde.targetFPS = 60;
 
@@ -46,6 +47,7 @@ document.body.onload = e => {
   nde.registerEvent("afterSetup", () => {
     scenes.game.loadWorld();
     nde.setScene(scenes.mainMenu);
+    nde.setScene(scenes.settings);
   });
 
   nde.registerEvent("update", dt => {

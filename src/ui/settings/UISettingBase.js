@@ -9,6 +9,10 @@ class UISettingBase extends UIBase {
     this.displayName = props.displayName;
   }
 
+
+  initChildren() {}
+
+
   setValue(newValue) {
     this.value = newValue;
   }
