@@ -10,9 +10,12 @@ class SceneGame extends Scene {
     this.cam.renderW = nde.w;
   }
   loadWorld() {
-    world = new World();
+    this.world = new World();
 
-    player = world.entities[0];
+    this.player = this.world.entities[0];
+
+    world = this.world;
+    player = this.player;
   }
 
   start() {
@@ -44,11 +47,11 @@ class SceneGame extends Scene {
 
   update(dt) {    
     let speedMult = nde.getKeyPressed("Run") ? 2 : 1;
-    player.move(new Vec(
+    this.player.move(new Vec(
       nde.getKeyPressed("Move Right") - nde.getKeyPressed("Move Left"),
       nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
-    ).normalize().mul(player.speed * speedMult), dt);
-    
+    ).normalize().mul(this.player.speed * speedMult), dt);
+
 
     this.cam.pos.addV(new Vec(
       nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),
@@ -56,8 +59,8 @@ class SceneGame extends Scene {
     ).mul(dt * 5));
     
 
-    for (let i = 0; i < world.entities.length; i++) {
-      let e = world.entities[i];
+    for (let i = 0; i < this.world.entities.length; i++) {
+      let e = this.world.entities[i];
       e.update(dt);
     }    
   }
@@ -80,8 +83,8 @@ class SceneGame extends Scene {
     cam.transformRenderer();
     renderer.set("lineWidth", cam.unscale(1));
 
-    for (let i = 0; i < world.entities.length; i++) {
-      let e = world.entities[i];
+    for (let i = 0; i < this.world.entities.length; i++) {
+      let e = this.world.entities[i];
 
       e.render();
     }

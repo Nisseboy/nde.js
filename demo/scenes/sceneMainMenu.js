@@ -97,13 +97,6 @@ class SceneMainMenu extends Scene {
     });    
   }
 
-  update(dt) {
-    this.cam.pos.addV(new Vec(
-      nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),
-      nde.getKeyPressed("Move Camera Down") - nde.getKeyPressed("Move Camera Up"),
-    ).mul(dt * 500));
-  }
-
   render() {
     let cam = this.cam;
     cam.renderW = nde.w;
