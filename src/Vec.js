@@ -121,6 +121,23 @@ class Vec {
   }
 
   /**
+   * Performs dot poduct between this and v
+   * 
+   * @param {Vec} v
+   * @return {number} dot
+   */
+  dot(v) {
+    let result = 0;
+
+    if (this.x) result += this.x * v.x;
+    if (this.y) result += this.y * v.y;
+    if (this.z) result += this.z * v.z;
+    if (this.w) result += this.w * v.w;
+
+    return result;
+  }
+
+  /**
    * Normalizes this vector
    * 
    * @return {Vec} this
