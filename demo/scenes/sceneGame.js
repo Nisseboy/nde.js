@@ -1,3 +1,6 @@
+let world;
+let player;
+
 class SceneGame extends Scene {
   constructor() {
     super();
@@ -7,9 +10,9 @@ class SceneGame extends Scene {
     this.cam.renderW = nde.w;
   }
   loadWorld() {
-    this.world = new World();
+    world = new World();
 
-    this.player = this.world.entities[0];
+    player = world.entities[0];
   }
 
   start() {
@@ -17,20 +20,35 @@ class SceneGame extends Scene {
   }
 
   keydown(e) {
-    if (nde.getKeyEqual(e.key,"Pause")) {
+    this.handleInputDown(e.key);
+  }
+  keyup(e) {
+    this.handleInputUp(e.key);
+  }
+
+  mousedown(e) {
+    this.handleInputDown("mouse" + e.button);
+  }
+  mouseup(e) {
+    this.handleInputUp("mouse" + e.button);
+  }
+
+  handleInputDown(code) {
+    if (nde.getKeyEqual(code,"Pause")) {
       nde.transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
     }
   }
-
-  update(dt) {
-    let player = this.player;
+  handleInputUp(code) {
     
+  }
+
+  update(dt) {    
     let speedMult = nde.getKeyPressed("Run") ? 2 : 1;
     player.move(new Vec(
       nde.getKeyPressed("Move Right") - nde.getKeyPressed("Move Left"),
       nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
     ).normalize().mul(player.speed * speedMult), dt);
-
+    
 
     this.cam.pos.addV(new Vec(
       nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),
@@ -38,8 +56,8 @@ class SceneGame extends Scene {
     ).mul(dt * 5));
     
 
-    for (let i = 0; i < this.world.entities.length; i++) {
-      let e = this.world.entities[i];
+    for (let i = 0; i < world.entities.length; i++) {
+      let e = world.entities[i];
       e.update(dt);
     }    
   }
@@ -62,8 +80,8 @@ class SceneGame extends Scene {
     cam.transformRenderer();
     renderer.set("lineWidth", cam.unscale(1));
 
-    for (let i = 0; i < this.world.entities.length; i++) {
-      let e = this.world.entities[i];
+    for (let i = 0; i < world.entities.length; i++) {
+      let e = world.entities[i];
 
       e.render();
     }
