@@ -1,10 +1,10 @@
 class World extends Serializable {
-  constructor(type = "World") {
-    super(type);
+  constructor() {
+    super();
 
     this.entities = [
-      new EntityPlayer(), 
-      createData(EntityText, {pos: new Vec(0, -4), text: "[w a s d shift], [arrow keys]"})
+      new EntityPlayer(new Vec(0, 0)), 
+      new EntityText(new Vec(0, -4), "[w a s d shift], [arrow keys]"),
     ];
   }
 

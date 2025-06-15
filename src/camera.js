@@ -1,12 +1,24 @@
-class Camera {
+class Camera extends Serializable {
   constructor(pos) {
-    this.pos = pos;
+    super();
+
+    this.pos = pos || new Vec(0, 0);
 
     this.w = 16;
 
     this.dir = 0;
 
     this.renderW;
+  }
+
+  from(data) {
+    super.from(data);
+    if (data.pos) this.pos = new Vec().from(data.pos);
+    if (data.w) this.w = data.w;
+    if (data.dir) this.dir = data.dir;
+    if (data.renderW) this.renderW = data.renderW;
+    
+    return this;
   }
 
   /**
@@ -131,12 +143,4 @@ class Camera {
       context();
     });
   }
-
-
-
-  //Compatibility
-  applyTransform() {return this.transformRenderer()}
-  unScaleVec(a) {return this.unscaleVec(a)}
-  to(a) {return this.transformVec(a)}
-  from(a) {return this.untransformVec(a)}
 }

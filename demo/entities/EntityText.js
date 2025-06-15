@@ -1,9 +1,9 @@
 class EntityText extends EntityBase {
-  constructor(type = "EntityText") {
-    super(type);
+  constructor(pos, text) {
+    super(pos);
 
     this.size = new Vec(1, 1);
-    this.text = undefined;
+    this.text = text;
     this.style = {
       fill: "rgb(255,255,255)",
       textAlign: ["center", "middle"],

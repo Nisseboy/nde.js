@@ -1,10 +1,9 @@
 class Serializable {
-  constructor(type) {
-    this.type = type;
+  constructor() {
+    this.type = this.constructor.name;
   }
 
   from(data) {
-    if (data.type) this.type = data.type;
     return this;
   }
 
@@ -17,17 +16,24 @@ class Serializable {
   }
 }
 
+/*
 function createData(type, props) {
-  if (typeof type == "string") type = eval(type);
+  if (typeof type != "string") type = eval(type);
 
   let data = new type(type.name);
   for (let p in props) data[p] = props[p];
 
   return data;
-}
+}*/
 
 function cloneData(data, typeOverride = undefined) {
-  let type = typeOverride != undefined ? typeOverride : data.type;
+  if (typeof data == "string") data = JSON.parse(data);
+
+  let type = data.type;
+  if (!type) type = data.constructor.name;
+  if (typeOverride) type = typeOverride;
   
-  return new (eval(type))(type).from(data);
+  console.log(type);
+  
+  return new (eval(type))().from(data);
 }

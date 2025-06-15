@@ -15,8 +15,9 @@ generally operations on vectors follow this style:
 
 */
 
-class Vec {
+class Vec extends Serializable {
   constructor(x, y, z, w) {
+    super();
     this.x = x;
     this.y = y;
     this.z = z;
@@ -87,6 +88,7 @@ class Vec {
    * @return {Vec} this
    */
   from(v) {
+    super.from(v);
     this.x = v.x != undefined ? parseFloat(v.x) : v.x;
     this.y = v.y != undefined ? parseFloat(v.y) : v.y;
     this.z = v.z != undefined ? parseFloat(v.z) : v.z;

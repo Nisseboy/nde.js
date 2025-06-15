@@ -1,6 +1,7 @@
 import sys
 
 files = [
+  "src/Serializable.js",
   "src/Vec.js",
   "src/Camera.js",
   "src/scenes/Scene.js",

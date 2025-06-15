@@ -9,8 +9,8 @@ class SceneGame extends Scene {
     this.cam.w = 16;
     this.cam.renderW = nde.w;
   }
-  loadWorld() {
-    this.world = new World();
+  loadWorld(w) {
+    this.world = w;
 
     this.player = this.world.entities[0];
 

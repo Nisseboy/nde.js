@@ -1,8 +1,8 @@
 class EntityBase extends Serializable {
-  constructor(type = "EntityBase") {
-    super(type);
+  constructor(pos) {
+    super();
 
-    this.pos = new Vec(0, 0);
+    this.pos = pos || new Vec(0, 0);
     this.dir = 0;
 
     this.size = undefined;
@@ -47,7 +47,7 @@ class EntityBase extends Serializable {
   from(data) {
     super.from(data);
 
-    if (data.pos) this.pos = new Vec().from(data.pos); else this.pos = new Vec(0, 0);
+    if (data.pos) this.pos = new Vec().from(data.pos);
     if (data.dir) this.dir = data.dir;
 
     if (data.size) this.size = new Vec().from(data.size);

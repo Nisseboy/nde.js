@@ -4,6 +4,51 @@ This is a built version of nde (Nils Delicious Engine) and is basically all the 
 
 
 */
+/* src/Serializable.js */
+class Serializable {
+  constructor() {
+    this.type = this.constructor.name;
+  }
+
+  from(data) {
+    return this;
+  }
+
+  copy() {
+    return cloneData(this);
+  }
+
+  serialize() {
+    return JSON.stringify(this);
+  }
+}
+
+/*
+function createData(type, props) {
+  if (typeof type != "string") type = eval(type);
+
+  let data = new type(type.name);
+  for (let p in props) data[p] = props[p];
+
+  return data;
+}*/
+
+function cloneData(data, typeOverride = undefined) {
+  if (typeof data == "string") data = JSON.parse(data);
+
+  let type = data.type;
+  if (!type) type = data.constructor.name;
+  if (typeOverride) type = typeOverride;
+  
+  console.log(type);
+  
+  return new (eval(type))().from(data);
+}
+
+
+
+
+
 /* src/Vec.js */
 /*
 
@@ -22,8 +67,9 @@ generally operations on vectors follow this style:
 
 */
 
-class Vec {
+class Vec extends Serializable {
   constructor(x, y, z, w) {
+    super();
     this.x = x;
     this.y = y;
     this.z = z;
@@ -75,6 +121,18 @@ class Vec {
   isEqualTo(other) {
     return this.x == other.x && this.y == other.y && this.z == other.z && this.w == other.w
   }
+
+  /**
+   * Checks if this is within either bounding box vec(x, y, width, height)
+   * 
+   * @param {Vec} boundingBox
+   * @return {boolean} isWithin
+   */
+  isWithin(boundingBox) {
+    if (this.x < boundingBox.x || this.x > boundingBox.x + boundingBox.z) return false;
+    if (this.y < boundingBox.y || this.y > boundingBox.y + boundingBox.w) return false;
+    return true;
+  }
   /**
    * Sets each axis of this vector to each axis of v
    * 
@@ -82,6 +140,7 @@ class Vec {
    * @return {Vec} this
    */
   from(v) {
+    super.from(v);
     this.x = v.x != undefined ? parseFloat(v.x) : v.x;
     this.y = v.y != undefined ? parseFloat(v.y) : v.y;
     this.z = v.z != undefined ? parseFloat(v.z) : v.z;
@@ -125,6 +184,23 @@ class Vec {
    */
   mag() {
     return Math.sqrt(this.sqMag());
+  }
+
+  /**
+   * Performs dot poduct between this and v
+   * 
+   * @param {Vec} v
+   * @return {number} dot
+   */
+  dot(v) {
+    let result = 0;
+
+    if (this.x) result += this.x * v.x;
+    if (this.y) result += this.y * v.y;
+    if (this.z) result += this.z * v.z;
+    if (this.w) result += this.w * v.w;
+
+    return result;
   }
 
   /**
@@ -356,15 +432,27 @@ let vecOne = new Vec(1, 1);
 
 
 /* src/Camera.js */
-class Camera {
+class Camera extends Serializable {
   constructor(pos) {
-    this.pos = pos;
+    super();
+
+    this.pos = pos || new Vec(0, 0);
 
     this.w = 16;
 
     this.dir = 0;
 
     this.renderW;
+  }
+
+  from(data) {
+    super.from(data);
+    if (data.pos) this.pos = new Vec().from(data.pos);
+    if (data.w) this.w = data.w;
+    if (data.dir) this.dir = data.dir;
+    if (data.renderW) this.renderW = data.renderW;
+    
+    return this;
   }
 
   /**
@@ -475,13 +563,20 @@ class Camera {
     this.unscaleRenderer(r);
   }
 
+  
+  /**
+   * Context where renderer is transformed
+   * @param {Renderer} r renderer
+   */
 
+  _(r, context) {
+    r._(()=>{
+      this.transformRenderer(r);
+      r.set("lineWidth", this.unscale(1));
 
-  //Compatibility
-  applyTransform() {return this.transformRenderer()}
-  unScaleVec(a) {return this.unscaleVec(a)}
-  to(a) {return this.transformVec(a)}
-  from(a) {return this.untransformVec(a)}
+      context();
+    });
+  }
 }
 
 
@@ -712,6 +807,11 @@ class RendererBase {
 
   save() {}
   restore() {}
+  _(context) {
+    this.save();
+    context();
+    this.restore();
+  }
 
   rect(pos, size) {}
   ellipse(pos, size) {}
@@ -736,6 +836,7 @@ class RendererBase {
 class RendererCanvas extends RendererBase {
   constructor() {
     super();
+    this.ctx = this.img.ctx;
   }
 
   parseColor(...args) {
@@ -1167,12 +1268,10 @@ class UIRoot extends UIBase {
   }
 
   renderUI() {
-    renderer.save();
-
-    this.hoverPass();
-    this.renderPass();
-
-    renderer.restore();
+    renderer._(()=>{
+      this.hoverPass();
+      this.renderPass();
+    });
   }
 
 
@@ -1665,10 +1764,11 @@ class UISettingRange extends UISettingBase {
 
     this.children = [this.range, this.number];
 
-    renderer.save();
-    renderer.applyStyles(this.style.number.text);
-    let size = renderer.measureText(this.max);
-    renderer.restore();
+    let size;
+    renderer._(()=>{
+      renderer.applyStyles(this.style.number.text);
+      size = renderer.measureText(this.max);
+    });
 
     this.number.style.minSize.x = size.x;
     
@@ -1865,14 +1965,12 @@ class TransitionFade extends TransitionBase {
   render() {
     super.render();
     
-    renderer.save();
-
-    renderer.set("filter", `opacity(${(1-this.timer.progress) * 100}%)`);
-    renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
-    renderer.set("filter", `opacity(${this.timer.progress * 100}%)`);
-    renderer.image(this.newImg, new Vec(0, 0), this.newImg.size);
-    
-    renderer.restore();
+    renderer._(()=>{
+      renderer.set("filter", `opacity(${(1-this.timer.progress) * 100}%)`);
+      renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
+      renderer.set("filter", `opacity(${this.timer.progress * 100}%)`);
+      renderer.image(this.newImg, new Vec(0, 0), this.newImg.size);
+    });
   }
 }
 
@@ -1893,20 +1991,19 @@ class TransitionSlide extends TransitionBase {
     let b = this.oldImg.size.x * (1 - this.timer.progress);
 
     let ctx = renderer.img.ctx;
-
-    renderer.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, a, this.oldImg.size.y);
-    ctx.clip();
-    renderer.image(this.newImg, new Vec(0, 0), this.oldImg.size);
-    renderer.restore();
     
-    renderer.save();
-    ctx.beginPath();
-    ctx.rect(a, 0, b, this.oldImg.size.y);
-    ctx.clip();
-    renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
-    renderer.restore();
+    renderer._(()=>{
+      ctx.beginPath();
+      ctx.rect(0, 0, a, this.oldImg.size.y);
+      ctx.clip();
+      renderer.image(this.newImg, new Vec(0, 0), this.oldImg.size);
+    });
+    renderer._(()=>{
+      ctx.beginPath();
+      ctx.rect(a, 0, b, this.oldImg.size.y);
+      ctx.clip();
+      renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
+    });
   }
 }
 
@@ -2294,30 +2391,29 @@ class NDE {
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
   
   
-    this.renderer.save();
-  
-    this.fireEvent("update", gameDt);
-    for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
-    this.fireEvent("afterUpdate", gameDt);
-  
-    this.fireEvent("render");
-    if (this.transition) this.transition.render();
-    this.fireEvent("afterRender");
-  
-    this.renderer.set("fill", 255);
-    this.renderer.set("stroke", 0);
-    let textSize = 0.015 * this.w;
-    this.renderer.set("font", `${textSize}px monospace`);
-    this.renderer.set("textAlign", ["left", "top"]);
-    if (this.debug) {
-      let n = 0;
-      for (let i in this.debugStats) {
-        this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
-        n++;
-      }
-    }
+    renderer._(()=>{
+      this.fireEvent("update", gameDt);
+      for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
+      this.fireEvent("afterUpdate", gameDt);
     
-    this.renderer.restore();
+      this.fireEvent("render");
+      if (this.transition) this.transition.render();
+      this.fireEvent("afterRender");
+    
+      this.renderer.set("fill", 255);
+      this.renderer.set("stroke", 0);
+      let textSize = 0.015 * this.w;
+      this.renderer.set("font", `${textSize}px monospace`);
+      this.renderer.set("textAlign", ["left", "top"]);
+      if (this.debug) {
+        let n = 0;
+        for (let i in this.debugStats) {
+          this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
+          n++;
+        }
+      }
+    });
+    
   
     this.renderer.display(this.mainImg);
   }

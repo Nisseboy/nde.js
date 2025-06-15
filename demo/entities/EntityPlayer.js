@@ -1,6 +1,6 @@
 class EntityPlayer extends EntityBase {
-  constructor(type = "EntityPlayer") {
-    super(type);
+  constructor(pos) {
+    super(pos);
 
     this.size = new Vec(1, 1);
     this.speed = 4;
