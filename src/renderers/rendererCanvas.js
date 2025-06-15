@@ -1,6 +1,7 @@
 class RendererCanvas extends RendererBase {
   constructor() {
     super();
+    this.ctx = this.img.ctx;
   }
 
   parseColor(...args) {

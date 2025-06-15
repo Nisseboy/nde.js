@@ -117,6 +117,21 @@ class Camera {
     this.unscaleRenderer(r);
   }
 
+  
+  /**
+   * Context where renderer is transformed
+   * @param {Renderer} r renderer
+   */
+
+  _(r, context) {
+    r._(()=>{
+      this.transformRenderer(r);
+      r.set("lineWidth", this.unscale(1));
+
+      context();
+    });
+  }
+
 
 
   //Compatibility

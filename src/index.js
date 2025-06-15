@@ -339,30 +339,29 @@ class NDE {
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
   
   
-    this.renderer.save();
-  
-    this.fireEvent("update", gameDt);
-    for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
-    this.fireEvent("afterUpdate", gameDt);
-  
-    this.fireEvent("render");
-    if (this.transition) this.transition.render();
-    this.fireEvent("afterRender");
-  
-    this.renderer.set("fill", 255);
-    this.renderer.set("stroke", 0);
-    let textSize = 0.015 * this.w;
-    this.renderer.set("font", `${textSize}px monospace`);
-    this.renderer.set("textAlign", ["left", "top"]);
-    if (this.debug) {
-      let n = 0;
-      for (let i in this.debugStats) {
-        this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
-        n++;
-      }
-    }
+    renderer._(()=>{
+      this.fireEvent("update", gameDt);
+      for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
+      this.fireEvent("afterUpdate", gameDt);
     
-    this.renderer.restore();
+      this.fireEvent("render");
+      if (this.transition) this.transition.render();
+      this.fireEvent("afterRender");
+    
+      this.renderer.set("fill", 255);
+      this.renderer.set("stroke", 0);
+      let textSize = 0.015 * this.w;
+      this.renderer.set("font", `${textSize}px monospace`);
+      this.renderer.set("textAlign", ["left", "top"]);
+      if (this.debug) {
+        let n = 0;
+        for (let i in this.debugStats) {
+          this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
+          n++;
+        }
+      }
+    });
+    
   
     this.renderer.display(this.mainImg);
   }

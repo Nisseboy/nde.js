@@ -2,6 +2,7 @@ class EntityText extends EntityBase {
   constructor(type = "EntityText") {
     super(type);
 
+    this.size = new Vec(1, 1);
     this.text = undefined;
     this.style = {
       fill: "rgb(255,255,255)",
@@ -17,14 +18,15 @@ class EntityText extends EntityBase {
 
 
   render() {
-    renderer.save();
-    renderer.translate(this.pos);
-    if (this.dir) renderer.rotate(this.dir);
+    renderer._(()=>{
+      renderer.translate(this.pos);
+      if (this.dir) renderer.rotate(this.dir);
 
-    renderer.applyStyles(this.style);
-    renderer.text(this.text, vecZero);
+      renderer.applyStyles(this.style);
+      renderer.text(this.text, vecZero);
 
-    renderer.restore();
+      this.size.from(renderer.measureText(this.text));
+    });
   }
 
   from(data) {

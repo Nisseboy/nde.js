@@ -29,16 +29,19 @@ class EntityBase extends Serializable {
   load() {}
   unload() {}
 
+  getBoundingBox() {
+    return new Vec(this.pos.x - this.size.x / 2, this.pos.y - this.size.y / 2, this.size.x, this.size.y);
+  }
+
 
   render() {
-    renderer.save();
-    renderer.translate(this.pos);
-    if (this.dir) renderer.rotate(this.dir);
-    renderer.translate(this.size._mul(-0.5));
+    renderer._(()=>{
+      renderer.translate(this.pos);
+      if (this.dir) renderer.rotate(this.dir);
+      renderer.translate(this.size._mul(-0.5));
 
-    renderer.image(tex[this.texture], vecZero, this.size);
-
-    renderer.restore();
+      renderer.image(tex[this.texture], vecZero, this.size);
+    });
   }
 
   from(data) {

@@ -34,6 +34,11 @@ class RendererBase {
 
   save() {}
   restore() {}
+  _(context) {
+    this.save();
+    context();
+    this.restore();
+  }
 
   rect(pos, size) {}
   ellipse(pos, size) {}

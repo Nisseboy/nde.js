@@ -22,12 +22,10 @@ class UIRoot extends UIBase {
   }
 
   renderUI() {
-    renderer.save();
-
-    this.hoverPass();
-    this.renderPass();
-
-    renderer.restore();
+    renderer._(()=>{
+      this.hoverPass();
+      this.renderPass();
+    });
   }
 
 

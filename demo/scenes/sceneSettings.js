@@ -163,21 +163,13 @@ class SceneSettings extends Scene {
     let cam = this.cam;
     cam.renderW = nde.w;
 
-    renderer.save();
+    renderer._(()=>{
+      renderer.set("fill", settings.overrideBackground?[settings.backgroundR, settings.backgroundG, settings.backgroundB]:19);
+      renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
+    });
 
-    renderer.set("fill", settings.overrideBackground?[settings.backgroundR, settings.backgroundG, settings.backgroundB]:19);
-    renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
-    
-    renderer.restore();
-
-
-
-    renderer.save();
-
-    cam.applyTransform();
-    renderer.set("lineWidth", cam.unscale(1));
-    this.ui.renderUI();
-
-    renderer.restore();
+    cam._(renderer, ()=>{
+      this.ui.renderUI();
+    });
   }
 }

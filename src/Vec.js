@@ -68,6 +68,18 @@ class Vec {
   isEqualTo(other) {
     return this.x == other.x && this.y == other.y && this.z == other.z && this.w == other.w
   }
+
+  /**
+   * Checks if this is within either bounding box vec(x, y, width, height)
+   * 
+   * @param {Vec} boundingBox
+   * @return {boolean} isWithin
+   */
+  isWithin(boundingBox) {
+    if (this.x < boundingBox.x || this.x > boundingBox.x + boundingBox.z) return false;
+    if (this.y < boundingBox.y || this.y > boundingBox.y + boundingBox.w) return false;
+    return true;
+  }
   /**
    * Sets each axis of this vector to each axis of v
    * 

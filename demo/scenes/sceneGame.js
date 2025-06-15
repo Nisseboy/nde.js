@@ -69,26 +69,20 @@ class SceneGame extends Scene {
     let cam = this.cam;
     cam.renderW = nde.w;
 
-    renderer.save();
 
-    renderer.set("fill", "rgb(100, 100, 50)");
-    renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
-
-    renderer.restore();
-
+    renderer._(()=>{
+      renderer.set("fill", "rgb(100, 100, 50)");
+      renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
+    });
 
 
-    renderer.save();
 
-    cam.transformRenderer();
-    renderer.set("lineWidth", cam.unscale(1));
+    cam._(renderer, () => {
+      for (let i = 0; i < this.world.entities.length; i++) {
+        let e = this.world.entities[i];
 
-    for (let i = 0; i < this.world.entities.length; i++) {
-      let e = this.world.entities[i];
-
-      e.render();
-    }
-
-    renderer.restore();
+        e.render();
+      }
+    });
   }
 }
