@@ -5,15 +5,8 @@ class TimerFrames extends TimerBase {
     this.lengthFrames = frames;
   }
 
-  tick(dt) {
-    super.tick(dt);
-
+  calculateProgress() {
     this.progress = Math.min(this.elapsedFrames / this.lengthFrames, 1);
-
-    this.callback(this);
-
-    if (this.progress >= 1) {
-      this.stop();
-    }
+    return this.progress;
   }
 }

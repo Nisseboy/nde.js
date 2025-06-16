@@ -8,6 +8,8 @@ files = [
   
   "src/assets/Asset.js",
   "src/assets/Img.js",
+  "src/assets/ImgWrapper/ImgWrapperBase.js",
+  "src/assets/ImgWrapper/ImgAnimation.js",
   "src/assets/Aud.js",
 
   "src/renderers/RendererBase.js",

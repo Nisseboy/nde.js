@@ -724,6 +724,46 @@ class Img extends Asset {
 
 
 
+/* src/assets/ImgWrapper/ImgWrapperBase.js */
+class ImgWrapperBase {
+  constructor() {
+    this.isWrapper = true;
+  }
+
+  get() {}
+}
+
+
+
+
+
+/* src/assets/ImgWrapper/ImgAnimation.js */
+class ImgAnimation extends ImgWrapperBase {
+  constructor(texs, timer, loop) {
+    super();
+
+    this.texs = texs;
+    this.timer = timer;
+    this.timer.loop = loop;
+  }
+
+  get() {
+    let p = Math.floor(this.timer.progress * this.texs.length);
+    if (this.timer.progress == 1) p--;
+    let t = this.texs[p];
+    
+    return tex[t];
+  }
+
+  destroy() {
+    this.timer.stop();
+  }
+}
+
+
+
+
+
 /* src/assets/Aud.js */
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -742,6 +782,10 @@ class Aud extends Asset {
 
     this.audioBuffer = undefined;
     this.currentSource = undefined;
+  }
+
+  copy() {
+    
   }
 
   setPosition(pos) {
@@ -954,6 +998,7 @@ class RendererCanvas extends RendererBase {
 
   image(img, pos, size) {
     super.image(img, pos, size);
+    if (img.isWrapper) img = img.get();
     this.img.ctx.drawImage(img.canvas, pos.x, pos.y, size.x, size.y);
   }
 
@@ -1855,19 +1900,38 @@ class TimerBase {
     this.elapsedTime = 0;
     this.progress = 0;
 
+    this.playing = false;
+    this.loop = false;
+
     this.callback = callback;
 
-    nde.timers.push(this);
+    this.start();
   }
+
+  calculateProgress() {}
 
   tick(dt) {
     this.elapsedFrames++; 
     this.elapsedTime += dt;
+    
+    this.calculateProgress();
+
+    this.callback(this);
+
+    if (this.progress == 1 && this.playing) {
+      if (this.loop) this.reset();
+      else this.stop();
+    }
   }
   
   stop() {
     let index = nde.timers.indexOf(this);
     if (index != -1) nde.timers.splice(index, 1);
+    this.playing = false;
+  }
+  start() {
+    nde.timers.push(this);
+    this.playing = true;
   }
 
   reset() {
@@ -1875,10 +1939,8 @@ class TimerBase {
     this.elapsedTime = 0;
     this.progress = 0;
 
-    let index = nde.timers.indexOf(this);
-    if (index != -1) nde.timers.splice(index, 1);
-
-    nde.timers.push(this);
+    this.stop();
+    this.start();
   }
 }
 
@@ -1894,16 +1956,9 @@ class TimerFrames extends TimerBase {
     this.lengthFrames = frames;
   }
 
-  tick(dt) {
-    super.tick(dt);
-
+  calculateProgress() {
     this.progress = Math.min(this.elapsedFrames / this.lengthFrames, 1);
-
-    this.callback(this);
-
-    if (this.progress >= 1) {
-      this.stop();
-    }
+    return this.progress;
   }
 }
 
@@ -1919,16 +1974,9 @@ class TimerTime extends TimerBase {
     this.lengthTime = seconds;
   }
 
-  tick(dt) {
-    super.tick(dt);
-
+  calculateProgress() {
     this.progress = Math.min(this.elapsedTime / this.lengthTime, 1);
-
-    this.callback(this);
-
-    if (this.progress >= 1) {
-      this.stop();
-    }
+    return this.progress;
   }
 }
 
@@ -2401,8 +2449,9 @@ class NDE {
   
   
     renderer._(()=>{
-      this.fireEvent("update", gameDt);
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
+      
+      this.fireEvent("update", gameDt);
       this.fireEvent("afterUpdate", gameDt);
     
       this.fireEvent("render");

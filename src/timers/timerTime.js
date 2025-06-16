@@ -5,15 +5,8 @@ class TimerTime extends TimerBase {
     this.lengthTime = seconds;
   }
 
-  tick(dt) {
-    super.tick(dt);
-
+  calculateProgress() {
     this.progress = Math.min(this.elapsedTime / this.lengthTime, 1);
-
-    this.callback(this);
-
-    if (this.progress >= 1) {
-      this.stop();
-    }
+    return this.progress;
   }
 }

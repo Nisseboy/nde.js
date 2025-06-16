@@ -17,6 +17,10 @@ class Aud extends Asset {
     this.currentSource = undefined;
   }
 
+  copy() {
+    
+  }
+
   setPosition(pos) {
     this.panner.positionX.value = pos.x == undefined ? 0 : pos.x;
     this.panner.positionY.value = pos.y == undefined ? 0 : pos.y;

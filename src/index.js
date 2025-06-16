@@ -340,8 +340,9 @@ class NDE {
   
   
     renderer._(()=>{
-      this.fireEvent("update", gameDt);
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
+      
+      this.fireEvent("update", gameDt);
       this.fireEvent("afterUpdate", gameDt);
     
       this.fireEvent("render");
