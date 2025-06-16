@@ -725,43 +725,52 @@ class Img extends Asset {
 
 
 /* src/assets/Aud.js */
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
 class Aud extends Asset {
   constructor() {
     super();
 
     this.duration = undefined;
 
-    this.audio = new Audio();
+    this.panner = audioContext.createPanner();
+    this.panner.panningModel = 'HRTF';
+    this.panner.distanceModel = 'inverse';
+    this.panner.positionX.value = 0;
+    this.panner.positionY.value = 0;
+    this.panner.positionZ.value = 1;
 
-    this.instances = [];
+    this.audioBuffer = undefined;
+    this.currentSource = undefined;
   }
 
-  restart() {
-    this.stop();
-    this.play();
+  setPosition(pos) {
+    this.panner.positionX.value = pos.x == undefined ? 0 : pos.x;
+    this.panner.positionY.value = pos.y == undefined ? 0 : pos.y;
+    this.panner.positionZ.value = pos.z == undefined ? 1 : pos.z;
   }
 
   play() {
-    if (this.audio.paused) this.audio.play();
-    else {
-      let audio = new Audio(this.path);
-      this.instances.push(audio);
-      audio.play();
-
-      audio.onended = () => {
-        let index = this.instances.indexOf(audio);
-        if (index != -1)
-          this.instances.splice(index, 1);
-      }
+    if (!this.audioBuffer) {
+      console.warn('Audio not loaded yet.');
+      return;
     }
+    
+    const source = audioContext.createBufferSource();
+    source.buffer = this.audioBuffer;
+    source.connect(this.panner);
+    this.panner.connect(audioContext.destination);
+    source.start(0);
   }
   stop() {    
-    this.audio.stop();
-
-    for (let i = 0; i < this.instances.length; i++) {
-      this.instances[i].stop();
-      this.instances.splice(i, 1);
-      i--;
+    if (this.currentSource) {
+      try {
+        this.currentSource.stop();
+      } catch (e) {
+          // Already stopped
+      }
+      this.currentSource.disconnect();
+      this.currentSource = null;
     }
   }
 }
@@ -2418,32 +2427,24 @@ class NDE {
     this.renderer.display(this.mainImg);
   }
 
-  loadAssetHelper(asset, actualAsset, path) {
-    asset.loading = true;
-    asset.path = path;
-
-    actualAsset.src = path;
-
-    this.unloadedAssets.push(asset);
-
-    actualAsset.onerror = e => {
-      console.error(`"${path}" not found`);
-
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset));
-    };
-  }
-
   loadImg(path) {
     let img = new Img(new Vec(1, 1));
     let image = new Image();
+    image.src = path;
 
-    this.loadAssetHelper(img, image, path);
-
+    img.loading = true;
+    img.path = path;
+    this.unloadedAssets.push(img);
 
     image.onload = e => {
       img.resize(new Vec(image.width, image.height));
       img.ctx.drawImage(image, 0, 0);
       img.loading = false;
+
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+    };
+    image.onerror = e => {
+      console.error(`"${path}" not found`);
 
       this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
     };
@@ -2453,15 +2454,23 @@ class NDE {
 
   loadAud(path) {
     let aud = new Aud();
+    aud.loading = true;
+    aud.path = path;
+    this.unloadedAssets.push(aud);
 
-    this.loadAssetHelper(aud, aud.audio, path);
+    fetch(path).then(res => {
+      res.arrayBuffer().then(arrayBuffer => {
+        audioContext.decodeAudioData(arrayBuffer).then(audioBuffer => {
+          aud.audioBuffer = audioBuffer;
+          aud.loading = false;
+          aud.duration = audioBuffer.duration;
+          this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud));
+        });
+      });
+    }).catch(e => {
+      console.error(`"${path}" not found`);
 
-
-    aud.audio.addEventListener("canplaythrough", () => {
-      aud.loading = false;
-      aud.duration = aud.audio.duration;
-
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset));
     });
 
     return aud;
