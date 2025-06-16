@@ -23,8 +23,14 @@ class TimerBase {
     this.callback(this);
 
     if (this.progress == 1 && this.playing) {
-      if (this.loop) this.reset();
-      else this.stop();
+      this.stop();
+
+      if (!this.loop) return
+
+      if (this.lengthFrames) this.elapsedFrames -= this.lengthFrames; else this.elapsedFrames = 0;
+      if (this.lengthTime) this.elapsedTime -= this.lengthTime; else this.elapsedTime = 0;
+      this.progress = this.calculateProgress();
+      this.start();
     }
   }
   
