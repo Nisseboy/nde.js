@@ -15,7 +15,10 @@ class ImgAnimation extends ImgWrapperBase {
     return tex[t];
   }
 
-  destroy() {
+  start() {
+    this.timer.start();
+  }
+  stop() {
     this.timer.stop();
   }
 }
