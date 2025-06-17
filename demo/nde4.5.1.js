@@ -688,6 +688,8 @@ class Asset {
   constructor() {
     this.loading = false;
     this.path = "";
+
+    this.onload = undefined;
   }
 
   destroy() {}
@@ -752,10 +754,13 @@ class ImgAnimation extends ImgWrapperBase {
     if (this.timer.progress == 1) p--;
     let t = this.texs[p];
     
-    return tex[t];
+    return t;
   }
 
-  destroy() {
+  start() {
+    this.timer.start();
+  }
+  stop() {
     this.timer.stop();
   }
 }
@@ -1919,8 +1924,14 @@ class TimerBase {
     this.callback(this);
 
     if (this.progress == 1 && this.playing) {
-      if (this.loop) this.reset();
-      else this.stop();
+      this.stop();
+
+      if (!this.loop) return
+
+      if (this.lengthFrames) this.elapsedFrames -= this.lengthFrames; else this.elapsedFrames = 0;
+      if (this.lengthTime) this.elapsedTime -= this.lengthTime; else this.elapsedTime = 0;
+      this.progress = this.calculateProgress();
+      this.start();
     }
   }
   
@@ -2489,6 +2500,7 @@ class NDE {
       img.resize(new Vec(image.width, image.height));
       img.ctx.drawImage(image, 0, 0);
       img.loading = false;
+      if (img.onload) img.onload();
 
       this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
     };
@@ -2513,6 +2525,8 @@ class NDE {
           aud.audioBuffer = audioBuffer;
           aud.loading = false;
           aud.duration = audioBuffer.duration;
+          if (aud.onload) aud.onload();
+          
           this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud));
         });
       });

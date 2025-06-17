@@ -4,7 +4,7 @@ class EntityPlayer extends EntityBase {
 
     this.size = new Vec(1, 1);
     this.speed = 4;
-    this.texture = "duck/rot";
+    this.texture = "duck/1";
     this.name = "Player";
   }
 
