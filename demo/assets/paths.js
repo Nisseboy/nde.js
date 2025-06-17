@@ -6,5 +6,5 @@ let audiosPaths = [
 ];
 let texturesPaths = [
 "duck/1",
-"duck/2",
+"duck/rot/1,2,3,4,5,6,7,8",
 ];

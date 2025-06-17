@@ -12,7 +12,7 @@ class ImgAnimation extends ImgWrapperBase {
     if (this.timer.progress == 1) p--;
     let t = this.texs[p];
     
-    return tex[t];
+    return t;
   }
 
   start() {

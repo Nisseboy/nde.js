@@ -380,6 +380,7 @@ class NDE {
       img.resize(new Vec(image.width, image.height));
       img.ctx.drawImage(image, 0, 0);
       img.loading = false;
+      if (img.onload) img.onload();
 
       this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
     };
@@ -404,6 +405,8 @@ class NDE {
           aud.audioBuffer = audioBuffer;
           aud.loading = false;
           aud.duration = audioBuffer.duration;
+          if (aud.onload) aud.onload();
+          
           this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud));
         });
       });
