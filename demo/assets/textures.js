@@ -1,5 +1,5 @@
 let tex = {};
-let aud = {};
+let auds = {};
 
 function preloadTextures() {
   //Load all the textures
@@ -86,6 +86,6 @@ function preloadTextures() {
 
   //Load all the audios
   for (let i = 0; i < audiosPaths.length; i++) {
-    aud[audiosPaths[i]] = nde.loadAud("assets/audios/" + audiosPaths[i] + ".mp3");
+    auds[audiosPaths[i]] = new AudPool(nde.loadAud("assets/audios/" + audiosPaths[i] + ".mp3"));
   }
 }

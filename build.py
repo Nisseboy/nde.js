@@ -11,6 +11,7 @@ files = [
   "src/assets/ImgWrapper/ImgWrapperBase.js",
   "src/assets/ImgWrapper/ImgAnimation.js",
   "src/assets/Aud.js",
+  "src/assets/AudPool.js",
 
   "src/renderers/RendererBase.js",
   "src/renderers/RendererCanvas.js",

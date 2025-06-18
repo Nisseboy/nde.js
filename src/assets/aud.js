@@ -10,21 +10,31 @@ class Aud extends Asset {
     this.panner.panningModel = 'HRTF';
     this.panner.distanceModel = 'inverse';
     this.panner.positionX.value = 0;
-    this.panner.positionY.value = 0;
-    this.panner.positionZ.value = 1;
+    this.panner.positionY.value = 1;
+    this.panner.positionZ.value = 0;
+    this.position = new Vec(0, 1, 0);
 
     this.audioBuffer = undefined;
     this.currentSource = undefined;
+
+    this.isPlaying = false;
   }
 
   copy() {
-    
+    const newAud = new Aud();
+    newAud.path = this.path;
+    newAud.audioBuffer = this.audioBuffer;
+    newAud.setPosition(this.position);
+    return newAud;
   }
 
-  setPosition(pos) {
-    this.panner.positionX.value = pos.x == undefined ? 0 : pos.x;
-    this.panner.positionY.value = pos.y == undefined ? 0 : pos.y;
-    this.panner.positionZ.value = pos.z == undefined ? 1 : pos.z;
+  setPosition(xorpos, y, z) {
+    if (xorpos.x != undefined) this.position.from(xorpos);
+    else this.position.set(xorpos, y, z);
+    
+    this.panner.positionX.value = this.position.x;
+    this.panner.positionY.value = this.position.y;
+    this.panner.positionZ.value = this.position.z;
   }
 
   play() {
@@ -38,8 +48,12 @@ class Aud extends Asset {
     source.connect(this.panner);
     this.panner.connect(audioContext.destination);
     source.start(0);
+    this.currentSource = source;
+    this.isPlaying = true;
+    source.onended = () => {this.isPlaying = false;}
   }
   stop() {    
+    this.isPlaying = false;
     if (this.currentSource) {
       try {
         this.currentSource.stop();
