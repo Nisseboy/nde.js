@@ -369,6 +369,8 @@ class Vec extends Serializable {
   _rotateZAxis(angle) {return this.copy().rotateZAxis(angle)}
 
   _mix(v2, i) {return this.copy().mix(v2, i)}
+
+  _() {return this.copy()}
 }
 
 let vecZero = new Vec(0, 0);

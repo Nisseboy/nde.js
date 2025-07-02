@@ -1,10 +1,28 @@
 class Scene {
   constructor() {
     this.hasStarted = false;    
+
+    this.lastIndex = 0;
+    this.last = [];
   }
 
 
   
+  /**
+   * 
+   */
+  useLast(val, _default) {
+    let v = this.last[this.lastIndex];
+    if (v == undefined) v = (_default == undefined ? 0 : _default);
+
+    this.last[this.lastIndex] = val;
+
+    this.lastIndex++;
+
+    return v;
+  }
+
+
     
   /**
    * 

@@ -342,6 +342,7 @@ class NDE {
     renderer._(()=>{
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
       
+      if (!this.transition) this.scene.lastIndex = 0; 
       this.fireEvent("update", gameDt);
       this.fireEvent("afterUpdate", gameDt);
     
