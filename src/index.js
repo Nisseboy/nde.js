@@ -133,7 +133,7 @@ class NDE {
         this.mainElem.appendChild(this.mainImg.canvas);
         this.resize();
       
-        this.renderer.set("renderer.", "16px monospace");
+        this.renderer.set("font", "16px monospace");
         this.renderer.set("textAlign", ["left", "top"]);
         this.renderer.set("imageSmoothing", false);
         
@@ -339,7 +339,7 @@ class NDE {
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
   
   
-    renderer._(()=>{
+    this.renderer._(()=>{
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
       
       if (!this.transition) this.scene.lastIndex = 0; 

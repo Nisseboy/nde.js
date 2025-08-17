@@ -230,15 +230,15 @@ class UIBase {
 
   renderDebug() {
     if (this.debugColor) {
-      renderer.set("fill", `rgb(${this.debugColor}, 0, 0)`);
-      renderer.set("stroke", `rgb(255, 255, 255)`);
+      nde.renderer.set("fill", `rgb(${this.debugColor}, 0, 0)`);
+      nde.renderer.set("stroke", `rgb(255, 255, 255)`);
 
       if (this.trueHovered) {
-        renderer.set("fill", `rgb(${this.debugColor}, ${this.debugColor}, 0)`);
+        nde.renderer.set("fill", `rgb(${this.debugColor}, ${this.debugColor}, 0)`);
       }
 
       if (this.trueHoveredBottom) {
-        renderer.set("fill", `rgb(0, 255, 0)`);
+        nde.renderer.set("fill", `rgb(0, 255, 0)`);
 
         nde.debugStats.uiPos = this.pos;
         nde.debugStats.uiSize = this.size;
@@ -247,11 +247,11 @@ class UIBase {
   }
 
   render() {
-    renderer.applyStyles(this.hovered ? this.style.hover : this.style);
+    nde.renderer.applyStyles(this.hovered ? this.style.hover : this.style);
 
     this.renderDebug();
 
-    renderer.rect(this.pos, this.size);   
+    nde.renderer.rect(this.pos, this.size);   
   }
 }
 

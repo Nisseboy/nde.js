@@ -13,10 +13,10 @@ class UIImage extends UIBase {
   }
 
   render() {
-    renderer.applyStyles(this.hovered ? this.style.hover.image : this.style.image);
+    nde.renderer.applyStyles(this.hovered ? this.style.hover.image : this.style.image);
 
     super.renderDebug();
 
-    renderer.image(this.image, this.pos, this.size);
+    nde.renderer.image(this.image, this.pos, this.size);
   }
 }

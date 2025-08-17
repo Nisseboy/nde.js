@@ -92,6 +92,12 @@ class RendererCanvas extends RendererBase {
     this.img.ctx.fill();
     this.img.ctx.stroke();
   }
+  line(pos1, pos2) {    
+    this.img.ctx.beginPath();
+    this.img.ctx.moveTo(pos1.x, pos1.y);
+    this.img.ctx.lineTo(pos2.x, pos2.y);
+    this.img.ctx.stroke();
+  }
 
   text(t, pos) {
     t = t + "";

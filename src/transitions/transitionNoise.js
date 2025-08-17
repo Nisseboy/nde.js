@@ -26,7 +26,7 @@ class TransitionNoise extends TransitionBase {
       i += 4;
     }
 
-    renderer.img.ctx.putImageData(a, 0, 0);
+    nde.renderer.img.ctx.putImageData(a, 0, 0);
 
   }
 }

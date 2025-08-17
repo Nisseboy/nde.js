@@ -92,9 +92,9 @@ class UISettingRange extends UISettingBase {
     this.children = [this.range, this.number];
 
     let size;
-    renderer._(()=>{
-      renderer.applyStyles(this.style.number.text);
-      size = renderer.measureText(this.max);
+    nde.renderer._(()=>{
+      nde.renderer.applyStyles(this.style.number.text);
+      size = nde.renderer.measureText(this.max);
     });
 
     this.number.style.minSize.x = size.x;
@@ -149,6 +149,6 @@ class UISettingRange extends UISettingBase {
   render() {    
     super.render();
     
-    this.rendererTransform = renderer.getTransform();
+    this.rendererTransform = nde.renderer.getTransform();
   }
 }

@@ -22,7 +22,7 @@ class UIRoot extends UIBase {
   }
 
   renderUI() {
-    renderer._(()=>{
+    nde.renderer._(()=>{
       this.hoverPass();
       this.renderPass();
     });
@@ -61,7 +61,7 @@ class UIRoot extends UIBase {
 
   hoverPass() {    
     let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
-    let transformedMousePoint = mousePoint.matrixTransform(renderer.getTransform().inverse());
+    let transformedMousePoint = mousePoint.matrixTransform(nde.renderer.getTransform().inverse());
 
     this.hoverPassHelper(this, false, transformedMousePoint);
   }

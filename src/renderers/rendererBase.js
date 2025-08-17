@@ -42,6 +42,7 @@ class RendererBase {
 
   rect(pos, size) {}
   ellipse(pos, size) {}
+  line(pos1, pos2) {}
   text(t, pos) {}
   image(img, pos, size) {
     if (!img) {
