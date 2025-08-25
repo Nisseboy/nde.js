@@ -93,7 +93,7 @@ class UISettingRange extends UISettingBase {
 
     let size;
     nde.renderer._(()=>{
-      nde.renderer.applyStyles(this.style.number.text);
+      nde.renderer.setAll(this.style.number.text);
       size = nde.renderer.measureText(this.max);
     });
 

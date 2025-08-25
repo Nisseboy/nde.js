@@ -13,7 +13,7 @@ class UIImage extends UIBase {
   }
 
   render() {
-    nde.renderer.applyStyles(this.hovered ? this.style.hover.image : this.style.image);
+    nde.renderer.setAll(this.hovered ? this.style.hover.image : this.style.image);
 
     super.renderDebug();
 

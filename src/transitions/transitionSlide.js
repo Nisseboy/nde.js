@@ -9,7 +9,7 @@ class TransitionSlide extends TransitionBase {
     let a = this.oldImg.size.x * this.timer.progress;
     let b = this.oldImg.size.x * (1 - this.timer.progress);
 
-    let ctx = nde.renderer.img.ctx;
+    let ctx = nde.renderer.ctx;
     
     nde.renderer._(()=>{
       ctx.beginPath();

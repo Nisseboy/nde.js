@@ -6,12 +6,14 @@ class TransitionBase {
     this.timer = timer;
 
     nde.fireEvent("render");
-    nde.renderer.display(this.oldImg);
+    this.oldImg.ctx.imageSmoothingEnabled = false;
+    this.oldImg.image(nde.renderer, vecZero, this.oldImg.size);
 
     nde.setScene(newScene);
     newScene.update(1/60);
     nde.fireEvent("render");
-    nde.renderer.display(this.newImg);
+    this.newImg.ctx.imageSmoothingEnabled = false;
+    this.newImg.image(nde.renderer, vecZero, this.newImg.size);
   }
 
   render() {

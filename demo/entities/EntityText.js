@@ -22,7 +22,7 @@ class EntityText extends EntityBase {
       renderer.translate(this.pos);
       if (this.dir) renderer.rotate(this.dir);
 
-      renderer.applyStyles(this.style);
+      renderer.setAll(this.style);
       renderer.text(this.text, vecZero);
 
       this.size.from(renderer.measureText(this.text));

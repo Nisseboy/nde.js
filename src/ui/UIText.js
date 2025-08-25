@@ -16,7 +16,7 @@ class UIText extends UIBase {
   }
 
   calculateSize() {
-    nde.renderer.applyStyles(this.style.text);
+    nde.renderer.setAll(this.style.text);
 
     this.size = nde.renderer.measureText(this.text);    
 
@@ -25,7 +25,7 @@ class UIText extends UIBase {
   }
 
   render() {
-    nde.renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
+    nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
 
     super.renderDebug();
 

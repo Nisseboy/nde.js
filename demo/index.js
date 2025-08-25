@@ -1,19 +1,21 @@
-let nde;
-let scenes;
-let renderer;
+let nde = new NDE(document.getElementsByTagName("main")[0]); //nde needs to be defined globally and be the single instance of NDE
+nde.debug = true;
+nde.uiDebug = false;
+//nde.targetFPS = 60;
+
+let renderer = nde.renderer;
+preloadTextures();
+
 
 let settingsName = "ndeSettings";
 let settings = JSON.parse(localStorage.getItem(settingsName)) || {};
 
 
-nde = new NDE(document.getElementsByTagName("main")[0]);
-renderer = nde.renderer;
-preloadTextures();
-
-nde.debug = true;
-nde.uiDebug = false;
-
-//nde.targetFPS = 60;
+let scenes = {
+  game: new SceneGame(), 
+  mainMenu: new SceneMainMenu(),
+  settings: new SceneSettings(),
+};
 
 nde.controls = {
   "Move Up": "w",
@@ -33,11 +35,6 @@ nde.controls = {
   "UI Debug Mode": "k",
 };
 
-scenes = {
-  game: new SceneGame(), 
-  mainMenu: new SceneMainMenu(),
-  settings: new SceneSettings(),
-};
 
 nde.registerEvent("keydown", e => {
   if (nde.getKeyEqual(e.key,"Debug Mode")) nde.debug = !nde.debug;

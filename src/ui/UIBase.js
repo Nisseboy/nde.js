@@ -247,7 +247,7 @@ class UIBase {
   }
 
   render() {
-    nde.renderer.applyStyles(this.hovered ? this.style.hover : this.style);
+    nde.renderer.setAll(this.hovered ? this.style.hover : this.style);
 
     this.renderDebug();
 

@@ -421,6 +421,8 @@ class Vec extends Serializable {
   _rotateZAxis(angle) {return this.copy().rotateZAxis(angle)}
 
   _mix(v2, i) {return this.copy().mix(v2, i)}
+
+  _() {return this.copy()}
 }
 
 let vecZero = new Vec(0, 0);
@@ -587,10 +589,28 @@ class Camera extends Serializable {
 class Scene {
   constructor() {
     this.hasStarted = false;    
+
+    this.lastIndex = 0;
+    this.last = [];
   }
 
 
   
+  /**
+   * 
+   */
+  useLast(val, _default) {
+    let v = this.last[this.lastIndex];
+    if (v == undefined) v = (_default == undefined ? 0 : _default);
+
+    this.last[this.lastIndex] = val;
+
+    this.lastIndex++;
+
+    return v;
+  }
+
+
     
   /**
    * 
@@ -719,6 +739,138 @@ class Img extends Asset {
 
     this.canvas.width = size.x;
     this.canvas.height = size.y;
+  }
+
+
+
+  parseColor(...args) {
+    if (args.length == 1) {
+      if (typeof args[0] == "string") return args[0];
+      if (typeof args[0] == "number") return `rgba(${args[0]},${args[0]},${args[0]},1)`;
+      if (args[0] instanceof Vec) return `rgba(${args[0].x},${args[0].y},${args[0].z},${args[0][3] == undefined ? 1 : args[0].w})`;
+      if (typeof args[0] == "object") return `rgba(${args[0][0]},${args[0][1]},${args[0][2]},${args[0][3] == undefined ? 1 : args[0][3]})`;
+    }
+    return `rgba(${args[0]},${args[1]},${args[2]},${args[3] == undefined ? 1 : args[3]})`;
+  }
+
+  set(property, value) {
+    switch (property) {
+      case "fill":
+        this.ctx.fillStyle = this.parseColor(value);
+        break;
+      case "stroke":
+        this.ctx.strokeStyle = this.parseColor(value);
+        break;
+      case "lineWidth":
+        this.ctx.lineWidth = value;
+        break;
+      case "textAlign":
+        this.ctx.textAlign = value[0];
+        this.ctx.textBaseline = value[1];
+        break;
+      case "font":
+        this.ctx.font = value;
+        break;
+      case "imageSmoothing":
+        this.ctx.imageSmoothingEnabled = value;
+        break;
+      case "filter":
+        this.ctx.filter = value;
+        break;
+    }
+  }
+
+  setAll(styles) {
+    for (let s in styles) {      
+      this.set(s, styles[s]);
+    }
+  }
+
+  
+  translate(pos) {
+    this.ctx.translate(pos.x, pos.y);
+  }
+  rotate(radians) {
+    this.ctx.rotate(radians);
+  }
+  scale(scale) {
+    if (scale.x == undefined) scale = new Vec(scale, scale);
+    this.ctx.scale(scale.x, scale.y);
+  }
+  getTransform() {
+    return this.ctx.getTransform();
+  }
+  setTransform(transform) {
+    this.ctx.setTransform(transform);
+  }
+  resetTransform() {
+    this.ctx.resetTransform();
+  }
+
+
+  rect(pos, size) {    
+    this.ctx.beginPath();    
+    this.ctx.rect(pos.x, pos.y, size.x, size.y);
+    this.ctx.fill();
+    this.ctx.stroke();
+  }
+  ellipse(pos, size) {    
+    this.ctx.beginPath();    
+    this.ctx.ellipse(pos.x, pos.y, size.x, size.y, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.stroke();
+  }
+  line(pos1, pos2) {    
+    this.ctx.beginPath();
+    this.ctx.moveTo(pos1.x, pos1.y);
+    this.ctx.lineTo(pos2.x, pos2.y);
+    this.ctx.stroke();
+  }
+  image(img, pos, size) {
+    if (!img) {
+      console.error("No image supplied to renderer.image()");
+    }
+
+    if (img.isWrapper) img = img.get();
+    this.ctx.drawImage(img.canvas, pos.x, pos.y, size.x, size.y);
+  }
+
+  text(t, pos) {
+    t = t + "";
+
+    let lines = t.split("\n");
+    let y = 0;
+    let step = 0;
+
+    if (lines.length > 1) step = this.measureText(lines[0]).y;
+    
+    for (let l of lines) {
+      this.ctx.fillText(l, pos.x, pos.y + y);   
+      y += step;
+    } 
+  }
+  measureText(text) {
+    text = text + "";
+
+    let size = this.ctx.measureText(text);
+
+    let lines = text.split("\n").length;
+    
+    return new Vec(size.width, (size.fontBoundingBoxAscent + size.fontBoundingBoxDescent) * lines);
+  }
+  
+  
+
+  save() {
+    this.ctx.save();
+  }
+  restore() {
+    this.ctx.restore();
+  }
+  _(context) {
+    this.save();
+    context();
+    this.restore();
   }
 }
 
@@ -865,194 +1017,6 @@ class AudPool {
   }
   getNew() {
     return this.aud.copy();
-  }
-}
-
-
-
-
-
-/* src/renderers/RendererBase.js */
-class RendererBase {
-  constructor() {
-    this.img = new Img(new Vec(1, 1));
-    
-    
-    this.set("fill", 255);
-    this.set("stroke", 0);
-    this.set("lineWidth", 1);
-    this.set("textAlign", ["left", "top"]);
-    this.set("font", "16px monospace");
-    this.set("imageSmoothing", true);
-    this.set("filter", "none");
-  }
-
-  parseColor(c) {}
-
-  set(property, val) {}
-
-  translate(pos) {}
-  rotate(radians) {}
-  scale(scale) {}
-  resetTransform() {}
-
-  measureText(text) {}
-
-  applyStyles(styles) {
-    for (let s in styles) {      
-      this.set(s, styles[s]);
-    }
-  }
-
-  getTransform() {}
-  setTransform(transform) {}
-
-  save() {}
-  restore() {}
-  _(context) {
-    this.save();
-    context();
-    this.restore();
-  }
-
-  rect(pos, size) {}
-  ellipse(pos, size) {}
-  text(t, pos) {}
-  image(img, pos, size) {
-    if (!img) {
-      console.error("No image supplied to renderer.image()");
-    }
-  }
-
-  display(targetImg) {
-    targetImg.ctx.imageSmoothingEnabled = false;
-    targetImg.ctx.drawImage(this.img.canvas, 0, 0, targetImg.size.x, targetImg.size.y);
-  }
-}
-
-
-
-
-
-/* src/renderers/RendererCanvas.js */
-class RendererCanvas extends RendererBase {
-  constructor() {
-    super();
-    this.ctx = this.img.ctx;
-  }
-
-  parseColor(...args) {
-    if (args.length == 1) {
-      if (typeof args[0] == "string") return args[0];
-      if (typeof args[0] == "number") return `rgba(${args[0]},${args[0]},${args[0]},1)`;
-      if (args[0] instanceof Vec) return `rgba(${args[0].x},${args[0].y},${args[0].z},${args[0][3] == undefined ? 1 : args[0].w})`;
-      if (typeof args[0] == "object") return `rgba(${args[0][0]},${args[0][1]},${args[0][2]},${args[0][3] == undefined ? 1 : args[0][3]})`;
-    }
-    return `rgba(${args[0]},${args[1]},${args[2]},${args[3] == undefined ? 1 : args[3]})`;
-  }
-
-  
-  translate(pos) {
-    this.img.ctx.translate(pos.x, pos.y);
-  }
-  rotate(radians) {
-    this.img.ctx.rotate(radians);
-  }
-  scale(scale) {
-    if (scale.x == undefined) scale = new Vec(scale, scale);
-    this.img.ctx.scale(scale.x, scale.y);
-  }
-  resetTransform() {
-    this.img.ctx.resetTransform();
-  }
-
-  set(property, value) {
-    switch (property) {
-      case "fill":
-        this.img.ctx.fillStyle = this.parseColor(value);
-        break;
-      case "stroke":
-        this.img.ctx.strokeStyle = this.parseColor(value);
-        break;
-      case "lineWidth":
-        this.img.ctx.lineWidth = value;
-        break;
-      case "textAlign":
-        this.img.ctx.textAlign = value[0];
-        this.img.ctx.textBaseline = value[1];
-        break;
-      case "font":
-        this.img.ctx.font = value;
-        break;
-      case "imageSmoothing":
-        this.img.ctx.imageSmoothingEnabled = value;
-        break;
-      case "filter":
-        this.img.ctx.filter = value;
-        break;
-    }
-  }
-
-  measureText(text) {
-    text = text + "";
-
-    let size = this.img.ctx.measureText(text);
-
-    let lines = text.split("\n").length;
-    
-    return new Vec(size.width, (size.fontBoundingBoxAscent + size.fontBoundingBoxDescent) * lines);
-  }
-
-  getTransform() {
-    return this.img.ctx.getTransform();
-  }
-  setTransform(transform) {
-    this.img.ctx.setTransform(transform);
-  }
-
-  save() {
-    this.img.ctx.save();
-  }
-  restore() {
-    this.img.ctx.restore();
-  }
-
-  rect(pos, size) {    
-    this.img.ctx.beginPath();    
-    this.img.ctx.rect(pos.x, pos.y, size.x, size.y);
-    this.img.ctx.fill();
-    this.img.ctx.stroke();
-  }
-  ellipse(pos, size) {    
-    this.img.ctx.beginPath();    
-    this.img.ctx.ellipse(pos.x, pos.y, size.x, size.y, 0, 0, Math.PI * 2);
-    this.img.ctx.fill();
-    this.img.ctx.stroke();
-  }
-
-  text(t, pos) {
-    t = t + "";
-
-    let lines = t.split("\n");
-    let y = 0;
-    let step = 0;
-
-    if (lines.length > 1) step = this.measureText(lines[0]).y;
-    
-    for (let l of lines) {
-      this.img.ctx.fillText(l, pos.x, pos.y + y);   
-      y += step;
-    } 
-  }
-
-  image(img, pos, size) {
-    super.image(img, pos, size);
-    if (img.isWrapper) img = img.get();
-    this.img.ctx.drawImage(img.canvas, pos.x, pos.y, size.x, size.y);
-  }
-
-  display(targetImg) {
-    super.display(targetImg);
   }
 }
 
@@ -1293,15 +1257,15 @@ class UIBase {
 
   renderDebug() {
     if (this.debugColor) {
-      renderer.set("fill", `rgb(${this.debugColor}, 0, 0)`);
-      renderer.set("stroke", `rgb(255, 255, 255)`);
+      nde.renderer.set("fill", `rgb(${this.debugColor}, 0, 0)`);
+      nde.renderer.set("stroke", `rgb(255, 255, 255)`);
 
       if (this.trueHovered) {
-        renderer.set("fill", `rgb(${this.debugColor}, ${this.debugColor}, 0)`);
+        nde.renderer.set("fill", `rgb(${this.debugColor}, ${this.debugColor}, 0)`);
       }
 
       if (this.trueHoveredBottom) {
-        renderer.set("fill", `rgb(0, 255, 0)`);
+        nde.renderer.set("fill", `rgb(0, 255, 0)`);
 
         nde.debugStats.uiPos = this.pos;
         nde.debugStats.uiSize = this.size;
@@ -1310,11 +1274,11 @@ class UIBase {
   }
 
   render() {
-    renderer.applyStyles(this.hovered ? this.style.hover : this.style);
+    nde.renderer.setAll(this.hovered ? this.style.hover : this.style);
 
     this.renderDebug();
 
-    renderer.rect(this.pos, this.size);   
+    nde.renderer.rect(this.pos, this.size);   
   }
 }
 
@@ -1371,7 +1335,7 @@ class UIRoot extends UIBase {
   }
 
   renderUI() {
-    renderer._(()=>{
+    nde.renderer._(()=>{
       this.hoverPass();
       this.renderPass();
     });
@@ -1410,7 +1374,7 @@ class UIRoot extends UIBase {
 
   hoverPass() {    
     let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
-    let transformedMousePoint = mousePoint.matrixTransform(renderer.getTransform().inverse());
+    let transformedMousePoint = mousePoint.matrixTransform(nde.renderer.getTransform().inverse());
 
     this.hoverPassHelper(this, false, transformedMousePoint);
   }
@@ -1492,20 +1456,20 @@ class UIText extends UIBase {
   }
 
   calculateSize() {
-    renderer.applyStyles(this.style.text);
+    nde.renderer.setAll(this.style.text);
 
-    this.size = renderer.measureText(this.text);    
+    this.size = nde.renderer.measureText(this.text);    
 
     if (this.size.x < this.style.minSize.x) this.size.x = this.style.minSize.x;
     if (this.size.y < this.style.minSize.y) this.size.y = this.style.minSize.y;
   }
 
   render() {
-    renderer.applyStyles(this.hovered ? this.style.hover.text : this.style.text);
+    nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
 
     super.renderDebug();
 
-    renderer.text(this.text, this.pos);
+    nde.renderer.text(this.text, this.pos);
   }
 }
 
@@ -1529,11 +1493,11 @@ class UIImage extends UIBase {
   }
 
   render() {
-    renderer.applyStyles(this.hovered ? this.style.hover.image : this.style.image);
+    nde.renderer.setAll(this.hovered ? this.style.hover.image : this.style.image);
 
     super.renderDebug();
 
-    renderer.image(this.image, this.pos, this.size);
+    nde.renderer.image(this.image, this.pos, this.size);
   }
 }
 
@@ -1677,8 +1641,8 @@ class UISettingCollection extends UISettingBase {
   render() {
     for (let i in this.elements) {
       let elem = this.elements[i];      
-      renderer.applyStyles(this.style.text);
-      renderer.text(this.template[i].name || i, new Vec(this.pos.x, elem.pos.y));
+      nde.renderer.setAll(this.style.text);
+      nde.renderer.text(this.template[i].name || i, new Vec(this.pos.x, elem.pos.y));
 
       elem.render();
     }
@@ -1868,9 +1832,9 @@ class UISettingRange extends UISettingBase {
     this.children = [this.range, this.number];
 
     let size;
-    renderer._(()=>{
-      renderer.applyStyles(this.style.number.text);
-      size = renderer.measureText(this.max);
+    nde.renderer._(()=>{
+      nde.renderer.setAll(this.style.number.text);
+      size = nde.renderer.measureText(this.max);
     });
 
     this.number.style.minSize.x = size.x;
@@ -1925,7 +1889,7 @@ class UISettingRange extends UISettingBase {
   render() {    
     super.render();
     
-    this.rendererTransform = renderer.getTransform();
+    this.rendererTransform = nde.renderer.getTransform();
   }
 }
 
@@ -2048,17 +2012,19 @@ class TransitionBase {
     this.timer = timer;
 
     nde.fireEvent("render");
-    renderer.display(this.oldImg);
+    this.oldImg.ctx.imageSmoothingEnabled = false;
+    this.oldImg.image(nde.renderer, vecZero, this.oldImg.size);
 
     nde.setScene(newScene);
     newScene.update(1/60);
     nde.fireEvent("render");
-    renderer.display(this.newImg);
+    this.newImg.ctx.imageSmoothingEnabled = false;
+    this.newImg.image(nde.renderer, vecZero, this.newImg.size);
   }
 
   render() {
-    renderer.set("fill", 0);
-    renderer.rect(new Vec(0, 0), nde.mainImg.size);
+    nde.renderer.set("fill", 0);
+    nde.renderer.rect(new Vec(0, 0), nde.mainImg.size);
 
     if (this.timer.progress == 1) nde.transition = undefined;
   }
@@ -2077,11 +2043,11 @@ class TransitionFade extends TransitionBase {
   render() {
     super.render();
     
-    renderer._(()=>{
-      renderer.set("filter", `opacity(${(1-this.timer.progress) * 100}%)`);
-      renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
-      renderer.set("filter", `opacity(${this.timer.progress * 100}%)`);
-      renderer.image(this.newImg, new Vec(0, 0), this.newImg.size);
+    nde.renderer._(()=>{
+      nde.renderer.set("filter", `opacity(${(1-this.timer.progress) * 100}%)`);
+      nde.renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
+      nde.renderer.set("filter", `opacity(${this.timer.progress * 100}%)`);
+      nde.renderer.image(this.newImg, new Vec(0, 0), this.newImg.size);
     });
   }
 }
@@ -2102,19 +2068,19 @@ class TransitionSlide extends TransitionBase {
     let a = this.oldImg.size.x * this.timer.progress;
     let b = this.oldImg.size.x * (1 - this.timer.progress);
 
-    let ctx = renderer.img.ctx;
+    let ctx = nde.renderer.ctx;
     
-    renderer._(()=>{
+    nde.renderer._(()=>{
       ctx.beginPath();
       ctx.rect(0, 0, a, this.oldImg.size.y);
       ctx.clip();
-      renderer.image(this.newImg, new Vec(0, 0), this.oldImg.size);
+      nde.renderer.image(this.newImg, new Vec(0, 0), this.oldImg.size);
     });
-    renderer._(()=>{
+    nde.renderer._(()=>{
       ctx.beginPath();
       ctx.rect(a, 0, b, this.oldImg.size.y);
       ctx.clip();
-      renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
+      nde.renderer.image(this.oldImg, new Vec(0, 0), this.oldImg.size);
     });
   }
 }
@@ -2152,7 +2118,7 @@ class TransitionNoise extends TransitionBase {
       i += 4;
     }
 
-    renderer.img.ctx.putImageData(a, 0, 0);
+    nde.renderer.ctx.putImageData(a, 0, 0);
 
   }
 }
@@ -2261,7 +2227,7 @@ class NDE {
     this.targetFPS = undefined;
     this.hoveredUIElement = undefined;
     this.transition = undefined;
-    this.renderer = new RendererCanvas();
+    this.renderer = new Img(vecOne);
 
     this.events = {};
 
@@ -2297,7 +2263,7 @@ class NDE {
         this.mainElem.appendChild(this.mainImg.canvas);
         this.resize();
       
-        this.renderer.set("renderer.", "16px monospace");
+        this.renderer.set("font", "16px monospace");
         this.renderer.set("textAlign", ["left", "top"]);
         this.renderer.set("imageSmoothing", false);
         
@@ -2432,7 +2398,7 @@ class NDE {
 
     this.w = result || this.w;
     
-    this.renderer.img.resize(new Vec(this.w, this.w / 16 * 9));
+    this.renderer.resize(new Vec(this.w, this.w / 16 * 9));
     
     if (!this.transition) this.scene.resize(e);
   
@@ -2503,9 +2469,10 @@ class NDE {
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
   
   
-    renderer._(()=>{
+    this.renderer._(()=>{
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
       
+      if (!this.transition) this.scene.lastIndex = 0; 
       this.fireEvent("update", gameDt);
       this.fireEvent("afterUpdate", gameDt);
     
@@ -2528,7 +2495,8 @@ class NDE {
     });
     
   
-    this.renderer.display(this.mainImg);
+    this.mainImg.ctx.imageSmoothingEnabled = false;
+    this.mainImg.image(this.renderer, vecZero, this.mainImg.size);
   }
 
   loadImg(path) {

@@ -13,9 +13,6 @@ files = [
   "src/assets/Aud.js",
   "src/assets/AudPool.js",
 
-  "src/renderers/RendererBase.js",
-  "src/renderers/RendererCanvas.js",
-
   "src/ui/UIBase.js",
   "src/ui/UIRoot.js",
   "src/ui/UIText.js",

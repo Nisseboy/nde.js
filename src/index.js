@@ -97,7 +97,7 @@ class NDE {
     this.targetFPS = undefined;
     this.hoveredUIElement = undefined;
     this.transition = undefined;
-    this.renderer = new RendererCanvas();
+    this.renderer = new Img(vecOne);
 
     this.events = {};
 
@@ -268,7 +268,7 @@ class NDE {
 
     this.w = result || this.w;
     
-    this.renderer.img.resize(new Vec(this.w, this.w / 16 * 9));
+    this.renderer.resize(new Vec(this.w, this.w / 16 * 9));
     
     if (!this.transition) this.scene.resize(e);
   
@@ -365,7 +365,8 @@ class NDE {
     });
     
   
-    this.renderer.display(this.mainImg);
+    this.mainImg.ctx.imageSmoothingEnabled = false;
+    this.mainImg.image(this.renderer, vecZero, this.mainImg.size);
   }
 
   loadImg(path) {
