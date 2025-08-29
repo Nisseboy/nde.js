@@ -1031,6 +1031,7 @@ let defaultStyle = {
   growY: false,
 
   align: new Vec(0, 0), //0: left, 1: center, 2: right,    0: top, 1: middle, 2: bottom
+  offsetPos: new Vec(0, 0),
 
   padding: 0,
 
@@ -1045,6 +1046,7 @@ class UIBase {
   constructor(props) {
     this.defaultStyle = {};
     this.style = undefined;
+    this.uiRoot = undefined;
 
     this.fillStyle(props.style);
 
@@ -1251,6 +1253,8 @@ class UIBase {
         along += c.size.y + this.style.gap;
       }
 
+      c.pos.addV(c.style.offsetPos);
+
       c.positionChildren();
     }
   }
@@ -1267,6 +1271,7 @@ class UIBase {
       if (this.trueHoveredBottom) {
         nde.renderer.set("fill", `rgb(0, 255, 0)`);
 
+        nde.debugStats.uiClass = this.__proto__.constructor.name;
         nde.debugStats.uiPos = this.pos;
         nde.debugStats.uiSize = this.size;
       }
@@ -1281,9 +1286,6 @@ class UIBase {
     nde.renderer.rect(this.pos, this.size);   
   }
 }
-
-
-
 
 function nestedObjectAssign(dest, target, source) {  
   Object.assign(dest, target, source);
@@ -1305,6 +1307,7 @@ function nestedObjectAssign(dest, target, source) {
 
   return dest;
 }
+
 
 
 
@@ -1353,6 +1356,7 @@ class UIRoot extends UIBase {
       this.fitSizePassHelper(c, depth + 1);
     }
 
+    element.uiRoot = this;
     element.calculateSize();
 
     this.depth = Math.max(this.depth, depth);
@@ -1446,7 +1450,7 @@ class UIText extends UIBase {
     this.defaultStyle.text = {
       fill: "rgb(255, 255, 255)",
 
-      font: "16px monospace",
+      font: "25px monospace",
       textAlign: ["left", "top"],
     };
 
@@ -1484,7 +1488,7 @@ class UIImage extends UIBase {
     this.children = [];
 
     this.defaultStyle.image = {
-      imageSmoothing: true,
+      imageSmoothing: false,
     };
 
     this.fillStyle(props.style);  
@@ -1591,7 +1595,7 @@ class UISettingCollection extends UISettingBase {
     this.defaultStyle = {
       direction: "column",
 
-      row: {growX: true, gap: 10},
+      row: {growX: true},
       label: {},
     };
     this.fillStyle(props.style);  
@@ -1669,8 +1673,6 @@ class UISettingCheckbox extends UISettingBase {
     super(props);
 
     this.defaultStyle.checkbox = {
-      fill: "rgba(255, 255, 255, 0)",
-
       growX: true,
       growY: true,
         
@@ -1744,18 +1746,15 @@ class UISettingRange extends UISettingBase {
 
     this.defaultStyle = {
       gap: 10,
-      padding: 0,
 
       slider: {
-        padding: 10,
-        minSize: new Vec(300, 50),
+        padding: 5,
+        minSize: new Vec(300, 30),
 
         fill: "rgb(0, 0, 0)",
-        stroke: "rgb(0, 0, 0)",
   
         active: {
           fill: "rgb(255, 255, 255)",
-          stroke: "rgb(255, 255, 255)",
         },
       },
 
@@ -1763,11 +1762,10 @@ class UISettingRange extends UISettingBase {
         align: new Vec(2, 1),
 
         fill: "rgb(0, 0, 0)",
-        stroke: "rgb(0, 0, 0)",
         
         text: {
           fill: "rgb(255, 255, 255)",
-          font: "40px monospace",
+          font: "25px monospace",
         },
       },
     };
@@ -2201,17 +2199,8 @@ Project:
     sceneGame.js
     sceneMainMenu.js
     ...
-  buttons:
-    buttomCustom.js
-    ...
-  timers:
-    timerCustom.js
-    ...
-  transitions:
-    transitionCustom.js
-    ...
-  renderers:
-    rendererCustom.js
+  ui:
+    UIElementCustom.js
     ...
   index.js
   index.html
@@ -2482,7 +2471,7 @@ class NDE {
     
       this.renderer.set("fill", 255);
       this.renderer.set("stroke", 0);
-      let textSize = 0.015 * this.w;
+      let textSize = 0.012 * this.w;
       this.renderer.set("font", `${textSize}px monospace`);
       this.renderer.set("textAlign", ["left", "top"]);
       if (this.debug) {

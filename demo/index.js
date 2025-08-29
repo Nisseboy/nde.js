@@ -9,6 +9,7 @@ preloadTextures();
 
 let settingsName = "ndeSettings";
 let settings = JSON.parse(localStorage.getItem(settingsName)) || {};
+setBackgroundCol();
 
 
 let scenes = {

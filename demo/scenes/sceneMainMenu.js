@@ -8,17 +8,6 @@ class SceneMainMenu extends Scene {
   }
 
   start() {
-    let buttonStyle = {
-      padding: 10,
-
-      fill: "rgb(0, 0, 0)",
-
-      text: {font: "50px monospace"},
-
-      hover: {
-        text: {fill: "rgb(255, 0, 0)"}
-      }
-    };
     this.ui = new UIRoot({
       pos: new Vec(50, 50),
 
@@ -40,7 +29,7 @@ class SceneMainMenu extends Scene {
           },
           imageStyle: {
             image: {imageSmoothing: false},
-            minSize: new Vec(50, 50),
+            minSize: new Vec(30, 30),
           },
 
           events: {mousedown: [() => {
@@ -102,7 +91,7 @@ class SceneMainMenu extends Scene {
     cam.renderW = nde.w;
 
     renderer._(()=>{
-      renderer.set("fill", settings.overrideBackground?[settings.backgroundR, settings.backgroundG, settings.backgroundB]:19);
+      renderer.set("fill", backgroundCol);
       renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
     });
 

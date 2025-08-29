@@ -4,7 +4,7 @@ class UIImage extends UIBase {
     this.children = [];
 
     this.defaultStyle.image = {
-      imageSmoothing: true,
+      imageSmoothing: false,
     };
 
     this.fillStyle(props.style);  

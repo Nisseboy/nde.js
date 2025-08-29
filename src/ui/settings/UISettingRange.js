@@ -4,18 +4,15 @@ class UISettingRange extends UISettingBase {
 
     this.defaultStyle = {
       gap: 10,
-      padding: 0,
 
       slider: {
-        padding: 10,
-        minSize: new Vec(300, 50),
+        padding: 5,
+        minSize: new Vec(300, 30),
 
         fill: "rgb(0, 0, 0)",
-        stroke: "rgb(0, 0, 0)",
   
         active: {
           fill: "rgb(255, 255, 255)",
-          stroke: "rgb(255, 255, 255)",
         },
       },
 
@@ -23,11 +20,10 @@ class UISettingRange extends UISettingBase {
         align: new Vec(2, 1),
 
         fill: "rgb(0, 0, 0)",
-        stroke: "rgb(0, 0, 0)",
         
         text: {
           fill: "rgb(255, 255, 255)",
-          font: "40px monospace",
+          font: "25px monospace",
         },
       },
     };

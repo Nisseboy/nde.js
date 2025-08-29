@@ -10,42 +10,6 @@ class SceneSettings extends Scene {
   }
 
   start() {
-  
-    
-    let buttonStyle = {
-      minSize: new Vec(50, 50),
-
-      padding: 10,
-
-      fill: "rgb(0, 0, 0)",
-
-      text: {font: "40px monospace"},
-
-      hover: {
-        text: {fill: "rgb(255, 0, 0)"},
-
-        checkbox: {checked: {
-          fill: "rgb(255, 0, 0)",
-          stroke: "rgb(255, 0, 0)",
-        }},
-
-        slider: { active: {
-          fill: "rgb(255, 0, 0)",
-          stroke: "rgb(255, 0, 0)",
-        }},
-      },
-    };
-    let rangeStyle = {
-
-      hover: {
-        slider: { active: {
-          fill: "rgb(255, 0, 0)",
-          stroke: "rgb(255, 0, 0)",
-        }},
-      },
-    };
-
-
     this.ui = new UIRoot({
       pos: new Vec(50, 50),
 
@@ -142,7 +106,7 @@ class SceneSettings extends Scene {
 
           events: {
             input: [function (value) {
-          
+              setBackgroundCol();
             }],
             change: [function (value) {
               localStorage.setItem(settingsName, JSON.stringify(settings));          
@@ -164,7 +128,7 @@ class SceneSettings extends Scene {
     cam.renderW = nde.w;
 
     renderer._(()=>{
-      renderer.set("fill", settings.overrideBackground?[settings.backgroundR, settings.backgroundG, settings.backgroundB]:19);
+      renderer.set("fill", backgroundCol);
       renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
     });
 

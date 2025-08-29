@@ -40,6 +40,7 @@ class UIRoot extends UIBase {
       this.fitSizePassHelper(c, depth + 1);
     }
 
+    element.uiRoot = this;
     element.calculateSize();
 
     this.depth = Math.max(this.depth, depth);

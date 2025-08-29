@@ -4,6 +4,7 @@ let defaultStyle = {
   growY: false,
 
   align: new Vec(0, 0), //0: left, 1: center, 2: right,    0: top, 1: middle, 2: bottom
+  offsetPos: new Vec(0, 0),
 
   padding: 0,
 
@@ -18,6 +19,7 @@ class UIBase {
   constructor(props) {
     this.defaultStyle = {};
     this.style = undefined;
+    this.uiRoot = undefined;
 
     this.fillStyle(props.style);
 
@@ -224,6 +226,8 @@ class UIBase {
         along += c.size.y + this.style.gap;
       }
 
+      c.pos.addV(c.style.offsetPos);
+
       c.positionChildren();
     }
   }
@@ -240,6 +244,7 @@ class UIBase {
       if (this.trueHoveredBottom) {
         nde.renderer.set("fill", `rgb(0, 255, 0)`);
 
+        nde.debugStats.uiClass = this.__proto__.constructor.name;
         nde.debugStats.uiPos = this.pos;
         nde.debugStats.uiSize = this.size;
       }
@@ -254,9 +259,6 @@ class UIBase {
     nde.renderer.rect(this.pos, this.size);   
   }
 }
-
-
-
 
 function nestedObjectAssign(dest, target, source) {  
   Object.assign(dest, target, source);

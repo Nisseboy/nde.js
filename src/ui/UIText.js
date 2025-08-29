@@ -6,7 +6,7 @@ class UIText extends UIBase {
     this.defaultStyle.text = {
       fill: "rgb(255, 255, 255)",
 
-      font: "16px monospace",
+      font: "25px monospace",
       textAlign: ["left", "top"],
     };
 

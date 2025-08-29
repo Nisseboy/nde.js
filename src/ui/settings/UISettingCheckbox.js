@@ -3,8 +3,6 @@ class UISettingCheckbox extends UISettingBase {
     super(props);
 
     this.defaultStyle.checkbox = {
-      fill: "rgba(255, 255, 255, 0)",
-
       growX: true,
       growY: true,
         

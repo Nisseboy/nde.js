@@ -6,7 +6,7 @@ class UISettingCollection extends UISettingBase {
     this.defaultStyle = {
       direction: "column",
 
-      row: {growX: true, gap: 10},
+      row: {growX: true},
       label: {},
     };
     this.fillStyle(props.style);  

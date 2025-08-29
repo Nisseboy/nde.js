@@ -71,17 +71,8 @@ Project:
     sceneGame.js
     sceneMainMenu.js
     ...
-  buttons:
-    buttomCustom.js
-    ...
-  timers:
-    timerCustom.js
-    ...
-  transitions:
-    transitionCustom.js
-    ...
-  renderers:
-    rendererCustom.js
+  ui:
+    UIElementCustom.js
     ...
   index.js
   index.html
@@ -352,7 +343,7 @@ class NDE {
     
       this.renderer.set("fill", 255);
       this.renderer.set("stroke", 0);
-      let textSize = 0.015 * this.w;
+      let textSize = 0.012 * this.w;
       this.renderer.set("font", `${textSize}px monospace`);
       this.renderer.set("textAlign", ["left", "top"]);
       if (this.debug) {
