@@ -22,11 +22,7 @@ class SceneMainMenu extends Scene {
         new UIButtonImage({
           image: tex["duck/1"],
 
-          style: {...buttonStyle,
-            hover: {
-              fill: "rgb(255, 0, 0)",
-            }
-          },
+          style: {...buttonStyle},
           imageStyle: {
             image: {imageSmoothing: false},
             minSize: new Vec(30, 30),
@@ -38,7 +34,7 @@ class SceneMainMenu extends Scene {
         }),
 
         new UIButtonText({
-          style: {...buttonStyle},
+          style: {...buttonStyle,},
           textStyle: {...buttonStyle},
           text: "Fade",
 

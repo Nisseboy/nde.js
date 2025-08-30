@@ -65,8 +65,7 @@ class SceneSettings extends Scene {
               name: "overrideBackground", displayName: "Override Background",
               value: false,
 
-              style: {...buttonStyle,
-              }
+              style: {...buttonStyle,}
             }),
             
             new UISettingRange({

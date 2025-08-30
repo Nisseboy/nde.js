@@ -4,7 +4,9 @@ let defaultStyle = {
   growY: false,
 
   align: new Vec(0, 0), //0: left, 1: center, 2: right,    0: top, 1: middle, 2: bottom
-  offsetPos: new Vec(0, 0),
+
+  position: "normal", //normal (from calculated pos, takes up space), relative (from parent element), absolute (from 0, 0)
+  pos: new Vec(0, 0), //position offset
 
   padding: 0,
 
@@ -75,7 +77,10 @@ class UIBase {
 
     this.size.set(0, 0);
 
+    let numChildren = 0;
     for (let c of this.children) {
+      if (c.style.position != "normal") continue;
+
       if (isRow) {
         this.size.x += c.size.x;
         this.size.y = Math.max(this.size.y, c.size.y);
@@ -83,6 +88,7 @@ class UIBase {
         this.size.x = Math.max(this.size.x, c.size.x);
         this.size.y += c.size.y;
       }
+      numChildren++;
     }
     
     this.size.add(this.style.padding * 2);
@@ -90,7 +96,7 @@ class UIBase {
     if (this.size.x < this.style.minSize.x) this.size.x = this.style.minSize.x;
     if (this.size.y < this.style.minSize.y) this.size.y = this.style.minSize.y;
 
-    let gap = this.style.gap * Math.max(this.children.length - 1, 0);
+    let gap = this.style.gap * Math.max(numChildren - 1, 0);
 
     if (isRow) this.size.x += gap;
     else this.size.y += gap;
@@ -98,6 +104,12 @@ class UIBase {
 
   growChildren() {
     let isRow = this.style.direction == "row";
+
+    let numChildren = 0;
+    for (let c of this.children) {
+      if (c.style.position != "normal") continue;
+      numChildren++;
+    }
 
     for (let i = 0; i < 2; i++) {
       let isHor = i == 0;
@@ -109,6 +121,8 @@ class UIBase {
 
       if (isHor == isRow) {
         for (let c of this.children) {
+          if (c.style.position != "normal") continue;
+
           if (isHor) {
             remaining -= c.size.x;
             if (c.style.growX) growable.push(c);
@@ -119,7 +133,7 @@ class UIBase {
         }
         if (growable.length == 0) continue;
   
-        remaining -= this.style.gap * Math.max(this.children.length - 1, 0);
+        remaining -= this.style.gap * Math.max(numChildren - 1, 0);
 
         while (remaining > 0.0001) {
           let smallestChild = growable[0];
@@ -158,7 +172,7 @@ class UIBase {
 
         }
         for (let c of this.children) {
-          if ((isHor && !c.style.growX) || (!isHor && !c.style.growY)) continue;
+          if ((isHor && !c.style.growX) || (!isHor && !c.style.growY) || c.style.position != "normal") continue;
   
           if (isHor) {
             c.size.x += remaining / growable.length;
@@ -170,7 +184,7 @@ class UIBase {
 
       } else {
         for (let c of this.children) {
-          if ((isHor && !c.style.growX) || (!isHor && !c.style.growY)) continue;
+          if ((isHor && !c.style.growX) || (!isHor && !c.style.growY) || c.style.position != "normal") continue;
   
           if (isHor) {
             c.size.x = remaining;
@@ -195,38 +209,55 @@ class UIBase {
     let remaining = isRow ? this.size.x : this.size.y;
     remaining -= this.style.padding * 2;
 
+    let numChildren = 0;
     for (let c of this.children) {
+      if (c.style.position != "normal") continue;
+
       if (isRow) remaining -= c.size.x;
       else remaining -= c.size.y;
+
+      numChildren++;
     }
 
-    remaining -= this.style.gap * Math.max(this.children.length - 1, 0);
+    remaining -= this.style.gap * Math.max(numChildren - 1, 0);
     remaining *= (isRow ? this.style.align.x : this.style.align.y) / 2;
     
     let along = this.style.padding + remaining;
 
     for (let c of this.children) {
-      let remaining;
+      switch (c.style.position) {
+        case "normal":
+          let remaining;
 
-      if (isRow) {
-        remaining = this.size.y - this.style.padding * 2 - c.size.y;
-        remaining *= this.style.align.y / 2;
+          if (isRow) {
+            remaining = this.size.y - this.style.padding * 2 - c.size.y;
+            remaining *= this.style.align.y / 2;
 
-        c.pos.x = this.pos.x + along;
-        c.pos.y = this.pos.y + this.style.padding + remaining;
+            c.pos.x = this.pos.x + along;
+            c.pos.y = this.pos.y + this.style.padding + remaining;
 
-        along += c.size.x + this.style.gap;
-      } else {
-        remaining = this.size.x - this.style.padding * 2 - c.size.x;
-        remaining *= this.style.align.x / 2;
+            along += c.size.x + this.style.gap;
+          } else {
+            remaining = this.size.x - this.style.padding * 2 - c.size.x;
+            remaining *= this.style.align.x / 2;
 
-        c.pos.x = this.pos.x + this.style.padding + remaining;
-        c.pos.y = this.pos.y + along;
+            c.pos.x = this.pos.x + this.style.padding + remaining;
+            c.pos.y = this.pos.y + along;
 
-        along += c.size.y + this.style.gap;
+            along += c.size.y + this.style.gap;
+          }
+          break;
+
+        case "absolute":
+          c.pos = this.uiRoot.pos._add(this.uiRoot.style.padding);
+          break;
+
+        case "relative":
+          c.pos = this.pos._add(this.style.padding);
+          break;
       }
-
-      c.pos.addV(c.style.offsetPos);
+      
+      c.pos.addV(c.style.pos);
 
       c.positionChildren();
     }
