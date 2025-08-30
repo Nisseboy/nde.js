@@ -5,27 +5,30 @@ class UISettingChoice extends UISettingBase {
 
     this.defaultStyle = {
       direction: "column",
+      gap: 10,
     };
     this.fillStyle(props.style); 
+    this.style.fill = "rgba(0, 0, 0, 0)";
+    this.style.padding = 0;
     
     this.choices = props.choices || ["undefined"];
     this.value = props.value || this.choices[0];
 
     for (let choice of this.choices) {
       let elem = new UIButton({
-        style: {...this.style,
+        style: {...props.style,
           direction: "row",
           align: new Vec(0, 1),
         },
 
         children: [
           new UIText({
-            style: this.style,
+            style: props.style,
             text: choice,
           }),
           new UIBase({
             style: {
-              minSize: this.style.minSize._sub(this.style.padding * 2),
+              minSize: this.style.minSize._sub((props.style.padding || 0) * 2),
             },
           }),
         ],
