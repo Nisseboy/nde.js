@@ -74,33 +74,37 @@ class SceneSettings extends Scene {
               value: 19,
               min: 0, max: 255, step: 1,
 
-              style: {...rangeStyle,},
+              style: rangeStyle,
             }),
             new UISettingRange({
               name: "backgroundG", displayName: "Background G",
               value: 19,
               min: 0, max: 255, step: 1,
 
-              style: {...rangeStyle,
-
-                hover: {slider: { active: {
-                  fill: "rgb(0, 255, 0)",
-                  stroke: "rgb(0, 255, 0)",
-                }}},
-              }
+              style: rangeStyle,
             }),
             new UISettingRange({
               name: "backgroundB", displayName: "Background B",
               value: 19,
               min: 0, max: 255, step: 1,
 
-              style: {...rangeStyle,
+              style: rangeStyle,
+            }),
+            
 
-                hover: {slider: { active: {
-                  fill: "rgb(0, 0, 255)",
-                  stroke: "rgb(0, 0, 255)",
-                }}},
-              }
+            new UIBase({
+              style: {
+                minSize: new Vec(50, 50)
+              },
+            }),
+            new UISettingChoice({
+              name: "choice", displayName: "Choice",
+              value: "B",
+              choices: [
+                "A", "B", "C", "D", "E", "F"
+              ],
+
+              style: buttonStyle,
             }),
           ],
 

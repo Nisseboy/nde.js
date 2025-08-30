@@ -19,6 +19,8 @@ class UIRoot extends UIBase {
     this.fitSizePass();
     this.growSizePass();
     this.positionPass();
+
+    this.fireEvent("init");
   }
 
   renderUI() {

@@ -1,6 +1,6 @@
 class TransitionBase {
   constructor(newScene, timer) {
-    this.oldImg = new Img(new Vec(nde.w, nde.w / 16 * 9));
+    this.oldImg = new Img(new Vec(nde.w, nde.w * nde.ar));
     this.newImg = new Img(this.oldImg.size);
 
     this.timer = timer;

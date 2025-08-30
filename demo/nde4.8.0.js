@@ -441,6 +441,7 @@ class Camera extends Serializable {
     this.pos = pos || new Vec(0, 0);
 
     this.w = 16;
+    this.ar = nde.ar;
 
     this.dir = 0;
 
@@ -465,7 +466,7 @@ class Camera extends Serializable {
    */
   transformVec(v) {
     v = v._subV(this.pos);
-    v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 / 16 * 9));
+    v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 * this.ar));
     v.mul(this.renderW / this.w);
 
     return v;
@@ -478,7 +479,7 @@ class Camera extends Serializable {
    */
   untransformVec(v) {
     v = v._div(this.renderW / this.w);
-    v.subV(new Vec(this.w / 2, this.w / 2 / 16 * 9));
+    v.subV(new Vec(this.w / 2, this.w / 2 * this.ar));
     v.addV(this.pos);
 
     return v;
@@ -546,7 +547,7 @@ class Camera extends Serializable {
    */
   transformRenderer(r = renderer) {
     this.scaleRenderer(r);
-    r.translate(new Vec(this.w / 2, this.w / 2 / 16 * 9));
+    r.translate(new Vec(this.w / 2, this.w / 2 * this.ar));
 
     r.rotate(-this.dir);
     r.translate(this.pos._mul(-1));
@@ -561,7 +562,7 @@ class Camera extends Serializable {
     r.translate(this.pos._mul(1));
     r.rotate(this.dir);
 
-    r.translate(new Vec(this.w / -2, this.w / -2 / 16 * 9));
+    r.translate(new Vec(this.w / -2, this.w / -2 * this.ar));
     this.unscaleRenderer(r);
   }
 
@@ -1335,6 +1336,8 @@ class UIRoot extends UIBase {
     this.fitSizePass();
     this.growSizePass();
     this.positionPass();
+
+    this.fireEvent("init");
   }
 
   renderUI() {
@@ -1667,6 +1670,69 @@ class UISettingCollectionRow extends UIBase {
 
 
 
+/* src/ui/settings/UISettingChoice.js */
+class UISettingChoice extends UISettingBase {
+  constructor(props) {
+    super(props);
+    this.interactable = false;
+
+    this.defaultStyle = {
+      direction: "column",
+    };
+    this.fillStyle(props.style); 
+    
+    this.choices = props.choices || ["undefined"];
+    this.value = props.value || this.choices[0];
+
+    for (let choice of this.choices) {
+      let elem = new UIButton({
+        style: {...this.style,
+          direction: "row",
+          align: new Vec(0, 1),
+        },
+
+        children: [
+          new UIText({
+            style: this.style,
+            text: choice,
+          }),
+          new UIBase({
+            style: {
+              minSize: this.style.minSize._sub(this.style.padding * 2),
+            },
+          }),
+        ],
+
+        events: {mouseup: [() => {
+          this.value = choice;
+
+          this.updateColors();
+          
+          this.fireEvent("change", this.value);
+        }]},
+      });
+
+      this.children.push(elem);
+    }
+
+    this.updateColors();
+  }
+
+  updateColors() {
+    for (let c of this.children) {
+      let name = c.children[0].text;
+      let col = (name == this.value) ? "rgb(255, 255, 255)" : "rgba(0, 0, 0, 0)";
+
+      c.children[1].style.fill = col;
+      c.children[1].style.hover.fill = col;
+    }
+  }
+}
+
+
+
+
+
 /* src/ui/settings/UISettingCheckbox.js */
 class UISettingCheckbox extends UISettingBase {
   constructor(props) {
@@ -1770,6 +1836,8 @@ class UISettingRange extends UISettingBase {
       },
     };
     this.fillStyle(props.style);
+    this.style.fill = "rgba(0, 0, 0, 0)";
+    this.style.hover.fill = "rgba(0, 0, 0, 0)";
     
 
     this.min = props.min;
@@ -2004,7 +2072,7 @@ class TimerTime extends TimerBase {
 /* src/transitions/TransitionBase.js */
 class TransitionBase {
   constructor(newScene, timer) {
-    this.oldImg = new Img(new Vec(nde.w, nde.w / 16 * 9));
+    this.oldImg = new Img(new Vec(nde.w, nde.w * nde.ar));
     this.newImg = new Img(this.oldImg.size);
 
     this.timer = timer;
@@ -2213,6 +2281,7 @@ class NDE {
   constructor(mainElem) {
     this.scene = undefined;
     this.w = undefined;
+    this.ar = 9 / 16;
     this.targetFPS = undefined;
     this.hoveredUIElement = undefined;
     this.transition = undefined;
@@ -2373,8 +2442,8 @@ class NDE {
   }
 
   resize(e) {
-    this.w = Math.min(window.innerWidth, window.innerHeight / 9 * 16);
-    this.mainImg.resize(new Vec(this.w, this.w / 16 * 9));
+    this.w = Math.min(window.innerWidth, window.innerHeight / this.ar);
+    this.mainImg.resize(new Vec(this.w, this.w * this.ar));
   
 
     let result = undefined;
@@ -2387,7 +2456,7 @@ class NDE {
 
     this.w = result || this.w;
     
-    this.renderer.resize(new Vec(this.w, this.w / 16 * 9));
+    this.renderer.resize(new Vec(this.w, this.w * this.ar));
     
     if (!this.transition) this.scene.resize(e);
   

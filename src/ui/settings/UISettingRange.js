@@ -28,6 +28,8 @@ class UISettingRange extends UISettingBase {
       },
     };
     this.fillStyle(props.style);
+    this.style.fill = "rgba(0, 0, 0, 0)";
+    this.style.hover.fill = "rgba(0, 0, 0, 0)";
     
 
     this.min = props.min;

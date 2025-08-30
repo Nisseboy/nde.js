@@ -85,6 +85,7 @@ class NDE {
   constructor(mainElem) {
     this.scene = undefined;
     this.w = undefined;
+    this.ar = 9 / 16;
     this.targetFPS = undefined;
     this.hoveredUIElement = undefined;
     this.transition = undefined;
@@ -245,8 +246,8 @@ class NDE {
   }
 
   resize(e) {
-    this.w = Math.min(window.innerWidth, window.innerHeight / 9 * 16);
-    this.mainImg.resize(new Vec(this.w, this.w / 16 * 9));
+    this.w = Math.min(window.innerWidth, window.innerHeight / this.ar);
+    this.mainImg.resize(new Vec(this.w, this.w * this.ar));
   
 
     let result = undefined;
@@ -259,7 +260,7 @@ class NDE {
 
     this.w = result || this.w;
     
-    this.renderer.resize(new Vec(this.w, this.w / 16 * 9));
+    this.renderer.resize(new Vec(this.w, this.w * this.ar));
     
     if (!this.transition) this.scene.resize(e);
   

@@ -5,6 +5,7 @@ class Camera extends Serializable {
     this.pos = pos || new Vec(0, 0);
 
     this.w = 16;
+    this.ar = nde.ar;
 
     this.dir = 0;
 
@@ -29,7 +30,7 @@ class Camera extends Serializable {
    */
   transformVec(v) {
     v = v._subV(this.pos);
-    v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 / 16 * 9));
+    v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 * this.ar));
     v.mul(this.renderW / this.w);
 
     return v;
@@ -42,7 +43,7 @@ class Camera extends Serializable {
    */
   untransformVec(v) {
     v = v._div(this.renderW / this.w);
-    v.subV(new Vec(this.w / 2, this.w / 2 / 16 * 9));
+    v.subV(new Vec(this.w / 2, this.w / 2 * this.ar));
     v.addV(this.pos);
 
     return v;
@@ -110,7 +111,7 @@ class Camera extends Serializable {
    */
   transformRenderer(r = renderer) {
     this.scaleRenderer(r);
-    r.translate(new Vec(this.w / 2, this.w / 2 / 16 * 9));
+    r.translate(new Vec(this.w / 2, this.w / 2 * this.ar));
 
     r.rotate(-this.dir);
     r.translate(this.pos._mul(-1));
@@ -125,7 +126,7 @@ class Camera extends Serializable {
     r.translate(this.pos._mul(1));
     r.rotate(this.dir);
 
-    r.translate(new Vec(this.w / -2, this.w / -2 / 16 * 9));
+    r.translate(new Vec(this.w / -2, this.w / -2 * this.ar));
     this.unscaleRenderer(r);
   }
 
