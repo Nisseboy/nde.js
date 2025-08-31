@@ -3,12 +3,7 @@ class UISettingText extends UISettingBase {
     super(props);
 
     this.defaultStyle = {
-      text: {
-        fill: "rgb(255, 255, 255)",
-
-        font: "25px monospace",
-        textAlign: ["left", "top"],
-      },
+      cursor: "text",
 
       editor: {
         blinkTime: 1,
@@ -17,7 +12,12 @@ class UISettingText extends UISettingBase {
         numberOnly: false,
       },
 
-      cursor: "text",
+      text: {
+        fill: "rgb(255, 255, 255)",
+
+        font: "25px monospace",
+        textAlign: ["left", "top"],
+      },
     };
     this.fillStyle(props.style);
     
@@ -506,8 +506,7 @@ class UISettingText extends UISettingBase {
     this.scroll.x = Math.max(Math.min(this.scroll.x, this.textSize.x - this.size.x + this.style.padding * 2), 0);
     this.scroll.y = Math.max(Math.min(this.scroll.y, this.textSize.y - nde.renderer.measureText("i").y), 0);
 
-
-    nde.renderer.clipRect(this.pos, this.size, () => {
+    nde.renderer.clipRect(this.pos._add(this.style.padding), this.size._sub(this.style.padding * 2), () => {
       let pos = this.pos._add(this.style.padding).subV(this.scroll);
 
       nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
@@ -534,7 +533,6 @@ class UISettingText extends UISettingBase {
           }
         }
       }
-        
     });
   }
 }

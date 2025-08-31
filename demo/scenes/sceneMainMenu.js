@@ -62,10 +62,10 @@ class SceneMainMenu extends Scene {
             nde.transition = new TransitionNoise(scenes.game, new TimerTime(0.2));
           }]},
         }),
-
+            
         new UIBase({
           style: {
-            minSize: new Vec(80, 80),
+            minSize: buttonStyle.minSize || new Vec(0, 0),
           },
         }),
 

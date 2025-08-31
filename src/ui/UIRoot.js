@@ -41,6 +41,8 @@ class UIRoot extends UIBase {
   }
   fitSizePassHelper(element, depth) {
     for (let c of element.children) {
+      c.parent = element;
+
       this.fitSizePassHelper(c, depth + 1);
     }
 
@@ -114,6 +116,12 @@ class UIRoot extends UIBase {
       found = true;
     }
 
+    if (element.style.clip && 
+      (pt.x < element.pos.x || 
+      pt.x > element.pos.x + element.size.x || 
+      pt.y < element.pos.y || 
+      pt.y > element.pos.y + element.size.y)) return;
+
     for (let c of element.children) {
       this.hoverPassHelper(c, found, pt);
 
@@ -142,9 +150,18 @@ class UIRoot extends UIBase {
       element.debugColor = 255 / (this.depth + 1) * (depth + 1);
     } else element.debugColor = undefined;
 
+
     element.render();
-    for (let c of element.children) {
-      this.renderPassHelper(c, depth + 1);
+    if (element.style.clip) {
+      nde.renderer.clipRect(element.pos._add(element.style.padding), element.size._sub(element.style.padding * 2), () => {
+        for (let c of element.children) {
+          this.renderPassHelper(c, depth + 1);
+        }
+      });
+    } else {
+      for (let c of element.children) {
+        this.renderPassHelper(c, depth + 1);
+      }
     }
   }
 }

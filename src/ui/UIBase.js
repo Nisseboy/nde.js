@@ -1,5 +1,7 @@
 let defaultStyle = {
   minSize: new Vec(0, 0),
+  maxSize: new Vec(Infinity, Infinity),
+  clip: false,
   growX: false,
   growY: false,
 
@@ -7,6 +9,7 @@ let defaultStyle = {
 
   position: "normal", //normal (from calculated pos, takes up space), relative (from parent element), absolute (from 0, 0)
   pos: new Vec(0, 0), //position offset
+
   render: "normal", //normal, hidden, last
 
   padding: 0,
@@ -24,6 +27,8 @@ class UIBase {
   constructor(props) {
     this.defaultStyle = {};
     this.style = undefined;
+
+    this.parent = undefined;
     this.uiRoot = undefined;
 
     this.fillStyle(props.style);
@@ -96,13 +101,14 @@ class UIBase {
     
     this.size.add(this.style.padding * 2);
 
-    if (this.size.x < this.style.minSize.x) this.size.x = this.style.minSize.x;
-    if (this.size.y < this.style.minSize.y) this.size.y = this.style.minSize.y;
-
     let gap = this.style.gap * Math.max(numChildren - 1, 0);
 
     if (isRow) this.size.x += gap;
     else this.size.y += gap;
+
+
+    this.size.x = Math.min(Math.max(this.size.x, this.style.minSize.x), this.style.maxSize.x);
+    this.size.y = Math.min(Math.max(this.size.y, this.style.minSize.y), this.style.maxSize.x);
   }
 
   growChildren() {
@@ -281,6 +287,10 @@ class UIBase {
         nde.debugStats.uiClass = this.__proto__.constructor.name;
         nde.debugStats.uiPos = this.pos;
         nde.debugStats.uiSize = this.size;
+        for (let style in this.style) {
+          nde.debugStats["ui-" + style] = this.style[style];
+          if (this.style[style]) nde.debugStats["ui-" + style] = this.style[style].toString();
+        }
       }
     }
   }
