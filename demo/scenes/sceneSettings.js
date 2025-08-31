@@ -99,7 +99,23 @@ class SceneSettings extends Scene {
               name: "choice", displayName: "Choice",
               value: "B",
               choices: [
-                "A", "B", "C", "D", "E", "F"
+                "A", "B", "C"
+              ],
+
+              style: buttonStyle,
+            }),
+            
+            new UIBase({
+              style: {
+                minSize: buttonStyle.minSize || new Vec(0, 0),
+              },
+            }),
+
+            new UISettingDropdown({
+              name: "dropdown", displayName: "Dropdown",
+              value: "B",
+              choices: [
+                "A", "B", "C"
               ],
 
               style: buttonStyle,

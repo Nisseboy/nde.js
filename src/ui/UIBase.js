@@ -7,6 +7,7 @@ let defaultStyle = {
 
   position: "normal", //normal (from calculated pos, takes up space), relative (from parent element), absolute (from 0, 0)
   pos: new Vec(0, 0), //position offset
+  render: "normal", //normal, hidden, last
 
   padding: 0,
 

@@ -11,6 +11,8 @@ class UIRoot extends UIBase {
     if (props.pos) this.pos.from(props.pos);
 
     this.initUI();
+
+    this.renderLast = [];
   }
 
   initUI() {
@@ -68,9 +70,20 @@ class UIRoot extends UIBase {
 
     document.body.style.cursor = "auto";
 
+    this.renderLast.length = 0;
     this.hoverPassHelper(this, false, transformedMousePoint);
+
+    for (let elem of this.renderLast) {
+      this.hoverPassHelper(elem[0], elem[1], transformedMousePoint, true);
+    }
   }
-  hoverPassHelper(element, found, pt) {
+  hoverPassHelper(element, found, pt, ignoreRenderLast = false) {
+    if (element.style.render == "last" && !ignoreRenderLast) {
+      this.renderLast.push([element, found]);
+      return;
+    }
+    if (element.style.render == "hidden") return;
+    
     element.hovered = false;
     element.trueHovered = false;
 
@@ -111,9 +124,20 @@ class UIRoot extends UIBase {
 
 
   renderPass() {
+    this.renderLast.length = 0;
     this.renderPassHelper(this, 0);
+
+    for (let elem of this.renderLast) {
+      this.renderPassHelper(elem[0], elem[1], true);
+    }
   }
-  renderPassHelper(element, depth) {
+  renderPassHelper(element, depth, ignoreRenderLast = false) {
+    if (element.style.render == "last" && !ignoreRenderLast) {
+      this.renderLast.push([element, depth]);
+      return;
+    }
+    if (element.style.render == "hidden") return;
+
     if (nde.uiDebug) {
       element.debugColor = 255 / (this.depth + 1) * (depth + 1);
     } else element.debugColor = undefined;

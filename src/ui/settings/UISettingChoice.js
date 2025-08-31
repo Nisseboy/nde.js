@@ -14,6 +14,8 @@ class UISettingChoice extends UISettingBase {
     this.choices = props.choices || ["undefined"];
     this.value = props.value || this.choices[0];
 
+    
+
     for (let choice of this.choices) {
       let elem = new UIButton({
         style: {...props.style,
@@ -38,6 +40,7 @@ class UISettingChoice extends UISettingBase {
 
           this.updateColors();
           
+          this.fireEvent("input", this.value);
           this.fireEvent("change", this.value);
         }]},
       });
@@ -56,5 +59,11 @@ class UISettingChoice extends UISettingBase {
       c.children[1].style.fill = col;
       c.children[1].style.hover.fill = col;
     }
+  }
+
+  setValue(newValue) {
+    super.setValue(newValue);
+
+    this.updateColors();
   }
 }

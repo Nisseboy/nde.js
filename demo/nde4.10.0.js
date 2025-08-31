@@ -1052,6 +1052,7 @@ let defaultStyle = {
 
   position: "normal", //normal (from calculated pos, takes up space), relative (from parent element), absolute (from 0, 0)
   pos: new Vec(0, 0), //position offset
+  render: "normal", //normal, hidden, last
 
   padding: 0,
 
@@ -1378,6 +1379,8 @@ class UIRoot extends UIBase {
     if (props.pos) this.pos.from(props.pos);
 
     this.initUI();
+
+    this.renderLast = [];
   }
 
   initUI() {
@@ -1435,9 +1438,20 @@ class UIRoot extends UIBase {
 
     document.body.style.cursor = "auto";
 
+    this.renderLast.length = 0;
     this.hoverPassHelper(this, false, transformedMousePoint);
+
+    for (let elem of this.renderLast) {
+      this.hoverPassHelper(elem[0], elem[1], transformedMousePoint, true);
+    }
   }
-  hoverPassHelper(element, found, pt) {
+  hoverPassHelper(element, found, pt, ignoreRenderLast = false) {
+    if (element.style.render == "last" && !ignoreRenderLast) {
+      this.renderLast.push([element, found]);
+      return;
+    }
+    if (element.style.render == "hidden") return;
+    
     element.hovered = false;
     element.trueHovered = false;
 
@@ -1478,9 +1492,20 @@ class UIRoot extends UIBase {
 
 
   renderPass() {
+    this.renderLast.length = 0;
     this.renderPassHelper(this, 0);
+
+    for (let elem of this.renderLast) {
+      this.renderPassHelper(elem[0], elem[1], true);
+    }
   }
-  renderPassHelper(element, depth) {
+  renderPassHelper(element, depth, ignoreRenderLast = false) {
+    if (element.style.render == "last" && !ignoreRenderLast) {
+      this.renderLast.push([element, depth]);
+      return;
+    }
+    if (element.style.render == "hidden") return;
+
     if (nde.uiDebug) {
       element.debugColor = 255 / (this.depth + 1) * (depth + 1);
     } else element.debugColor = undefined;
@@ -1739,6 +1764,8 @@ class UISettingChoice extends UISettingBase {
     this.choices = props.choices || ["undefined"];
     this.value = props.value || this.choices[0];
 
+    
+
     for (let choice of this.choices) {
       let elem = new UIButton({
         style: {...props.style,
@@ -1763,6 +1790,7 @@ class UISettingChoice extends UISettingBase {
 
           this.updateColors();
           
+          this.fireEvent("input", this.value);
           this.fireEvent("change", this.value);
         }]},
       });
@@ -1781,6 +1809,128 @@ class UISettingChoice extends UISettingBase {
       c.children[1].style.fill = col;
       c.children[1].style.hover.fill = col;
     }
+  }
+
+  setValue(newValue) {
+    super.setValue(newValue);
+
+    this.updateColors();
+  }
+}
+
+
+
+
+
+/* src/ui/settings/UISettingDropdown.js */
+class UISettingDropdown extends UISettingBase {
+  constructor(props) {
+    super(props);
+    this.interactable = false;
+
+    this.defaultStyle = {
+      gap: 0,
+    };
+    this.fillStyle(props.style); 
+    this.style.fill = "rgba(0, 0, 0, 0)";
+    this.style.padding = 0;
+    
+    this.choices = props.choices || ["undefined"];
+    this.value = props.value || this.choices[0];
+
+    this.children = [
+      new UIButton({
+        style: props.style,
+        children: [
+          new UIText({
+            style: props.style,
+            text: this.value,
+          }),
+          new UIText({
+            style: {...props.style,
+              minSize: this.style.minSize._sub((props.style.padding || 0) * 2),
+            },
+
+            text: "\u23F7",
+          }),
+        ],
+
+        events: {mouseup: [() => {
+          this.switchOpen();
+        }]}
+      }),
+      new UIBase({
+        style: {
+          position: "relative",
+          render: "hidden",
+
+          direction: "column",
+          gap: this.style.gap,
+        }
+      }),
+    ];
+
+    for (let choice of this.choices) {
+      let elem = new UIButton({
+        style: {...props.style,
+          direction: "row",
+          align: new Vec(0, 1),
+        },
+
+        children: [
+          new UIText({
+            style: props.style,
+            text: choice,
+          }),
+          new UIBase({
+            style: {
+              minSize: this.style.minSize._sub((props.style.padding || 0) * 2),
+            },
+          }),
+        ],
+
+        events: {mouseup: [() => {
+          this.setValue(choice);
+
+          this.switchOpen();
+          
+          this.fireEvent("input", this.value);
+          this.fireEvent("change", this.value);
+        }]},
+      });
+
+      this.children[1].children.push(elem);
+    }
+
+    this.updateColors();
+  }
+
+  switchOpen() {
+    if (this.children[0].style.render == "hidden") {
+      this.children[0].style.render = "normal";
+      this.children[1].style.render = "hidden";
+    } else {
+      this.children[0].style.render = "hidden";
+      this.children[1].style.render = "last";
+    }
+  }
+  updateColors() {
+    let dropdown = this.children[1];
+    for (let c of dropdown.children) {
+      let name = c.children[0].text;
+      let col = (name == this.value) ? "rgb(255, 255, 255)" : "rgba(0, 0, 0, 0)";
+
+      c.children[1].style.fill = col;
+      c.children[1].style.hover.fill = col;
+    }
+  }
+
+  setValue(newValue) {
+    super.setValue(newValue);
+
+    this.updateColors();
+    this.children[0].children[0].text = this.value;
+    if (this.uiRoot) this.uiRoot.initUI();
   }
 }
 
