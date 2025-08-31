@@ -26,6 +26,7 @@ files = [
   "src/ui/settings/UISettingChoice.js",
   "src/ui/settings/UISettingCheckbox.js",
   "src/ui/settings/UISettingRange.js",
+  "src/ui/settings/UISettingText.js",
   "src/ui/settings/UISettingRGB.js",
 
   "src/timers/TimerBase.js",

@@ -60,6 +60,14 @@ class UISettingRange extends UISettingBase {
 
 
   initChildren() {
+    let numberSize;
+    nde.renderer._(()=>{
+      nde.renderer.setAll(this.style.number.text);
+      numberSize = nde.renderer.measureText(this.max);
+    });
+
+    let sliderSize = new Vec(this.style.slider.minSize.x - numberSize.x - this.style.gap, this.style.slider.minSize.y);
+    
     this.slider = new UIBase({
       style: {...this.style.slider.active,
         hover: this.style.hover.slider.active,
@@ -68,35 +76,30 @@ class UISettingRange extends UISettingBase {
     this.range = new UIBase({
       style: {...this.style.slider,
         hover: this.style.hover.slider,
+        minSize: sliderSize,
       },
 
       children: [this.slider],
     });
-    this.numberText = new UIText({
-      text: "",
-
-      style: {text: {...this.style.number.text,
-        hover: this.style.hover.number.text,
-      }},
-    });
-    this.number = new UIBase({
+    this.number = new UISettingText({
       style: {...this.style.number,
         hover: this.style.hover.number,
+        minSize: numberSize,
+        editor: {
+          numberOnly: true,
+        },
       },
 
-      children: [this.numberText],
+      value: 0,
+
+      events: {change: [value => {
+        this.setValue(value);
+        this.fireInput();
+        this.fireChange();
+      }]},
     });
 
     this.children = [this.range, this.number];
-
-    let size;
-    nde.renderer._(()=>{
-      nde.renderer.setAll(this.style.number.text);
-      size = nde.renderer.measureText(this.max);
-    });
-
-    this.number.style.minSize.x = size.x;
-    
   }
 
 
@@ -133,9 +136,7 @@ class UISettingRange extends UISettingBase {
 
     this.sizeSlider();
     
-    this.numberText.text = this.value;
-    this.numberText.calculateSize();
-    this.number.positionChildren();
+    this.number.setValue(this.value);
     
   }
 

@@ -38,7 +38,7 @@ class SceneSettings extends Scene {
           style: {
             gap: 10,
 
-            row: {gap: 10,},
+            row: {gap: 10},
             label: {...buttonStyle,},
           },
 
@@ -57,7 +57,7 @@ class SceneSettings extends Scene {
 
             new UIBase({
               style: {
-                minSize: new Vec(50, 50)
+                minSize: buttonStyle.minSize || new Vec(0, 0),
               },
             }),
 
@@ -67,7 +67,6 @@ class SceneSettings extends Scene {
 
               style: {...buttonStyle,}
             }),
-            
             new UISettingRange({
               name: "backgroundR", displayName: "Background R",
               value: 19,
@@ -90,12 +89,12 @@ class SceneSettings extends Scene {
               style: rangeStyle,
             }),
             
-
             new UIBase({
               style: {
-                minSize: new Vec(50, 50)
+                minSize: buttonStyle.minSize || new Vec(0, 0),
               },
             }),
+
             new UISettingChoice({
               name: "choice", displayName: "Choice",
               value: "B",
@@ -105,6 +104,28 @@ class SceneSettings extends Scene {
 
               style: buttonStyle,
             }),
+
+            
+            
+            new UIBase({
+              style: {
+                minSize: buttonStyle.minSize || new Vec(0, 0),
+              },
+            }),
+
+            new UISettingText({
+              name: "text", displayName: "Text",
+              value: "text123  42\nte12\ntext123",
+
+              style: {...buttonStyle,
+                minSize: new Vec(300, 100),
+                editor: {
+                  multiLine: true,
+                }
+              },
+            }),
+
+            
           ],
 
           events: {

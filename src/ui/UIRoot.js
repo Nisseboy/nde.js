@@ -81,7 +81,6 @@ class UIRoot extends UIBase {
     element.trueHoveredBottom = inBounds;
 
     if (
-      !found &&
       element.interactable && 
       inBounds) 
     {

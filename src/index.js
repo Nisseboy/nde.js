@@ -157,16 +157,29 @@ class NDE {
 
     document.addEventListener("keydown", e => {
       if (this.debug) console.log(e.key);
+
+      
+      if (this.hoveredUIElement) {
+        if (!this.transition) {
+          if (this.hoveredUIElement.fireEvent("keydown", e) == false) return;
+        }
+      }
     
-      this.pressed[e.key.toLowerCase()] = true;
+      if (this.fireEvent("keydown", e))
+        this.pressed[e.key.toLowerCase()] = true;
     
-      this.fireEvent("keydown", e);
       
     });
     document.addEventListener("keyup", e => {
-      delete this.pressed[e.key.toLowerCase()];
+      if (this.hoveredUIElement) {
+        if (!this.transition) {
+          if (this.hoveredUIElement.fireEvent("keyup", e) == false) return;
+        }
+      }
+
+      if (this.fireEvent("keyup", e))
+        delete this.pressed[e.key.toLowerCase()];
     
-      this.fireEvent("keyup", e);
     });
     
     document.addEventListener("mousemove", e => {
@@ -201,6 +214,12 @@ class NDE {
       this.fireEvent("mouseup", e);
     });
     document.addEventListener("wheel", e => {
+      if (this.hoveredUIElement) {
+        if (!this.transition) {
+          if (this.hoveredUIElement.fireEvent("wheel", e) == false) return;
+        }
+      }
+
       this.fireEvent("wheel", e);
     });
 
@@ -238,11 +257,15 @@ class NDE {
     if (this.transition) return;
     
     let events = this.events[eventName];
-    if (events) 
-      for (let e of events) e(...args);
+    if (events) {
+      for (let e of events) {
+        if (e(...args) == false) return false;
+      }
+    }
     
-    this.scene[eventName](...args);
+    if (this.scene[eventName](...args) == false) return false;
       
+    return true;
   }
 
   resize(e) {
