@@ -45,7 +45,6 @@ nde.registerEvent("keydown", e => {
 nde.registerEvent("afterSetup", () => {
   scenes.game.loadWorld(new World());
   nde.setScene(scenes.mainMenu);
-  nde.setScene(scenes.settings);
 });
 
 nde.registerEvent("update", dt => {
