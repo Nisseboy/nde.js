@@ -66,6 +66,8 @@ class UIRoot extends UIBase {
     let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
     let transformedMousePoint = mousePoint.matrixTransform(nde.renderer.getTransform().inverse());
 
+    document.body.style.cursor = "auto";
+
     this.hoverPassHelper(this, false, transformedMousePoint);
   }
   hoverPassHelper(element, found, pt) {
@@ -85,6 +87,7 @@ class UIRoot extends UIBase {
       inBounds) 
     {
       nde.hoveredUIElement = element;
+      document.body.style.cursor = element.style.cursor;
 
       found = true;
     }

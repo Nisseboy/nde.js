@@ -116,7 +116,7 @@ class UISettingRange extends UISettingBase {
     let mousePoint = new DOMPoint(nde.mouse.x, nde.mouse.y);
     let transformedMousePoint = mousePoint.matrixTransform(this.rendererTransform.inverse());
     
-    let progress = Math.min(Math.max((transformedMousePoint.x - this.pos.x - this.style.padding) / this.rangeSizeTotal.x, 0), 1);
+    let progress = Math.min(Math.max((transformedMousePoint.x - this.pos.x - this.style.padding) / this.rangeSizeTotal.x, 0), 1); 
 
     this.setValue(progress * (this.max - this.min) + this.min);
     this.fireInput();

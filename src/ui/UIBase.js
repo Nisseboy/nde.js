@@ -15,6 +15,8 @@ let defaultStyle = {
 
   fill: "rgba(0, 0, 0, 0)",
   stroke: "rgba(0, 0, 0, 0)",
+
+  cursor: "auto",
 }
 
 class UIBase {

@@ -16,6 +16,8 @@ class UISettingText extends UISettingBase {
         multiLine: false,
         numberOnly: false,
       },
+
+      cursor: "text",
     };
     this.fillStyle(props.style);
     
@@ -70,11 +72,11 @@ class UISettingText extends UISettingBase {
 
       if (this.clicksInRow == 2) {
         this.cursor.x = 0;
-        this.cursor2 = new Vec(this.value.split("\n")[this.cursor.y].length, this.cursor.y);
+        this.cursor2 = new Vec(this.getLines()[this.cursor.y].length, this.cursor.y);
       }
 
       if (this.clicksInRow == 3) {
-        let lines = this.value.split("\n");
+        let lines = this.getLines();
         this.cursor.set(0, 0);
         this.cursor2 = new Vec(lines[lines.length - 1].length, lines.length - 1);
         
@@ -83,6 +85,15 @@ class UISettingText extends UISettingBase {
       this.forceHover = true;
       nde.registerEvent("mousemove", this.mousemoveGlobalFunc);
       nde.registerEvent("mouseup", this.mouseupGlobalFunc);
+    });
+
+    this.registerEvent("wheel", e=>{
+      let dy = e.deltaY * 0.5;
+
+      if (e.shiftKey) this.scroll.x += dy;
+      else this.scroll.y += dy;
+      
+      return false;
     });
   }
   
@@ -121,7 +132,7 @@ class UISettingText extends UISettingBase {
     if (e.key == "Backspace") {
       if (this.cursor2 != undefined) this.removeSelected();
       else {
-        if (ctrl) {
+        if (ctrl && this.cursor.x != 0) {
           this.cursor2 = this.cursor._();
           this.fillCursorLeft(this.cursor);
           this.removeSelected();
@@ -145,10 +156,68 @@ class UISettingText extends UISettingBase {
     }
     if (e.key == "Escape") {
       this.endFocus();
+      return;
+    }
+    if (ctrl) {
+      let key = e.key.toLowerCase();
+      let lines = this.getLines();
+
+      if (e.key == "a") {
+        this.cursor.set(0, 0);
+        this.cursor2 = new Vec(lines[lines.length - 1].length, lines.length - 1);
+      }
+
+      if (["c", "x"].includes(key)) {
+        let oldCursorPos = undefined;
+
+        if (this.cursor2 == undefined) {
+          oldCursorPos = this.cursor._();
+
+          this.cursor.x = 0;
+          this.cursor2 = new Vec(lines[this.cursor.y].length, this.cursor.y);
+        }
+
+        let string = "";
+        if (key == "c") {
+          string = this.getChars(this.cursor, this.cursor2);
+
+          if (oldCursorPos) {
+            this.cursor = oldCursorPos;
+            this.cursor2 = undefined;
+            string += "\n";
+          }
+        }
+        if (key == "x") {
+          string = this.removeSelected();
+
+          if (oldCursorPos) {
+            this.cursor2 = undefined;
+            string += "\n";
+
+            this.moveCursorRight(this.cursor);
+            this.removeAtCursor(this.cursor);
+          }
+        }
+
+        navigator.clipboard.writeText(string);
+        
+      }
+      if (key == "v") {
+        navigator.clipboard.readText().then(string => {
+          if (this.cursor2 != undefined) {
+            this.removeSelected();
+          }
+          this.addAtCursor(this.cursor, string);
+        });
+      }
+
+
+
+      if (["a", "c", "v", "x"].includes(key)) return;
     }
 
     if (e.key.startsWith("Arrow")) {
-      let lines = this.value.split("\n");
+      let lines = this.getLines();
 
       let cursor = this.cursor;
       let unselected = false;
@@ -253,7 +322,7 @@ class UISettingText extends UISettingBase {
     
     let p = pos._divV(size);
 
-    let split = this.value.split("\n");
+    let split = this.getLines();
     p.y = Math.max(Math.min(Math.floor(p.y), split.length - 1), 0);
     p.x = Math.max(Math.min(Math.round(p.x), split[p.y].length), 0);
     
@@ -262,7 +331,7 @@ class UISettingText extends UISettingBase {
   getCharActualPos(charPos) {
     let size = nde.renderer.measureText("a");
 
-    return charPos._mulV(size);
+    return charPos._mulV(size).addV(this.pos).add(this.style.padding).subV(this.scroll);
   }
 
   getMinPos(pos1, pos2) {
@@ -278,7 +347,7 @@ class UISettingText extends UISettingBase {
   }
 
   moveCursorRight(cursor) {
-    let lines = this.value.split("\n");
+    let lines = this.getLines();
 
     if (cursor.x == lines[cursor.y].length) {
       if (cursor.y == lines.length - 1) return false;
@@ -291,8 +360,11 @@ class UISettingText extends UISettingBase {
     return true;
   }
 
+  getLines() {
+    return this.value.split("\n");
+  }
   getCharSpans(pos1, pos2) {
-    let split = this.value.split("\n");
+    let split = this.getLines();
 
     let top = pos1;
     let bottom = pos2;
@@ -318,7 +390,7 @@ class UISettingText extends UISettingBase {
     return spans;
   }
   getChars(pos1, pos2) {
-    let lines = this.value.split("\n");
+    let lines = this.getLines();
     let spans = this.getCharSpans(pos1, pos2);
 
     let strings = [];
@@ -328,7 +400,7 @@ class UISettingText extends UISettingBase {
     return strings.join("\n");
   }
   getCharIndex(pos) {
-    let lines = this.value.split("\n");
+    let lines = this.getLines();
 
     let index = pos.x;
     for (let y = 0; y < pos.y; y++) {
@@ -339,12 +411,12 @@ class UISettingText extends UISettingBase {
   }
   
   isCursorEmpty(cursor) {
-    let line = this.value.split("\n")[cursor.y];
+    let line = this.getLines()[cursor.y];
 
     return ((cursor.x == 0 || line[cursor.x - 1] == " ") && (cursor.x == line.length || line[cursor.x] == " "))
   }
   fillCursorLeft(cursor) {
-    let line = this.value.split("\n")[cursor.y];
+    let line = this.getLines()[cursor.y];
     let isEmpty = this.isCursorEmpty(cursor);
 
     for (let x = 0; x < 100; x++) {      
@@ -357,7 +429,7 @@ class UISettingText extends UISettingBase {
     }
   }
   fillCursorRight(cursor) {
-    let line = this.value.split("\n")[cursor.y];
+    let line = this.getLines()[cursor.y];
     let isEmpty = this.isCursorEmpty(cursor);
 
     for (let x = 0; x < 100; x++) {      
@@ -371,24 +443,29 @@ class UISettingText extends UISettingBase {
   }
 
   removeAtCursor(cursor) {
-    let lines = this.value.split("\n");
+    let lines = this.getLines();
     let line = lines[cursor.y];
 
+    let char = "";
+
     if (cursor.x == 0) {
-      if (cursor.y == 0) return;
+      if (cursor.y == 0) return char;
 
       cursor.x = lines[cursor.y - 1].length;
       lines[cursor.y - 1] += line;
       lines.splice(cursor.y, 1);
       cursor.y--;
+
+      char = "\n";
     } else {
       lines[cursor.y] = line.slice(0, cursor.x - 1) + line.slice(cursor.x, line.length);
       cursor.x--;
+      char = line.slice(cursor.x - 1, cursor.x);
     }
 
     this.value = lines.join("\n");
     
-    return;
+    return char;
   }
   removeSelected() {
     let i1 = this.getCharIndex(this.cursor);
@@ -397,25 +474,26 @@ class UISettingText extends UISettingBase {
     let top = Math.min(i1, i2);
     let bottom = Math.max(i1, i2);
 
+    let string = this.value.slice(top, bottom);
     this.value = this.value.slice(0, top) + this.value.slice(bottom, this.value.length);
 
     this.cursor = this.getMinPos(this.cursor, this.cursor2);
     this.cursor2 = undefined;
+
+    return string;
   }
 
   addAtCursor(cursor, text) {
-    let lines = this.value.split("\n");
+    let lines = this.getLines();
     let line = lines[cursor.y];
 
     lines[cursor.y] = line.slice(0, cursor.x) + text + line.slice(cursor.x, line.length);
-    cursor.x++;
+    this.value = lines.join("\n");
 
-    if (text == "\n") {
-      cursor.x = 0;
-      cursor.y++;
+    for (let i = 0; i < text.length; i++) {
+      this.moveCursorRight(cursor);
     }
 
-    this.value = lines.join("\n");
     
     return;
   }
@@ -425,34 +503,38 @@ class UISettingText extends UISettingBase {
 
     super.render();    
     this.textSize = nde.renderer.measureText(this.value);
+    this.scroll.x = Math.max(Math.min(this.scroll.x, this.textSize.x - this.size.x + this.style.padding * 2), 0);
+    this.scroll.y = Math.max(Math.min(this.scroll.y, this.textSize.y - nde.renderer.measureText("i").y), 0);
 
-    let pos = this.pos._add(this.style.padding);
 
-    nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
-    nde.renderer.text(this.value, pos);
+    nde.renderer.clipRect(this.pos, this.size, () => {
+      let pos = this.pos._add(this.style.padding).subV(this.scroll);
 
-    if (this.focused) {
-      let cursor = this.cursor2 || this.cursor;
+      nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
+      nde.renderer.text(this.value, pos);
 
-      if ((this.cursorTimer.elapsedTime / this.style.editor.blinkTime) % 1 < 0.5) {
-        let cursorPos = this.getCharActualPos(cursor).addV(pos);
-        let cursorSize = nde.renderer.measureText("i");
-        cursorSize.x = cursorSize.x * 0.15;
-        nde.renderer.rect(cursorPos, cursorSize);
-      }
+      if (this.focused) {
+        let cursor = this.cursor2 || this.cursor;
 
-      if (this.cursor2 != undefined) {
-        nde.renderer.set("filter", "opacity(20%)");
-        let spans = this.getCharSpans(this.cursor, this.cursor2);
-        let size = nde.renderer.measureText("a");
-        for (let i = 0; i < spans.length; i++) {
-          let span = spans[i];
-          if (i < spans.length - 1) span.z++;
-          nde.renderer.rect(this.getCharActualPos(span).addV(pos), new Vec(size.x * span.z, size.y));
+        if ((this.cursorTimer.elapsedTime / this.style.editor.blinkTime) % 1 < 0.5) {
+          let cursorPos = this.getCharActualPos(cursor);
+          let cursorSize = nde.renderer.measureText("i");
+          cursorSize.x = cursorSize.x * 0.15;
+          nde.renderer.rect(cursorPos, cursorSize);
+        }
+
+        if (this.cursor2 != undefined) {
+          nde.renderer.set("filter", "opacity(20%)");
+          let spans = this.getCharSpans(this.cursor, this.cursor2);
+          let size = nde.renderer.measureText("a");
+          for (let i = 0; i < spans.length; i++) {
+            let span = spans[i];
+            if (i < spans.length - 1) span.z++;
+            nde.renderer.rect(this.getCharActualPos(span), new Vec(size.x * span.z, size.y));
+          }
         }
       }
-    }
+        
+    });
   }
 }
-
-

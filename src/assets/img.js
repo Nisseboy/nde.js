@@ -129,12 +129,29 @@ class Img extends Asset {
   }
   measureText(text) {
     text = text + "";
-
-    let size = this.ctx.measureText(text);
-
-    let lines = text.split("\n").length;
+    let size = new Vec(0, 0);
     
-    return new Vec(size.width, (size.fontBoundingBoxAscent + size.fontBoundingBoxDescent) * lines);
+
+    let lines = text.split("\n");
+    for (let line of lines) {
+      let s = this.ctx.measureText(line);
+      size.x = Math.max(size.x, s.width);
+      size.y += s.fontBoundingBoxAscent + s.fontBoundingBoxDescent;
+    }
+    
+    return size;
+  }
+
+
+  clipRect(pos, size, context) {
+    this.ctx.save();
+    
+    this.ctx.beginPath();
+    this.ctx.rect(pos.x, pos.y, size.x, size.y);
+    this.ctx.clip();
+
+    context();
+    this.ctx.restore();
   }
   
   
