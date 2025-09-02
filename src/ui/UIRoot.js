@@ -3,7 +3,7 @@ class UIRoot extends UIBase {
     super(props);
 
     this.defaultStyle = {
-      direction: "column"
+      direction: "column",
     };
 
     this.fillStyle(props.style);

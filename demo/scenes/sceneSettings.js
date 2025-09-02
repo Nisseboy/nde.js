@@ -10,153 +10,143 @@ class SceneSettings extends Scene {
   }
 
   start() {
-    this.ui = new UIRoot({
-      pos: new Vec(50, 50),
+    this.ui = createDefaultUIRoot([
+      new UIButtonText({
+        text: "Back",
 
-      style: {
-        direction: "column",
+        style: {...buttonStyle},
+        textStyle: {...buttonStyle},
 
-        gap: 10,
-      },
+        events: {mousedown: [() => {
+          nde.transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
+        }]},
+      }),
 
-      children: [
-        new UIButtonText({
-          text: "Back",
+      new UISettingCollection({
+        value: settings,
+        hasLabels: true,
 
-          style: {...buttonStyle},
-          textStyle: {...buttonStyle},
+        style: {
+          gap: 10,
 
-          events: {mousedown: [() => {
-            nde.transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
-          }]},
-        }),
+          row: {gap: 10},
+          label: {...buttonStyle,},
+        },
 
-        new UISettingCollection({
-          value: settings,
-          hasLabels: true,
+        children: [
+          new UISettingRange({
+            name: "renderResolution", displayName: "Render Resolution",
+            value: 100,
+            min: 25, max: 100, step: 1,
 
-          style: {
-            gap: 10,
+            style: {...rangeStyle,},
 
-            row: {gap: 10},
-            label: {...buttonStyle,},
-          },
+            events: {
+              change: [e=>{window.dispatchEvent(new Event('resize'));}]
+            },
+          }),
 
-          children: [
-            new UISettingRange({
-              name: "renderResolution", displayName: "Render Resolution",
-              value: 100,
-              min: 25, max: 100, step: 1,
+          new UIBase({
+            style: {
+              minSize: buttonStyle.minSize || new Vec(0, 0),
+            },
+          }),
 
-              style: {...rangeStyle,},
+          new UISettingCheckbox({
+            name: "overrideBackground", displayName: "Override Background",
+            value: false,
 
-              events: {
-                change: [e=>{window.dispatchEvent(new Event('resize'));}]
-              },
-            }),
+            style: {...buttonStyle,}
+          }),
+          new UISettingRange({
+            name: "backgroundR", displayName: "Background R",
+            value: 19,
+            min: 0, max: 255, step: 1,
 
-            new UIBase({
-              style: {
-                minSize: buttonStyle.minSize || new Vec(0, 0),
-              },
-            }),
+            style: rangeStyle,
+          }),
+          new UISettingRange({
+            name: "backgroundG", displayName: "Background G",
+            value: 19,
+            min: 0, max: 255, step: 1,
 
-            new UISettingCheckbox({
-              name: "overrideBackground", displayName: "Override Background",
-              value: false,
+            style: rangeStyle,
+          }),
+          new UISettingRange({
+            name: "backgroundB", displayName: "Background B",
+            value: 19,
+            min: 0, max: 255, step: 1,
 
-              style: {...buttonStyle,}
-            }),
-            new UISettingRange({
-              name: "backgroundR", displayName: "Background R",
-              value: 19,
-              min: 0, max: 255, step: 1,
+            style: rangeStyle,
+          }),
+          
+          new UIBase({
+            style: {
+              minSize: buttonStyle.minSize || new Vec(0, 0),
+            },
+          }),
 
-              style: rangeStyle,
-            }),
-            new UISettingRange({
-              name: "backgroundG", displayName: "Background G",
-              value: 19,
-              min: 0, max: 255, step: 1,
+          new UISettingChoice({
+            name: "choice", displayName: "Choice",
+            value: "B",
+            choices: [
+              "A", "B", "C"
+            ],
 
-              style: rangeStyle,
-            }),
-            new UISettingRange({
-              name: "backgroundB", displayName: "Background B",
-              value: 19,
-              min: 0, max: 255, step: 1,
+            style: buttonStyle,
+          }),
+          
+          new UIBase({
+            style: {
+              minSize: buttonStyle.minSize || new Vec(0, 0),
+            },
+          }),
 
-              style: rangeStyle,
-            }),
-            
-            new UIBase({
-              style: {
-                minSize: buttonStyle.minSize || new Vec(0, 0),
-              },
-            }),
+          new UISettingDropdown({
+            name: "dropdown", displayName: "Dropdown",
+            value: "B",
+            choices: [
+              "A", "B", "C", "D", "E", "F", "G", "H", "I"
+            ],
 
-            new UISettingChoice({
-              name: "choice", displayName: "Choice",
-              value: "B",
-              choices: [
-                "A", "B", "C"
-              ],
+            style: {...buttonStyle, 
+              maxSize: new Vec(Infinity, 100)
+            },
+          }),
 
-              style: buttonStyle,
-            }),
-            
-            new UIBase({
-              style: {
-                minSize: buttonStyle.minSize || new Vec(0, 0),
-              },
-            }),
+          
+          
+          new UIBase({
+            style: {
+              minSize: buttonStyle.minSize || new Vec(0, 0),
+            },
+          }),
 
-            new UISettingDropdown({
-              name: "dropdown", displayName: "Dropdown",
-              value: "B",
-              choices: [
-                "A", "B", "C", "D", "E", "F", "G", "H", "I"
-              ],
+          new UISettingText({
+            name: "text", displayName: "Text",
+            value: "text123  42\nte12fffffffffffffffffffffffff\ntext123\ntext123\ntext123\ntext123",
 
-              style: {...buttonStyle, 
-                maxSize: new Vec(Infinity, 100)
-              },
-            }),
+            style: {...buttonStyle,
+              minSize: new Vec(300, 100),
+              editor: {
+                multiLine: true,
+              }
+            },
+          }),
 
-            
-            
-            new UIBase({
-              style: {
-                minSize: buttonStyle.minSize || new Vec(0, 0),
-              },
-            }),
+          
+        ],
 
-            new UISettingText({
-              name: "text", displayName: "Text",
-              value: "text123  42\nte12fffffffffffffffffffffffff\ntext123\ntext123\ntext123\ntext123",
-
-              style: {...buttonStyle,
-                minSize: new Vec(300, 100),
-                editor: {
-                  multiLine: true,
-                }
-              },
-            }),
-
-            
-          ],
-
-          events: {
-            input: [function (value) {
-              setBackgroundCol();
-            }],
-            change: [function (value) {
-              localStorage.setItem(settingsName, JSON.stringify(settings));          
-            }],
-          },
-        }),
-      ],
-    });    
+        events: {
+          input: [function (value) {
+            setBackgroundCol();
+          }],
+          change: [function (value) {
+            localStorage.setItem(settingsName, JSON.stringify(settings));          
+          }],
+        },
+      }),
+    ]);    
   }
 
   keydown(e) {

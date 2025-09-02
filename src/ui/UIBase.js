@@ -86,6 +86,11 @@ class UIBase {
 
     nestedObjectAssign(this.style, temp, style);
 
+    if (this.style.size) {
+      this.style.minSize = this.style.size;
+      this.style.maxSize = this.style.size;
+    }
+
     delete this.style.hover;
     this.style.hover = nestedObjectAssign({}, this.style, style.hover);
   }

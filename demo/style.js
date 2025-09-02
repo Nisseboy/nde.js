@@ -58,3 +58,31 @@ let buttonStyle = {
 let rangeStyle = {...buttonStyle,
   padding: 0,
 };
+
+
+let rootStyle = {
+  size: new Vec(1600, 900),
+  scroll: {...buttonStyle.scroll,
+    width: buttonStyle.padding,
+  },
+};
+
+
+function createDefaultUIRoot(children) {
+  return new UIRoot({
+    pos: new Vec(0, 0),
+
+    style: rootStyle,
+    
+    children: [
+      new UIBase({
+        style: {
+          direction: "column",
+          padding: 50,
+          gap: 10,
+        },
+
+        children: children,
+      })],
+  });   
+}

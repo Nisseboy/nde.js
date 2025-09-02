@@ -8,78 +8,69 @@ class SceneMainMenu extends Scene {
   }
 
   start() {
-    this.ui = new UIRoot({
-      pos: new Vec(50, 50),
+    
+    this.ui = createDefaultUIRoot([
+      new UIButtonImage({
+        image: tex["duck/1"],
 
+        style: {...buttonStyle},
+        imageStyle: {
+          image: {imageSmoothing: false},
+          minSize: new Vec(30, 30),
+        },
 
-      style: {
-        direction: "column",
+        events: {mousedown: [() => {
+          nde.transition = new TransitionSlide(scenes.game, new TimerTime(0.2));
+        }]},
+      }),
 
-        gap: 10,
-      },
+      new UIButtonText({
+        style: {...buttonStyle,},
+        textStyle: {...buttonStyle},
+        text: "Fade",
 
-      children: [
-        new UIButtonImage({
-          image: tex["duck/1"],
+        events: {mousedown: [() => {
+          nde.transition = new TransitionFade(scenes.game, new TimerTime(0.2));
+        }]},
+      }),
 
-          style: {...buttonStyle},
-          imageStyle: {
-            image: {imageSmoothing: false},
-            minSize: new Vec(30, 30),
-          },
+      new UIButtonText({
+        style: {...buttonStyle},
+        textStyle: {...buttonStyle},
+        text: "Slide",
 
-          events: {mousedown: [() => {
-            nde.transition = new TransitionSlide(scenes.game, new TimerTime(0.2));
-          }]},
-        }),
+        events: {mousedown: [() => {
+          nde.transition = new TransitionSlide(scenes.game, new TimerTime(0.2));
+        }]},
+      }),
 
-        new UIButtonText({
-          style: {...buttonStyle,},
-          textStyle: {...buttonStyle},
-          text: "Fade",
+      new UIButtonText({
+        style: {...buttonStyle},
+        textStyle: {...buttonStyle},
+        text: "Noise",
 
-          events: {mousedown: [() => {
-            nde.transition = new TransitionFade(scenes.game, new TimerTime(0.2));
-          }]},
-        }),
+        events: {mousedown: [() => {
+          nde.transition = new TransitionNoise(scenes.game, new TimerTime(0.2));
+        }]},
+      }),
+          
+      new UIBase({
+        style: {
+          minSize: buttonStyle.minSize || new Vec(0, 0),
+        },
+      }),
 
-        new UIButtonText({
-          style: {...buttonStyle},
-          textStyle: {...buttonStyle},
-          text: "Slide",
+      new UIButtonText({
+        style: {...buttonStyle},
+        textStyle: {...buttonStyle},
+        text: "Settings",
 
-          events: {mousedown: [() => {
-            nde.transition = new TransitionSlide(scenes.game, new TimerTime(0.2));
-          }]},
-        }),
-
-        new UIButtonText({
-          style: {...buttonStyle},
-          textStyle: {...buttonStyle},
-          text: "Noise",
-
-          events: {mousedown: [() => {
-            nde.transition = new TransitionNoise(scenes.game, new TimerTime(0.2));
-          }]},
-        }),
-            
-        new UIBase({
-          style: {
-            minSize: buttonStyle.minSize || new Vec(0, 0),
-          },
-        }),
-
-        new UIButtonText({
-          style: {...buttonStyle},
-          textStyle: {...buttonStyle},
-          text: "Settings",
-
-          events: {mousedown: [() => {
-            nde.transition = new TransitionSlide(scenes.settings, new TimerTime(0.2));
-          }]},
-        }),
-      ],
-    });    
+        events: {mousedown: [() => {
+          nde.transition = new TransitionSlide(scenes.settings, new TimerTime(0.2));
+        }]},
+      }),
+    ],
+    );     
   }
 
   render() {
