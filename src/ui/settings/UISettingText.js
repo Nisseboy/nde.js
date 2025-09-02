@@ -140,6 +140,7 @@ class UISettingText extends UISettingBase {
           this.removeAtCursor(this.cursor);
         }
       }
+      this.moveScreenToCursor(this.cursor);
     }
     if (e.key == "Delete") {
       if (this.cursor2 != undefined) this.removeSelected();
@@ -153,6 +154,7 @@ class UISettingText extends UISettingBase {
             this.removeAtCursor(this.cursor);
         }
       }
+      this.moveScreenToCursor(this.cursor);
     }
     if (e.key == "Escape") {
       this.endFocus();
@@ -208,6 +210,7 @@ class UISettingText extends UISettingBase {
             this.removeSelected();
           }
           this.addAtCursor(this.cursor, string);
+          this.moveScreenToCursor(this.cursor);
         });
       }
 
@@ -274,6 +277,8 @@ class UISettingText extends UISettingBase {
 
         this.moveCursorRight(cursor);
       }
+
+      this.moveScreenToCursor(cursor);
     } else {
       this.maxCursorX = 0;
     }
@@ -296,6 +301,7 @@ class UISettingText extends UISettingBase {
     if (newText) {
       if (this.cursor2 != undefined) this.removeSelected();
       this.addAtCursor(this.cursor, newText);
+      this.moveScreenToCursor(this.cursor);
     }
 
 
@@ -498,6 +504,15 @@ class UISettingText extends UISettingBase {
     return;
   }
 
+  moveScreenToCursor(cursor) {
+    let pos = this.getCharActualPos(cursor).subV(this.pos).addV(this.scroll);
+    let size = nde.renderer.measureText("i").y;
+    
+    this.scroll.x = Math.max(Math.min(this.scroll.x, pos.x - this.style.padding * 2), pos.x - this.size.x + this.style.padding * 2);
+    this.scroll.y = Math.max(Math.min(this.scroll.y, pos.y - this.style.padding * 2), pos.y - this.size.y + this.style.padding * 2 + size);
+    
+  }
+
   render() {    
     this.rendererTransform = nde.renderer.getTransform();
 
@@ -506,6 +521,12 @@ class UISettingText extends UISettingBase {
     this.scroll.x = Math.max(Math.min(this.scroll.x, this.textSize.x - this.size.x + this.style.padding * 2), 0);
     this.scroll.y = Math.max(Math.min(this.scroll.y, this.textSize.y - nde.renderer.measureText("i").y), 0);
 
+    let cursor = this.cursor2 || this.cursor;
+    let cursorPos = this.getCharActualPos(cursor);
+    let cursorSize = nde.renderer.measureText("i");
+    cursorSize.x = cursorSize.x * 0.15;
+    cursorPos.x -= cursorSize.x / 2;
+
     nde.renderer.clipRect(this.pos._add(this.style.padding), this.size._sub(this.style.padding * 2), () => {
       let pos = this.pos._add(this.style.padding).subV(this.scroll);
 
@@ -513,12 +534,7 @@ class UISettingText extends UISettingBase {
       nde.renderer.text(this.value, pos);
 
       if (this.focused) {
-        let cursor = this.cursor2 || this.cursor;
-
         if ((this.cursorTimer.elapsedTime / this.style.editor.blinkTime) % 1 < 0.5) {
-          let cursorPos = this.getCharActualPos(cursor);
-          let cursorSize = nde.renderer.measureText("i");
-          cursorSize.x = cursorSize.x * 0.15;
           nde.renderer.rect(cursorPos, cursorSize);
         }
 
