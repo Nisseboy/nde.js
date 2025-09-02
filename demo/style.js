@@ -20,6 +20,9 @@ let buttonStyle = {
   text: {font: "25px monospace"},
   
   
+  scroll: {
+    fill: "rgb(60, 60, 60)",
+  },
 
   slider: {
     padding: 5,
@@ -29,8 +32,6 @@ let buttonStyle = {
   },
 
   number: {
-    align: new Vec(2, 1),
-
     fill: buttonCol,
     
     text: {

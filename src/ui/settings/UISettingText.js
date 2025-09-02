@@ -1,3 +1,5 @@
+let activeSettingText = undefined;
+
 class UISettingText extends UISettingBase {
   constructor(props) {
     super(props);
@@ -20,7 +22,15 @@ class UISettingText extends UISettingBase {
       },
     };
     this.fillStyle(props.style);
+    this.style.maxSize.from(this.style.minSize);
     
+    this.children = [
+      new UIText({
+        textStyle: {...this.style.text},
+        text: "",
+      }),
+    ];
+
     this.setValue("" + this.value);
     
 
@@ -34,8 +44,6 @@ class UISettingText extends UISettingBase {
 
     this.clicksInRow = 0;
     this.lastCharPos = new Vec(0, 0);
-
-    this.scroll = new Vec(0, 0);
 
 
     this.rendererTransform = undefined;
@@ -82,24 +90,25 @@ class UISettingText extends UISettingBase {
         
       }
 
+      if (activeSettingText && activeSettingText != this) activeSettingText.endFocus();
+      activeSettingText = this;
       this.forceHover = true;
       nde.registerEvent("mousemove", this.mousemoveGlobalFunc);
       nde.registerEvent("mouseup", this.mouseupGlobalFunc);
-    });
-
-    this.registerEvent("wheel", e=>{
-      let dy = e.deltaY * 0.5;
-
-      if (e.shiftKey) this.scroll.x += dy;
-      else this.scroll.y += dy;
-      
-      return false;
     });
   }
   
   setValue(newValue) {
     super.setValue(newValue);
     this.value = "" + this.value;
+    
+    this.recalculateSize();
+  }
+
+  recalculateSize() {
+    this.children[0].text = this.value;
+    this.children[0].calculateSize();
+    this.calculateSize();
   }
 
   mousedownGlobal(e) {
@@ -140,6 +149,9 @@ class UISettingText extends UISettingBase {
           this.removeAtCursor(this.cursor);
         }
       }
+
+      this.recalculateSize()
+    
       this.moveScreenToCursor(this.cursor);
     }
     if (e.key == "Delete") {
@@ -154,6 +166,9 @@ class UISettingText extends UISettingBase {
             this.removeAtCursor(this.cursor);
         }
       }
+
+      this.recalculateSize()
+
       this.moveScreenToCursor(this.cursor);
     }
     if (e.key == "Escape") {
@@ -211,6 +226,8 @@ class UISettingText extends UISettingBase {
           }
           this.addAtCursor(this.cursor, string);
           this.moveScreenToCursor(this.cursor);
+          
+          this.recalculateSize()
         });
       }
 
@@ -298,9 +315,13 @@ class UISettingText extends UISettingBase {
     if (this.style.editor.numberOnly && !["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "*", "/", "+", "-", "(", ")"].includes(newText)) return;
 
 
+
+
     if (newText) {
       if (this.cursor2 != undefined) this.removeSelected();
       this.addAtCursor(this.cursor, newText);
+      
+      this.recalculateSize()
       this.moveScreenToCursor(this.cursor);
     }
 
@@ -504,6 +525,7 @@ class UISettingText extends UISettingBase {
     return;
   }
 
+
   moveScreenToCursor(cursor) {
     let pos = this.getCharActualPos(cursor).subV(this.pos).addV(this.scroll);
     let size = nde.renderer.measureText("i").y;
@@ -511,15 +533,15 @@ class UISettingText extends UISettingBase {
     this.scroll.x = Math.max(Math.min(this.scroll.x, pos.x - this.style.padding * 2), pos.x - this.size.x + this.style.padding * 2);
     this.scroll.y = Math.max(Math.min(this.scroll.y, pos.y - this.style.padding * 2), pos.y - this.size.y + this.style.padding * 2 + size);
     
+    this.constrainScroll();
+    this.positionChildren();
   }
 
-  render() {    
+  render() {        
     this.rendererTransform = nde.renderer.getTransform();
 
     super.render();    
-    this.textSize = nde.renderer.measureText(this.value);
-    this.scroll.x = Math.max(Math.min(this.scroll.x, this.textSize.x - this.size.x + this.style.padding * 2), 0);
-    this.scroll.y = Math.max(Math.min(this.scroll.y, this.textSize.y - nde.renderer.measureText("i").y), 0);
+    nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
 
     let cursor = this.cursor2 || this.cursor;
     let cursorPos = this.getCharActualPos(cursor);
@@ -528,10 +550,7 @@ class UISettingText extends UISettingBase {
     cursorPos.x -= cursorSize.x / 2;
 
     nde.renderer.clipRect(this.pos._add(this.style.padding), this.size._sub(this.style.padding * 2), () => {
-      let pos = this.pos._add(this.style.padding).subV(this.scroll);
-
-      nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
-      nde.renderer.text(this.value, pos);
+      this.children[0].text = this.value;
 
       if (this.focused) {
         if ((this.cursorTimer.elapsedTime / this.style.editor.blinkTime) % 1 < 0.5) {

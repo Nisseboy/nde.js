@@ -54,6 +54,8 @@ class UISettingCollection extends UISettingBase {
   }
 
   render() {
+    super.render();
+    
     for (let i in this.elements) {
       let elem = this.elements[i];      
       nde.renderer.setAll(this.style.text);

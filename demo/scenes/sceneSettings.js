@@ -115,10 +115,12 @@ class SceneSettings extends Scene {
               name: "dropdown", displayName: "Dropdown",
               value: "B",
               choices: [
-                "A", "B", "C"
+                "A", "B", "C", "D", "E", "F", "G", "H", "I"
               ],
 
-              style: buttonStyle,
+              style: {...buttonStyle, 
+                maxSize: new Vec(Infinity, 100)
+              },
             }),
 
             
@@ -131,7 +133,7 @@ class SceneSettings extends Scene {
 
             new UISettingText({
               name: "text", displayName: "Text",
-              value: "text123  42\nte12\ntext123",
+              value: "text123  42\nte12fffffffffffffffffffffffff\ntext123\ntext123\ntext123\ntext123",
 
               style: {...buttonStyle,
                 minSize: new Vec(300, 100),

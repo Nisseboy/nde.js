@@ -12,7 +12,11 @@ class UIRoot extends UIBase {
 
     this.initUI();
 
+    this.deepestScrollable = undefined;
+    this.deepestScrollableDepth = 0;
     this.renderLast = [];
+
+    nde.registerEvent("wheel", (e) => {this.wheel(e)});
   }
 
   initUI() {
@@ -47,21 +51,35 @@ class UIRoot extends UIBase {
     }
 
     element.uiRoot = this;
+    element.constrainScroll();
     element.calculateSize();
 
     this.depth = Math.max(this.depth, depth);
   }
 
-
-
   growSizePass() {
     this.growChildren();
   }
 
-
-
   positionPass() {
     this.positionChildren();
+  }
+
+
+
+  wheel(e) {
+    if (!this.deepestScrollable) return;
+    
+    let delta = e.deltaY * 0.5;
+
+    if (e.shiftKey) this.deepestScrollable.scroll.x += delta;
+    else this.deepestScrollable.scroll.y += delta;
+
+    this.deepestScrollable.constrainScroll();
+
+    this.deepestScrollable.positionChildren();
+
+    return false;
   }
 
 
@@ -73,63 +91,79 @@ class UIRoot extends UIBase {
     document.body.style.cursor = "auto";
 
     this.renderLast.length = 0;
-    this.hoverPassHelper(this, false, transformedMousePoint);
+    this.deepestScrollable = undefined;
+    this.hoverPassHelper(this, false, false, transformedMousePoint);
 
     for (let elem of this.renderLast) {
-      this.hoverPassHelper(elem[0], elem[1], transformedMousePoint, true);
+      this.hoverPassHelper(elem[0], elem[1], elem[2], transformedMousePoint, true);
     }
   }
-  hoverPassHelper(element, found, pt, ignoreRenderLast = false) {
+  hoverPassHelper(element, found, ignoreHover, pt, ignoreRenderLast = false) {
     if (element.style.render == "last" && !ignoreRenderLast) {
-      this.renderLast.push([element, found]);
+      this.renderLast.push([element, found, ignoreHover]);
       return;
     }
     if (element.style.render == "hidden") return;
     
+
     element.hovered = false;
     element.trueHovered = false;
+    element.trueHoveredBottom = false;
 
-    let inBounds = (pt.x >= element.pos.x && 
+    let clip = (element.style.maxSize.x != Infinity || element.style.maxSize.y != Infinity);
+    let scrollable = clip && ((element.style.scroll.x && element.contentSize.x > element.size.x - element.style.padding * 2) || (element.style.scroll.y && element.contentSize.y > element.size.y - element.style.padding * 2));
+
+    if (ignoreHover || (clip && 
+      (pt.x < element.pos.x || 
+      pt.x > element.pos.x + element.size.x || 
+      pt.y < element.pos.y || 
+      pt.y > element.pos.y + element.size.y))) {
+
+      found = false;
+      ignoreHover = true;
+    } else {
+      let inBounds = (pt.x >= element.pos.x && 
                     pt.x <= element.pos.x + element.size.x && 
                     pt.y >= element.pos.y && 
                     pt.y <= element.pos.y + element.size.y);
     
-    element.trueHovered = inBounds;
-    element.trueHoveredBottom = inBounds;
+      element.trueHovered = inBounds;
+      element.trueHoveredBottom = inBounds;
+      
+      if (inBounds) {
+        if (element.interactable) {
+          nde.hoveredUIElement = element;
+          document.body.style.cursor = element.style.cursor;
 
-    if (
-      element.interactable && 
-      inBounds) 
-    {
-      nde.hoveredUIElement = element;
-      document.body.style.cursor = element.style.cursor;
+          found = true;
+        }
 
-      found = true;
+        if (scrollable) {
+          this.deepestScrollable = element;          
+        }
+      }
+      
+
+      if (found) {
+        element.hovered = true;
+      }
+
+      if (element.forceHover) {
+        element.hovered = true;
+        found = true;
+      }
     }
+    
 
-    if (found) {
-      element.hovered = true;
-    }
+    
 
-    if (element.forceHover) {
-      element.hovered = true;
-      found = true;
-    }
-
-    if (element.style.clip && 
-      (pt.x < element.pos.x || 
-      pt.x > element.pos.x + element.size.x || 
-      pt.y < element.pos.y || 
-      pt.y > element.pos.y + element.size.y)) return;
 
     for (let c of element.children) {
-      this.hoverPassHelper(c, found, pt);
+      this.hoverPassHelper(c, found, ignoreHover, pt);
 
       if (c.trueHovered) element.trueHoveredBottom = false;
     }
   }
-
-
 
   renderPass() {
     this.renderLast.length = 0;
@@ -152,12 +186,16 @@ class UIRoot extends UIBase {
 
 
     element.render();
-    if (element.style.clip) {
+
+    let clip = (element.style.maxSize.x != Infinity || element.style.maxSize.y != Infinity);
+    if (clip) {
       nde.renderer.clipRect(element.pos._add(element.style.padding), element.size._sub(element.style.padding * 2), () => {
         for (let c of element.children) {
           this.renderPassHelper(c, depth + 1);
         }
+        
       });
+      if (this.deepestScrollable == element || element.style.scroll.alwaysShow) element.renderScrollbars();
     } else {
       for (let c of element.children) {
         this.renderPassHelper(c, depth + 1);

@@ -1,9 +1,17 @@
 let defaultStyle = {
   minSize: new Vec(0, 0),
-  maxSize: new Vec(Infinity, Infinity),
-  clip: false,
   growX: false,
   growY: false,
+
+  maxSize: new Vec(Infinity, Infinity),
+
+  scroll: {
+    x: true,
+    y: true,
+    alwaysShow: false,
+    fill: "rgba(255, 255, 255, 255)",
+    width: -1, //-1 to be padding size
+  },
 
   align: new Vec(0, 0), //0: left, 1: center, 2: right,    0: top, 1: middle, 2: bottom
 
@@ -43,6 +51,8 @@ class UIBase {
     this.trueHoveredBottom = false;
     this.pos = new Vec(0, 0);
     this.size = new Vec(1, 1);
+    this.contentSize = new Vec(1, 1);
+    this.scroll = new Vec(0, 0);
 
     this.debugColor = undefined;
 
@@ -106,9 +116,10 @@ class UIBase {
     if (isRow) this.size.x += gap;
     else this.size.y += gap;
 
+    this.contentSize.from(this.size);
 
     this.size.x = Math.min(Math.max(this.size.x, this.style.minSize.x), this.style.maxSize.x);
-    this.size.y = Math.min(Math.max(this.size.y, this.style.minSize.y), this.style.maxSize.x);
+    this.size.y = Math.min(Math.max(this.size.y, this.style.minSize.y), this.style.maxSize.y);
   }
 
   growChildren() {
@@ -266,6 +277,8 @@ class UIBase {
           break;
       }
       
+      c.pos.subV(this.scroll);
+
       c.pos.addV(c.style.pos);
 
       c.positionChildren();
@@ -285,11 +298,11 @@ class UIBase {
         nde.renderer.set("fill", `rgb(0, 255, 0)`);
 
         nde.debugStats.uiClass = this.__proto__.constructor.name;
-        nde.debugStats.uiPos = this.pos;
-        nde.debugStats.uiSize = this.size;
+        nde.debugStats.uiPos = this.pos.toString();
+        nde.debugStats.uiSize = this.size.toString();
         for (let style in this.style) {
-          nde.debugStats["ui-" + style] = this.style[style];
-          if (this.style[style]) nde.debugStats["ui-" + style] = this.style[style].toString();
+          nde.debugStats[style] = this.style[style];
+          if (this.style[style] instanceof Vec) nde.debugStats[style] = this.style[style].toString();
         }
       }
     }
@@ -301,6 +314,36 @@ class UIBase {
     this.renderDebug();
 
     nde.renderer.rect(this.pos, this.size);   
+  }
+
+  constrainScroll() {
+    let maxScroll = this.contentSize._subV(this.size);
+    this.scroll.x = Math.max(Math.min(this.scroll.x, maxScroll.x), 0);
+    this.scroll.y = Math.max(Math.min(this.scroll.y, maxScroll.y), 0);
+  }
+  renderScrollbars() {
+    let size = this.size._sub(this.style.padding * 2);
+    let fraction = size._divV(this.contentSize);
+    let scrollFraction = this.scroll._divV(this.contentSize._subV(this.size));
+
+    let width = this.style.scroll.width;
+    if (width == -1) width = this.style.padding;
+
+    nde.renderer.set("stroke", "rgba(0, 0, 0, 0)");
+    nde.renderer.set("fill", this.style.scroll.fill);
+    
+    
+    if (fraction.x < 1) {
+      let max = 1 - fraction.x;
+      nde.renderer.rect(new Vec(this.pos.x + scrollFraction.x * max * this.size.x, this.pos.y + this.size.y - width), new Vec(this.size.x * fraction.x, width));      
+    }
+    
+    if (fraction.y < 1) {
+      let max = 1 - fraction.y;
+      nde.renderer.rect(new Vec(this.pos.x + this.size.x - width, this.pos.y + scrollFraction.y * max * this.size.y), new Vec(width, this.size.y * fraction.y));
+      
+    }
+    
   }
 }
 

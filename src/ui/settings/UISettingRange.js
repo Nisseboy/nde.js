@@ -17,8 +17,6 @@ class UISettingRange extends UISettingBase {
       },
 
       number: {
-        align: new Vec(2, 1),
-
         fill: "rgb(0, 0, 0)",
         
         text: {
