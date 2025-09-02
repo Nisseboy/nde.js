@@ -1048,10 +1048,21 @@ let defaultStyle = {
   growX: false,
   growY: false,
 
+  maxSize: new Vec(Infinity, Infinity),
+
+  scroll: {
+    x: true,
+    y: true,
+    alwaysShow: false,
+    fill: "rgba(255, 255, 255, 255)",
+    width: -1, //-1 to be padding size
+  },
+
   align: new Vec(0, 0), //0: left, 1: center, 2: right,    0: top, 1: middle, 2: bottom
 
   position: "normal", //normal (from calculated pos, takes up space), relative (from parent element), absolute (from 0, 0)
   pos: new Vec(0, 0), //position offset
+
   render: "normal", //normal, hidden, last
 
   padding: 0,
@@ -1069,6 +1080,8 @@ class UIBase {
   constructor(props) {
     this.defaultStyle = {};
     this.style = undefined;
+
+    this.parent = undefined;
     this.uiRoot = undefined;
 
     this.fillStyle(props.style);
@@ -1083,6 +1096,8 @@ class UIBase {
     this.trueHoveredBottom = false;
     this.pos = new Vec(0, 0);
     this.size = new Vec(1, 1);
+    this.contentSize = new Vec(1, 1);
+    this.scroll = new Vec(0, 0);
 
     this.debugColor = undefined;
 
@@ -1116,6 +1131,11 @@ class UIBase {
 
     nestedObjectAssign(this.style, temp, style);
 
+    if (this.style.size) {
+      this.style.minSize = this.style.size;
+      this.style.maxSize = this.style.size;
+    }
+
     delete this.style.hover;
     this.style.hover = nestedObjectAssign({}, this.style, style.hover);
   }
@@ -1141,13 +1161,15 @@ class UIBase {
     
     this.size.add(this.style.padding * 2);
 
-    if (this.size.x < this.style.minSize.x) this.size.x = this.style.minSize.x;
-    if (this.size.y < this.style.minSize.y) this.size.y = this.style.minSize.y;
-
     let gap = this.style.gap * Math.max(numChildren - 1, 0);
 
     if (isRow) this.size.x += gap;
     else this.size.y += gap;
+
+    this.contentSize.from(this.size);
+
+    this.size.x = Math.min(Math.max(this.size.x, this.style.minSize.x), this.style.maxSize.x);
+    this.size.y = Math.min(Math.max(this.size.y, this.style.minSize.y), this.style.maxSize.y);
   }
 
   growChildren() {
@@ -1305,6 +1327,8 @@ class UIBase {
           break;
       }
       
+      c.pos.subV(this.scroll);
+
       c.pos.addV(c.style.pos);
 
       c.positionChildren();
@@ -1324,8 +1348,12 @@ class UIBase {
         nde.renderer.set("fill", `rgb(0, 255, 0)`);
 
         nde.debugStats.uiClass = this.__proto__.constructor.name;
-        nde.debugStats.uiPos = this.pos;
-        nde.debugStats.uiSize = this.size;
+        nde.debugStats.uiPos = this.pos.toString();
+        nde.debugStats.uiSize = this.size.toString();
+        for (let style in this.style) {
+          nde.debugStats[style] = this.style[style];
+          if (this.style[style] instanceof Vec) nde.debugStats[style] = this.style[style].toString();
+        }
       }
     }
   }
@@ -1336,6 +1364,36 @@ class UIBase {
     this.renderDebug();
 
     nde.renderer.rect(this.pos, this.size);   
+  }
+
+  constrainScroll() {
+    let maxScroll = this.contentSize._subV(this.size);
+    this.scroll.x = Math.max(Math.min(this.scroll.x, maxScroll.x), 0);
+    this.scroll.y = Math.max(Math.min(this.scroll.y, maxScroll.y), 0);
+  }
+  renderScrollbars() {
+    let size = this.size._sub(this.style.padding * 2);
+    let fraction = size._divV(this.contentSize);
+    let scrollFraction = this.scroll._divV(this.contentSize._subV(this.size));
+
+    let width = this.style.scroll.width;
+    if (width == -1) width = this.style.padding;
+
+    nde.renderer.set("stroke", "rgba(0, 0, 0, 0)");
+    nde.renderer.set("fill", this.style.scroll.fill);
+    
+    
+    if (fraction.x < 1) {
+      let max = 1 - fraction.x;
+      nde.renderer.rect(new Vec(this.pos.x + scrollFraction.x * max * this.size.x, this.pos.y + this.size.y - width), new Vec(this.size.x * fraction.x, width));      
+    }
+    
+    if (fraction.y < 1) {
+      let max = 1 - fraction.y;
+      nde.renderer.rect(new Vec(this.pos.x + this.size.x - width, this.pos.y + scrollFraction.y * max * this.size.y), new Vec(width, this.size.y * fraction.y));
+      
+    }
+    
   }
 }
 
@@ -1371,7 +1429,7 @@ class UIRoot extends UIBase {
     super(props);
 
     this.defaultStyle = {
-      direction: "column"
+      direction: "column",
     };
 
     this.fillStyle(props.style);
@@ -1380,7 +1438,11 @@ class UIRoot extends UIBase {
 
     this.initUI();
 
+    this.deepestScrollable = undefined;
+    this.deepestScrollableDepth = 0;
     this.renderLast = [];
+
+    nde.registerEvent("wheel", (e) => {this.wheel(e)});
   }
 
   initUI() {
@@ -1409,25 +1471,41 @@ class UIRoot extends UIBase {
   }
   fitSizePassHelper(element, depth) {
     for (let c of element.children) {
+      c.parent = element;
+
       this.fitSizePassHelper(c, depth + 1);
     }
 
     element.uiRoot = this;
+    element.constrainScroll();
     element.calculateSize();
 
     this.depth = Math.max(this.depth, depth);
   }
 
-
-
   growSizePass() {
     this.growChildren();
   }
 
-
-
   positionPass() {
     this.positionChildren();
+  }
+
+
+
+  wheel(e) {
+    if (!this.deepestScrollable) return;
+    
+    let delta = e.deltaY * 0.5;
+
+    if (e.shiftKey) this.deepestScrollable.scroll.x += delta;
+    else this.deepestScrollable.scroll.y += delta;
+
+    this.deepestScrollable.constrainScroll();
+
+    this.deepestScrollable.positionChildren();
+
+    return false;
   }
 
 
@@ -1439,57 +1517,79 @@ class UIRoot extends UIBase {
     document.body.style.cursor = "auto";
 
     this.renderLast.length = 0;
-    this.hoverPassHelper(this, false, transformedMousePoint);
+    this.deepestScrollable = undefined;
+    this.hoverPassHelper(this, false, false, transformedMousePoint);
 
     for (let elem of this.renderLast) {
-      this.hoverPassHelper(elem[0], elem[1], transformedMousePoint, true);
+      this.hoverPassHelper(elem[0], elem[1], elem[2], transformedMousePoint, true);
     }
   }
-  hoverPassHelper(element, found, pt, ignoreRenderLast = false) {
+  hoverPassHelper(element, found, ignoreHover, pt, ignoreRenderLast = false) {
     if (element.style.render == "last" && !ignoreRenderLast) {
-      this.renderLast.push([element, found]);
+      this.renderLast.push([element, found, ignoreHover]);
       return;
     }
     if (element.style.render == "hidden") return;
     
+
     element.hovered = false;
     element.trueHovered = false;
+    element.trueHoveredBottom = false;
 
-    let inBounds = (pt.x >= element.pos.x && 
+    let clip = (element.style.maxSize.x != Infinity || element.style.maxSize.y != Infinity);
+    let scrollable = clip && ((element.style.scroll.x && element.contentSize.x > element.size.x - element.style.padding * 2) || (element.style.scroll.y && element.contentSize.y > element.size.y - element.style.padding * 2));
+
+    if (ignoreHover || (clip && 
+      (pt.x < element.pos.x || 
+      pt.x > element.pos.x + element.size.x || 
+      pt.y < element.pos.y || 
+      pt.y > element.pos.y + element.size.y))) {
+
+      found = false;
+      ignoreHover = true;
+    } else {
+      let inBounds = (pt.x >= element.pos.x && 
                     pt.x <= element.pos.x + element.size.x && 
                     pt.y >= element.pos.y && 
                     pt.y <= element.pos.y + element.size.y);
     
-    element.trueHovered = inBounds;
-    element.trueHoveredBottom = inBounds;
+      element.trueHovered = inBounds;
+      element.trueHoveredBottom = inBounds;
+      
+      if (inBounds) {
+        if (element.interactable) {
+          nde.hoveredUIElement = element;
+          document.body.style.cursor = element.style.cursor;
 
-    if (
-      element.interactable && 
-      inBounds) 
-    {
-      nde.hoveredUIElement = element;
-      document.body.style.cursor = element.style.cursor;
+          found = true;
+        }
 
-      found = true;
+        if (scrollable) {
+          this.deepestScrollable = element;          
+        }
+      }
+      
+
+      if (found) {
+        element.hovered = true;
+      }
+
+      if (element.forceHover) {
+        element.hovered = true;
+        found = true;
+      }
     }
+    
 
-    if (found) {
-      element.hovered = true;
-    }
+    
 
-    if (element.forceHover) {
-      element.hovered = true;
-      found = true;
-    }
 
     for (let c of element.children) {
-      this.hoverPassHelper(c, found, pt);
+      this.hoverPassHelper(c, found, ignoreHover, pt);
 
       if (c.trueHovered) element.trueHoveredBottom = false;
     }
   }
-
-
 
   renderPass() {
     this.renderLast.length = 0;
@@ -1510,9 +1610,22 @@ class UIRoot extends UIBase {
       element.debugColor = 255 / (this.depth + 1) * (depth + 1);
     } else element.debugColor = undefined;
 
+
     element.render();
-    for (let c of element.children) {
-      this.renderPassHelper(c, depth + 1);
+
+    let clip = (element.style.maxSize.x != Infinity || element.style.maxSize.y != Infinity);
+    if (clip) {
+      nde.renderer.clipRect(element.pos._add(element.style.padding), element.size._sub(element.style.padding * 2), () => {
+        for (let c of element.children) {
+          this.renderPassHelper(c, depth + 1);
+        }
+        
+      });
+      if (this.deepestScrollable == element || element.style.scroll.alwaysShow) element.renderScrollbars();
+    } else {
+      for (let c of element.children) {
+        this.renderPassHelper(c, depth + 1);
+      }
     }
   }
 }
@@ -1723,6 +1836,8 @@ class UISettingCollection extends UISettingBase {
   }
 
   render() {
+    super.render();
+    
     for (let i in this.elements) {
       let elem = this.elements[i];      
       nde.renderer.setAll(this.style.text);
@@ -1832,23 +1947,24 @@ class UISettingDropdown extends UISettingBase {
       gap: 0,
     };
     this.fillStyle(props.style); 
-    this.style.fill = "rgba(0, 0, 0, 0)";
-    this.style.padding = 0;
     
     this.choices = props.choices || ["undefined"];
     this.value = props.value || this.choices[0];
 
+    let oldMaxSize = this.style.maxSize;
+    this.style.maxSize = new Vec(Infinity, Infinity);
+
     this.children = [
       new UIButton({
-        style: props.style,
+        style: {...this.style},
         children: [
           new UIText({
-            style: props.style,
+            style: {...this.style},
             text: this.value,
           }),
           new UIText({
-            style: {...props.style,
-              minSize: this.style.minSize._sub((props.style.padding || 0) * 2),
+            style: {...this.style,
+              minSize: this.style.minSize._sub((this.style.padding || 0) * 2),
             },
 
             text: "\u23F7",
@@ -1863,23 +1979,33 @@ class UISettingDropdown extends UISettingBase {
         style: {
           position: "relative",
           render: "hidden",
+        },
 
-          direction: "column",
-          gap: this.style.gap,
-        }
+        children: [
+          new UIBase({
+            style: {
+              scroll: {
+                width: this.style.padding / 2,
+              },
+              direction: "column",
+              gap: this.style.gap,
+              maxSize: oldMaxSize,
+            },
+          }),
+        ],
       }),
     ];
 
     for (let choice of this.choices) {
       let elem = new UIButton({
-        style: {...props.style,
+        style: {...this.style,
           direction: "row",
           align: new Vec(0, 1),
         },
 
         children: [
           new UIText({
-            style: props.style,
+            style: {...this.style,},
             text: choice,
           }),
           new UIBase({
@@ -1899,8 +2025,11 @@ class UISettingDropdown extends UISettingBase {
         }]},
       });
 
-      this.children[1].children.push(elem);
+      this.children[1].children[0].children.push(elem);
     }
+
+    this.style.fill = "rgba(0, 0, 0, 0)";
+    this.style.padding = 0;
 
     this.updateColors();
   }
@@ -1915,7 +2044,7 @@ class UISettingDropdown extends UISettingBase {
     }
   }
   updateColors() {
-    let dropdown = this.children[1];
+    let dropdown = this.children[1].children[0];
     for (let c of dropdown.children) {
       let name = c.children[0].text;
       let col = (name == this.value) ? "rgb(255, 255, 255)" : "rgba(0, 0, 0, 0)";
@@ -2030,8 +2159,6 @@ class UISettingRange extends UISettingBase {
       },
 
       number: {
-        align: new Vec(2, 1),
-
         fill: "rgb(0, 0, 0)",
         
         text: {
@@ -2170,17 +2297,14 @@ class UISettingRange extends UISettingBase {
 
 
 /* src/ui/settings/UISettingText.js */
+let activeSettingText = undefined;
+
 class UISettingText extends UISettingBase {
   constructor(props) {
     super(props);
 
     this.defaultStyle = {
-      text: {
-        fill: "rgb(255, 255, 255)",
-
-        font: "25px monospace",
-        textAlign: ["left", "top"],
-      },
+      cursor: "text",
 
       editor: {
         blinkTime: 1,
@@ -2189,10 +2313,23 @@ class UISettingText extends UISettingBase {
         numberOnly: false,
       },
 
-      cursor: "text",
+      text: {
+        fill: "rgb(255, 255, 255)",
+
+        font: "25px monospace",
+        textAlign: ["left", "top"],
+      },
     };
     this.fillStyle(props.style);
+    this.style.maxSize.from(this.style.minSize);
     
+    this.children = [
+      new UIText({
+        textStyle: {...this.style.text},
+        text: "",
+      }),
+    ];
+
     this.setValue("" + this.value);
     
 
@@ -2206,8 +2343,6 @@ class UISettingText extends UISettingBase {
 
     this.clicksInRow = 0;
     this.lastCharPos = new Vec(0, 0);
-
-    this.scroll = new Vec(0, 0);
 
 
     this.rendererTransform = undefined;
@@ -2254,24 +2389,25 @@ class UISettingText extends UISettingBase {
         
       }
 
+      if (activeSettingText && activeSettingText != this) activeSettingText.endFocus();
+      activeSettingText = this;
       this.forceHover = true;
       nde.registerEvent("mousemove", this.mousemoveGlobalFunc);
       nde.registerEvent("mouseup", this.mouseupGlobalFunc);
-    });
-
-    this.registerEvent("wheel", e=>{
-      let dy = e.deltaY * 0.5;
-
-      if (e.shiftKey) this.scroll.x += dy;
-      else this.scroll.y += dy;
-      
-      return false;
     });
   }
   
   setValue(newValue) {
     super.setValue(newValue);
     this.value = "" + this.value;
+    
+    this.recalculateSize();
+  }
+
+  recalculateSize() {
+    this.children[0].text = this.value;
+    this.children[0].calculateSize();
+    this.calculateSize();
   }
 
   mousedownGlobal(e) {
@@ -2312,6 +2448,10 @@ class UISettingText extends UISettingBase {
           this.removeAtCursor(this.cursor);
         }
       }
+
+      this.recalculateSize()
+    
+      this.moveScreenToCursor(this.cursor);
     }
     if (e.key == "Delete") {
       if (this.cursor2 != undefined) this.removeSelected();
@@ -2325,6 +2465,10 @@ class UISettingText extends UISettingBase {
             this.removeAtCursor(this.cursor);
         }
       }
+
+      this.recalculateSize()
+
+      this.moveScreenToCursor(this.cursor);
     }
     if (e.key == "Escape") {
       this.endFocus();
@@ -2380,6 +2524,9 @@ class UISettingText extends UISettingBase {
             this.removeSelected();
           }
           this.addAtCursor(this.cursor, string);
+          this.moveScreenToCursor(this.cursor);
+          
+          this.recalculateSize()
         });
       }
 
@@ -2446,6 +2593,8 @@ class UISettingText extends UISettingBase {
 
         this.moveCursorRight(cursor);
       }
+
+      this.moveScreenToCursor(cursor);
     } else {
       this.maxCursorX = 0;
     }
@@ -2465,9 +2614,14 @@ class UISettingText extends UISettingBase {
     if (this.style.editor.numberOnly && !["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "*", "/", "+", "-", "(", ")"].includes(newText)) return;
 
 
+
+
     if (newText) {
       if (this.cursor2 != undefined) this.removeSelected();
       this.addAtCursor(this.cursor, newText);
+      
+      this.recalculateSize()
+      this.moveScreenToCursor(this.cursor);
     }
 
 
@@ -2670,28 +2824,35 @@ class UISettingText extends UISettingBase {
     return;
   }
 
-  render() {    
+
+  moveScreenToCursor(cursor) {
+    let pos = this.getCharActualPos(cursor).subV(this.pos).addV(this.scroll);
+    let size = nde.renderer.measureText("i").y;
+    
+    this.scroll.x = Math.max(Math.min(this.scroll.x, pos.x - this.style.padding * 2), pos.x - this.size.x + this.style.padding * 2);
+    this.scroll.y = Math.max(Math.min(this.scroll.y, pos.y - this.style.padding * 2), pos.y - this.size.y + this.style.padding * 2 + size);
+    
+    this.constrainScroll();
+    this.positionChildren();
+  }
+
+  render() {        
     this.rendererTransform = nde.renderer.getTransform();
 
     super.render();    
-    this.textSize = nde.renderer.measureText(this.value);
-    this.scroll.x = Math.max(Math.min(this.scroll.x, this.textSize.x - this.size.x + this.style.padding * 2), 0);
-    this.scroll.y = Math.max(Math.min(this.scroll.y, this.textSize.y - nde.renderer.measureText("i").y), 0);
+    nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
 
+    let cursor = this.cursor2 || this.cursor;
+    let cursorPos = this.getCharActualPos(cursor);
+    let cursorSize = nde.renderer.measureText("i");
+    cursorSize.x = cursorSize.x * 0.15;
+    cursorPos.x -= cursorSize.x / 2;
 
-    nde.renderer.clipRect(this.pos, this.size, () => {
-      let pos = this.pos._add(this.style.padding).subV(this.scroll);
-
-      nde.renderer.setAll(this.hovered ? this.style.hover.text : this.style.text);
-      nde.renderer.text(this.value, pos);
+    nde.renderer.clipRect(this.pos._add(this.style.padding), this.size._sub(this.style.padding * 2), () => {
+      this.children[0].text = this.value;
 
       if (this.focused) {
-        let cursor = this.cursor2 || this.cursor;
-
         if ((this.cursorTimer.elapsedTime / this.style.editor.blinkTime) % 1 < 0.5) {
-          let cursorPos = this.getCharActualPos(cursor);
-          let cursorSize = nde.renderer.measureText("i");
-          cursorSize.x = cursorSize.x * 0.15;
           nde.renderer.rect(cursorPos, cursorSize);
         }
 
@@ -2706,7 +2867,6 @@ class UISettingText extends UISettingBase {
           }
         }
       }
-        
     });
   }
 }
