@@ -1062,6 +1062,7 @@ let defaultStyle = {
 
   position: "normal", //normal (from calculated pos, takes up space), relative (from parent element), absolute (from 0, 0)
   pos: new Vec(0, 0), //position offset
+  selfPos: new Vec(0, 0), //position offset relative to size
 
   render: "normal", //normal, hidden, last
 
@@ -1330,6 +1331,8 @@ class UIBase {
       c.pos.subV(this.scroll);
 
       c.pos.addV(c.style.pos);
+
+      c.pos.addV(c.style.selfPos._mulV(c.size));
 
       c.positionChildren();
     }
