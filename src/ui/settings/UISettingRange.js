@@ -58,10 +58,11 @@ class UISettingRange extends UISettingBase {
 
 
   initChildren() {
-    let numberSize;
+    let numberSize = new Vec(0, 0);
     nde.renderer._(()=>{
       nde.renderer.setAll(this.style.number.text);
-      numberSize = nde.renderer.measureText(this.max);
+      numberSize.y = Math.max(nde.renderer.measureText(this.max).y, this.style.minSize.y);
+      numberSize.x = Math.max(nde.renderer.measureText(this.max).x, this.style.minSize.x);
     });
 
     let sliderSize = new Vec(this.style.slider.minSize.x - numberSize.x - this.style.gap, this.style.slider.minSize.y);
@@ -82,7 +83,7 @@ class UISettingRange extends UISettingBase {
     this.number = new UISettingText({
       style: {...this.style.number,
         hover: this.style.hover.number,
-        minSize: numberSize,
+        size: numberSize,
         editor: {
           numberOnly: true,
         },
