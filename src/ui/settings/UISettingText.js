@@ -278,21 +278,30 @@ class UISettingText extends UISettingBase {
       if (e.key == "ArrowLeft") {
         this.maxCursorX = 0;
 
-        if (unselected) return;
-        if (cursor.x == 0) {
-          if (cursor.y == 0) return;
-
-          cursor.y--;
-          cursor.x = lines[cursor.y].length;
+        if (ctrl) {
+          let x = this.fillCursorLeft(cursor);
+          if (x == 0) {
+            this.moveCursorLeft(cursor);
+            this.fillCursorLeft(cursor);
+          }
         } else {
-          cursor.x--;
+          if (unselected) return;
+          this.moveCursorLeft(cursor);
         }
       }
       if (e.key == "ArrowRight") {
         this.maxCursorX = 0;
-        if (unselected) return;
 
-        this.moveCursorRight(cursor);
+        if (ctrl) {
+          let x = this.fillCursorRight(cursor);
+          if (x == 0) {
+            this.moveCursorRight(cursor);
+            this.fillCursorRight(cursor);
+          }
+        } else {
+          if (unselected) return;
+          this.moveCursorRight(cursor);
+        }
       }
 
       this.moveScreenToCursor(cursor);
@@ -386,6 +395,19 @@ class UISettingText extends UISettingBase {
     }
     return true;
   }
+  moveCursorLeft(cursor) {
+    let lines = this.getLines();
+
+    if (cursor.x == 0) {
+      if (cursor.y == 0) return false;
+
+      cursor.y--;
+      cursor.x = lines[cursor.y].length;
+    } else {
+      cursor.x--;
+    }
+    return true;
+  }
 
   getLines() {
     return this.value.split("\n");
@@ -440,33 +462,35 @@ class UISettingText extends UISettingBase {
   isCursorEmpty(cursor) {
     let line = this.getLines()[cursor.y];
 
-    return ((cursor.x == 0 || line[cursor.x - 1] == " ") && (cursor.x == line.length || line[cursor.x] == " "))
+    return ((cursor.x == 0 || !isAlphaNumeric(line[cursor.x - 1])) && (cursor.x == line.length || !isAlphaNumeric(line[cursor.x])))
   }
   fillCursorLeft(cursor) {
     let line = this.getLines()[cursor.y];
     let isEmpty = this.isCursorEmpty(cursor);
 
-    for (let x = 0; x < 100; x++) {      
-      if (cursor.x == 0) return;
+    for (let x = 0; x < 1000; x++) {      
+      if (cursor.x == 0) return x;
 
-      let charIsEmpty = line[cursor.x - 1] == " ";
-      if (isEmpty != charIsEmpty) return;
+      let charIsEmpty = !isAlphaNumeric(line[cursor.x - 1]);
+      if (isEmpty != charIsEmpty) return x;
 
       cursor.x--;
     }
+    return 1000;
   }
   fillCursorRight(cursor) {
     let line = this.getLines()[cursor.y];
     let isEmpty = this.isCursorEmpty(cursor);
 
-    for (let x = 0; x < 100; x++) {      
-      if (cursor.x == line.length) return;
+    for (let x = 0; x < 1000; x++) {      
+      if (cursor.x == line.length) return x;    
 
-      let charIsEmpty = line[cursor.x] == " ";
-      if (isEmpty != charIsEmpty) return;
+      let charIsEmpty = !isAlphaNumeric(line[cursor.x]);
+      if (isEmpty != charIsEmpty) return x;
 
       cursor.x++;
     }
+    return 1000;
   }
 
   removeAtCursor(cursor) {
@@ -571,3 +595,14 @@ class UISettingText extends UISettingBase {
     });
   }
 }
+
+
+
+//https://stackoverflow.com/questions/4434076/best-way-to-alphanumeric-check-in-javascript
+function isAlphaNumeric(char) {
+  let code = char.charCodeAt(i);
+  return ((code > 47 && code < 58) || // numeric (0-9)
+      (code > 64 && code < 91) || // upper alpha (A-Z)
+      (code > 96 && code < 123)) // lower alpha (a-z)
+  
+};

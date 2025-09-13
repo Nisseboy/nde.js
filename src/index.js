@@ -156,26 +156,27 @@ class NDE {
       if (this.debug) console.log(e.key);
 
       
-      if (this.hoveredUIElement) {
-        if (!this.transition) {
-          if (this.hoveredUIElement.fireEvent("keydown", e) == false) return;
-        }
+      if (this.hoveredUIElement && !this.transition) {
+        if (this.hoveredUIElement.fireEvent("keydown", e) == false) return;
+        if (this.hoveredUIElement.fireEvent("inputdown", e.key.toLowerCase(), e) == false) return;
       }
     
       if (this.fireEvent("keydown", e))
-        this.pressed[e.key.toLowerCase()] = true;
+        if (this.fireEvent("inputdown", e.key.toLowerCase(), e))
+          this.pressed[e.key.toLowerCase()] = true;
     
       
     });
     document.addEventListener("keyup", e => {
-      if (this.hoveredUIElement) {
-        if (!this.transition) {
-          if (this.hoveredUIElement.fireEvent("keyup", e) == false) return;
-        }
+      if (this.hoveredUIElement && !this.transition) {
+        if (this.hoveredUIElement.fireEvent("keyup", e) == false) return;
+        if (this.hoveredUIElement.fireEvent("inputup", e.key.toLowerCase(), e) == false) return;
       }
 
-      if (this.fireEvent("keyup", e))
-        delete this.pressed[e.key.toLowerCase()];
+      this.fireEvent("keyup", e);
+      this.fireEvent("inputup", e.key.toLowerCase(), e);
+
+      delete this.pressed[e.key.toLowerCase()];
     
     });
     
@@ -193,6 +194,7 @@ class NDE {
     document.addEventListener("mousedown", e => {
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
+        if (!this.transition) this.hoveredUIElement.fireEvent("inputdown", "mouse" + e.button, e);
         return;
       }
     
@@ -200,15 +202,18 @@ class NDE {
 
       this.pressed["mouse" + e.button] = true;
       this.fireEvent("mousedown", e);
+      this.fireEvent("inputdown", "mouse" + e.button, e);
     });
     document.addEventListener("mouseup", e => {
       delete this.pressed["mouse" + e.button];
 
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
+        if (!this.transition) this.hoveredUIElement.fireEvent("inputup", "mouse" + e.button, e);
       }
       
       this.fireEvent("mouseup", e);
+      this.fireEvent("inputup", "mouse" + e.button, e);
     });
     document.addEventListener("wheel", e => {
       if (this.hoveredUIElement) {

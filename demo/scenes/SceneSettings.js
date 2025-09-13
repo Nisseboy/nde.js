@@ -149,8 +149,9 @@ class SceneSettings extends Scene {
     ]);    
   }
 
-  keydown(e) {
-    if (nde.getKeyEqual(e.key,"Pause")) {
+
+  inputdown(key) {
+    if (nde.getKeyEqual(key,"Pause")) {
       nde.transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
     }
   }

@@ -22,26 +22,12 @@ class SceneGame extends Scene {
   
   }
 
-  keydown(e) {
-    this.handleInputDown(e.key);
-  }
-  keyup(e) {
-    this.handleInputUp(e.key);
-  }
-
-  mousedown(e) {
-    this.handleInputDown("mouse" + e.button);
-  }
-  mouseup(e) {
-    this.handleInputUp("mouse" + e.button);
-  }
-
-  handleInputDown(code) {
-    if (nde.getKeyEqual(code,"Pause")) {
+  inputdown(key) {
+    if (nde.getKeyEqual(key,"Pause")) {
       nde.transition = new TransitionSlide(scenes.mainMenu, new TimerTime(0.2));
     }
   }
-  handleInputUp(code) {
+  inputup(key) {
     
   }
 

@@ -75,6 +75,23 @@ class Scene {
  */
   mouseup(e) {}
   
+
+  
+/**
+ * @param {string} key
+ * @param {Event} e
+ */
+  inputdown(key, e) {}
+  
+  
+/**
+ * @param {string} key
+ * @param {Event} e
+ */
+  inputup(key, e) {}
+  
+
+
 /**
  * Mouse scrolled
  * 
