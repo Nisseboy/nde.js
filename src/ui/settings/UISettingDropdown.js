@@ -47,7 +47,7 @@ class UISettingDropdown extends UISettingBase {
         children: [
           new UIBase({
             style: {
-              scroll: {
+              scroll: {...this.style.scroll,
                 width: this.style.padding / 2,
               },
               direction: "column",

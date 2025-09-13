@@ -22,11 +22,15 @@ class UISettingText extends UISettingBase {
       },
     };
     this.fillStyle(props.style);
-    this.style.maxSize.from(this.style.minSize);
+
+    
+    //this.style.maxSize.from(this.style.minSize);
     
     this.children = [
       new UIText({
-        style: {...this.style},
+        style: {...this.style,
+          minSize: vecZero,
+        },
         text: "",
       }),
     ];

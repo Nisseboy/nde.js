@@ -10,6 +10,14 @@ class SceneSettings extends Scene {
   }
 
   start() {
+    let textInputSize = new Vec(300, 100);
+    renderer._(() => {
+      renderer.setAll(buttonStyle.text);
+      let charSize = renderer.measureText("a");
+      textInputSize.divV(charSize).floor().mulV(charSize).add(buttonStyle.padding * 2);
+    });
+
+
     this.ui = createDefaultUIRoot([
       new UIButtonText({
         text: "Back",
@@ -127,7 +135,7 @@ class SceneSettings extends Scene {
             value: "text123  42\nte12fffffffffffffffffffffffff\ntext123\ntext123\ntext123\ntext123",
 
             style: {...buttonStyle,
-              minSize: new Vec(300, 100),
+              size: textInputSize,
               editor: {
                 multiLine: true,
               }

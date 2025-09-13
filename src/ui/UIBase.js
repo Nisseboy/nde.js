@@ -1,9 +1,9 @@
 let defaultStyle = {
   minSize: new Vec(0, 0),
+  maxSize: new Vec(Infinity, Infinity),
+
   growX: false,
   growY: false,
-
-  maxSize: new Vec(Infinity, Infinity),
 
   scroll: {
     x: true,
@@ -40,8 +40,6 @@ class UIBase {
     this.parent = undefined;
     this.uiRoot = undefined;
 
-    this.fillStyle(props.style);
-
     this.children = props.children || [];
     this.events = props.events || {};
 
@@ -56,6 +54,8 @@ class UIBase {
     this.scroll = new Vec(0, 0);
 
     this.debugColor = undefined;
+
+    this.fillStyle(props.style);
 
   }
 
@@ -90,6 +90,7 @@ class UIBase {
     if (this.style.size) {
       this.style.minSize = this.style.size._();
       this.style.maxSize = this.style.size._();
+      delete this.style.size;
     }
 
     delete this.style.hover;
@@ -308,6 +309,7 @@ class UIBase {
         nde.debugStats.uiClass = this.__proto__.constructor.name;
         nde.debugStats.uiPos = this.pos.toString();
         nde.debugStats.uiSize = this.size.toString();
+        nde.debugStats.uiContentSize = this.contentSize.toString();
         for (let style in this.style) {
           nde.debugStats[style] = this.style[style];
           if (this.style[style] instanceof Vec) nde.debugStats[style] = this.style[style].toString();
