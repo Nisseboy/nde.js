@@ -1133,8 +1133,8 @@ class UIBase {
     nestedObjectAssign(this.style, temp, style);
 
     if (this.style.size) {
-      this.style.minSize = this.style.size;
-      this.style.maxSize = this.style.size;
+      this.style.minSize = this.style.size._();
+      this.style.maxSize = this.style.size._();
     }
 
     delete this.style.hover;
@@ -1959,7 +1959,10 @@ class UISettingDropdown extends UISettingBase {
 
     this.children = [
       new UIButton({
-        style: {...this.style},
+        style: {...this.style,
+          growX: true,
+          growY: true,
+        },
         children: [
           new UIText({
             style: {...this.style},
@@ -1998,17 +2001,20 @@ class UISettingDropdown extends UISettingBase {
         ],
       }),
     ];
+    this.container = this.children[1].children[0];
 
+    let size = new Vec(0, 0);
     for (let choice of this.choices) {
       let elem = new UIButton({
         style: {...this.style,
           direction: "row",
           align: new Vec(0, 1),
+          growX: true,
         },
 
         children: [
           new UIText({
-            style: {...this.style,},
+            style: this.style,
             text: choice,
           }),
           new UIBase({
@@ -2028,9 +2034,18 @@ class UISettingDropdown extends UISettingBase {
         }]},
       });
 
-      this.children[1].children[0].children.push(elem);
-    }
+      this.container.children.push(elem);
 
+      for (let c of elem.children) c.calculateSize();
+      elem.calculateSize();
+
+      size.x = Math.max(size.x, elem.size.x);
+      size.y = Math.max(size.y, elem.size.y);
+    }
+    this.style.minSize.x = Math.max(this.style.minSize.x, size.x);
+    this.style.minSize.y = Math.max(this.style.minSize.y, size.y);
+
+    
     this.style.fill = "rgba(0, 0, 0, 0)";
     this.style.padding = 0;
 
@@ -2065,6 +2080,8 @@ class UISettingDropdown extends UISettingBase {
     if (this.uiRoot) this.uiRoot.initUI();
   }
 }
+
+
 
 
 
@@ -3110,9 +3127,6 @@ class TransitionNoise extends TransitionBase {
 
 /* src/index.js */
 /*
-This engine uses NDV (Nils Delicious Vectors), see engine/ndv.js
-
-
 scene: the current active scene, is set by setScene, see engine/scenes/scene.js for base class
 
 w: how many pixels are across the screen, is updated automatically on resize
@@ -3390,15 +3404,13 @@ class NDE {
         let res = ee(e); if (res) result = res
       };
     }
-    this.scene.resize(e);
 
     this.w = result || this.w;
     
     this.renderer.resize(new Vec(this.w, this.w * this.ar));
     
-    if (!this.transition) this.scene.resize(e);
-  
-    this.fireEvent("resize", e);
+    this.scene.resize(e);
+    //this.fireEvent("resize", e);
   }
 
   /**

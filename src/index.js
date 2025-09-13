@@ -1,7 +1,4 @@
 /*
-This engine uses NDV (Nils Delicious Vectors), see engine/ndv.js
-
-
 scene: the current active scene, is set by setScene, see engine/scenes/scene.js for base class
 
 w: how many pixels are across the screen, is updated automatically on resize
@@ -279,15 +276,13 @@ class NDE {
         let res = ee(e); if (res) result = res
       };
     }
-    this.scene.resize(e);
 
     this.w = result || this.w;
     
     this.renderer.resize(new Vec(this.w, this.w * this.ar));
     
-    if (!this.transition) this.scene.resize(e);
-  
-    this.fireEvent("resize", e);
+    this.scene.resize(e);
+    //this.fireEvent("resize", e);
   }
 
   /**

@@ -26,7 +26,7 @@ class UISettingText extends UISettingBase {
     
     this.children = [
       new UIText({
-        textStyle: {...this.style.text},
+        style: {...this.style},
         text: "",
       }),
     ];
