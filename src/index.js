@@ -84,7 +84,6 @@ class NDE {
     this.w = undefined;
     this.ar = 9 / 16;
     this.targetFPS = undefined;
-    this.hoveredUIElement = undefined;
     this.transition = undefined;
     this.renderer = new Img(vecOne);
 
@@ -98,9 +97,11 @@ class NDE {
     this.timers = [];
 
     this.debug = false;
-    this.uiDebug = false;
     this.debugStats = {};
 
+    this.hoveredUIElement = undefined;
+    this.hoveredUIRoot = undefined;
+    this.uiDebug = false;
     
     this.mainElem = mainElem;
     this.mainImg = new Img(new Vec(1, 1));
@@ -219,10 +220,11 @@ class NDE {
       if (this.hoveredUIElement) {
         if (!this.transition) {
           if (this.hoveredUIElement.fireEvent("wheel", e) == false) return;
+          if (this.hoveredUIRoot?.wheel(e) == false) return;
         }
       }
 
-      this.fireEvent("wheel", e);
+      this.fireEvent("wheel", e);      
     });
 
     
@@ -240,9 +242,13 @@ class NDE {
     this.scene.hasStarted = true;
   }
 
-  registerEvent(eventName, func) {
+  registerEvent(eventName, func, isPriority = false) {
     if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
+    if (isPriority) {
+      this.events[eventName].unshift(func);
+    } else {
+      this.events[eventName].push(func);
+    }
   }
   unregisterEvent(eventName, func) {
     let events = this.events[eventName];
@@ -342,6 +348,8 @@ class NDE {
     
 
     this.hoveredUIElement = undefined;
+    this.hoveredUIRoot = undefined;
+
     this.debugStats = {};
     this.debugStats["frameTime"] = Math.round(averageDt);
     this.debugStats["fps"] = Math.round(1000 / averageDt);

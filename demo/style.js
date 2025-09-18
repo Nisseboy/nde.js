@@ -33,10 +33,6 @@ let buttonStyle = {
 
   number: {
     fill: buttonCol,
-    
-    text: {
-      font: "25px monospace",
-    },
   },
 
   hover: {
@@ -55,6 +51,7 @@ let buttonStyle = {
     }
   }
 };
+
 let rangeStyle = {...buttonStyle,
   padding: 0,
 };

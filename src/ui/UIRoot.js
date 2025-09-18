@@ -15,8 +15,6 @@ class UIRoot extends UIBase {
     this.deepestScrollable = undefined;
     this.deepestScrollableDepth = 0;
     this.renderLast = [];
-
-    nde.registerEvent("wheel", (e) => {this.wheel(e)});
   }
 
   initUI() {
@@ -97,6 +95,10 @@ class UIRoot extends UIBase {
     for (let elem of this.renderLast) {
       this.hoverPassHelper(elem[0], elem[1], elem[2], transformedMousePoint, true);
     }
+
+    if (transformedMousePoint.x >= this.pos.x && transformedMousePoint.x <= this.pos.x + this.size.x && transformedMousePoint.y >= this.pos.y && transformedMousePoint.y <= this.pos.y + this.size.y) {
+      nde.hoveredUIRoot = this;      
+    }
   }
   hoverPassHelper(element, found, ignoreHover, pt, ignoreRenderLast = false) {
     if (element.style.render == "last" && !ignoreRenderLast) {
@@ -104,7 +106,7 @@ class UIRoot extends UIBase {
       return;
     }
     if (element.style.render == "hidden") return;
-    
+
 
     element.hovered = false;
     element.trueHovered = false;
@@ -117,8 +119,8 @@ class UIRoot extends UIBase {
       (pt.x < element.pos.x || 
       pt.x > element.pos.x + element.size.x || 
       pt.y < element.pos.y || 
-      pt.y > element.pos.y + element.size.y))) {
-
+      pt.y > element.pos.y + element.size.y))) 
+    {
       found = false;
       ignoreHover = true;
     } else {
@@ -142,16 +144,15 @@ class UIRoot extends UIBase {
           this.deepestScrollable = element;          
         }
       }
-      
+    
+    }
 
-      if (found) {
-        element.hovered = true;
-      }
-
-      if (element.forceHover) {
-        element.hovered = true;
-        found = true;
-      }
+    if (found) {
+      element.hovered = true;
+    }
+    if (element.forceHover) {
+      element.hovered = true;
+      found = true;        
     }
     
 

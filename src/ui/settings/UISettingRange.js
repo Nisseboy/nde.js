@@ -18,11 +18,6 @@ class UISettingRange extends UISettingBase {
 
       number: {
         fill: "rgb(0, 0, 0)",
-        
-        text: {
-          fill: "rgb(255, 255, 255)",
-          font: "25px monospace",
-        },
       },
     };
     this.fillStyle(props.style);
@@ -83,6 +78,7 @@ class UISettingRange extends UISettingBase {
     this.number = new UISettingText({
       style: {...this.style.number,
         hover: this.style.hover.number,
+        text: this.style.text,
         size: numberSize,
         editor: {
           numberOnly: true,

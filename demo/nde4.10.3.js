@@ -23,24 +23,12 @@ class Serializable {
   }
 }
 
-/*
-function createData(type, props) {
-  if (typeof type != "string") type = eval(type);
-
-  let data = new type(type.name);
-  for (let p in props) data[p] = props[p];
-
-  return data;
-}*/
-
 function cloneData(data, typeOverride = undefined) {
   if (typeof data == "string") data = JSON.parse(data);
 
   let type = data.type;
   if (!type) type = data.constructor.name;
   if (typeOverride) type = typeOverride;
-  
-  console.log(type);
   
   return new (eval(type))().from(data);
 }
@@ -664,6 +652,23 @@ class Scene {
  */
   mouseup(e) {}
   
+
+  
+/**
+ * @param {string} key
+ * @param {Event} e
+ */
+  inputdown(key, e) {}
+  
+  
+/**
+ * @param {string} key
+ * @param {Event} e
+ */
+  inputup(key, e) {}
+  
+
+
 /**
  * Mouse scrolled
  * 
@@ -1045,10 +1050,10 @@ class AudPool {
 /* src/ui/UIBase.js */
 let defaultStyle = {
   minSize: new Vec(0, 0),
+  maxSize: new Vec(Infinity, Infinity),
+
   growX: false,
   growY: false,
-
-  maxSize: new Vec(Infinity, Infinity),
 
   scroll: {
     x: true,
@@ -1085,8 +1090,6 @@ class UIBase {
     this.parent = undefined;
     this.uiRoot = undefined;
 
-    this.fillStyle(props.style);
-
     this.children = props.children || [];
     this.events = props.events || {};
 
@@ -1101,6 +1104,8 @@ class UIBase {
     this.scroll = new Vec(0, 0);
 
     this.debugColor = undefined;
+
+    this.fillStyle(props.style);
 
   }
 
@@ -1135,6 +1140,7 @@ class UIBase {
     if (this.style.size) {
       this.style.minSize = this.style.size._();
       this.style.maxSize = this.style.size._();
+      delete this.style.size;
     }
 
     delete this.style.hover;
@@ -1353,6 +1359,7 @@ class UIBase {
         nde.debugStats.uiClass = this.__proto__.constructor.name;
         nde.debugStats.uiPos = this.pos.toString();
         nde.debugStats.uiSize = this.size.toString();
+        nde.debugStats.uiContentSize = this.contentSize.toString();
         for (let style in this.style) {
           nde.debugStats[style] = this.style[style];
           if (this.style[style] instanceof Vec) nde.debugStats[style] = this.style[style].toString();
@@ -1444,8 +1451,6 @@ class UIRoot extends UIBase {
     this.deepestScrollable = undefined;
     this.deepestScrollableDepth = 0;
     this.renderLast = [];
-
-    nde.registerEvent("wheel", (e) => {this.wheel(e)});
   }
 
   initUI() {
@@ -1526,6 +1531,10 @@ class UIRoot extends UIBase {
     for (let elem of this.renderLast) {
       this.hoverPassHelper(elem[0], elem[1], elem[2], transformedMousePoint, true);
     }
+
+    if (transformedMousePoint.x >= this.pos.x && transformedMousePoint.x <= this.pos.x + this.size.x && transformedMousePoint.y >= this.pos.y && transformedMousePoint.y <= this.pos.y + this.size.y) {
+      nde.hoveredUIRoot = this;      
+    }
   }
   hoverPassHelper(element, found, ignoreHover, pt, ignoreRenderLast = false) {
     if (element.style.render == "last" && !ignoreRenderLast) {
@@ -1533,7 +1542,7 @@ class UIRoot extends UIBase {
       return;
     }
     if (element.style.render == "hidden") return;
-    
+
 
     element.hovered = false;
     element.trueHovered = false;
@@ -1546,8 +1555,8 @@ class UIRoot extends UIBase {
       (pt.x < element.pos.x || 
       pt.x > element.pos.x + element.size.x || 
       pt.y < element.pos.y || 
-      pt.y > element.pos.y + element.size.y))) {
-
+      pt.y > element.pos.y + element.size.y))) 
+    {
       found = false;
       ignoreHover = true;
     } else {
@@ -1571,16 +1580,15 @@ class UIRoot extends UIBase {
           this.deepestScrollable = element;          
         }
       }
-      
+    
+    }
 
-      if (found) {
-        element.hovered = true;
-      }
-
-      if (element.forceHover) {
-        element.hovered = true;
-        found = true;
-      }
+    if (found) {
+      element.hovered = true;
+    }
+    if (element.forceHover) {
+      element.hovered = true;
+      found = true;        
     }
     
 
@@ -1990,7 +1998,7 @@ class UISettingDropdown extends UISettingBase {
         children: [
           new UIBase({
             style: {
-              scroll: {
+              scroll: {...this.style.scroll,
                 width: this.style.padding / 2,
               },
               direction: "column",
@@ -2180,11 +2188,6 @@ class UISettingRange extends UISettingBase {
 
       number: {
         fill: "rgb(0, 0, 0)",
-        
-        text: {
-          fill: "rgb(255, 255, 255)",
-          font: "25px monospace",
-        },
       },
     };
     this.fillStyle(props.style);
@@ -2220,10 +2223,11 @@ class UISettingRange extends UISettingBase {
 
 
   initChildren() {
-    let numberSize;
+    let numberSize = new Vec(0, 0);
     nde.renderer._(()=>{
       nde.renderer.setAll(this.style.number.text);
-      numberSize = nde.renderer.measureText(this.max);
+      numberSize.y = Math.max(nde.renderer.measureText(this.max).y, this.style.minSize.y);
+      numberSize.x = Math.max(nde.renderer.measureText(this.max).x, this.style.minSize.x);
     });
 
     let sliderSize = new Vec(this.style.slider.minSize.x - numberSize.x - this.style.gap, this.style.slider.minSize.y);
@@ -2244,7 +2248,8 @@ class UISettingRange extends UISettingBase {
     this.number = new UISettingText({
       style: {...this.style.number,
         hover: this.style.hover.number,
-        minSize: numberSize,
+        text: this.style.text,
+        size: numberSize,
         editor: {
           numberOnly: true,
         },
@@ -2341,11 +2346,15 @@ class UISettingText extends UISettingBase {
       },
     };
     this.fillStyle(props.style);
-    this.style.maxSize.from(this.style.minSize);
+
+    
+    //this.style.maxSize.from(this.style.minSize);
     
     this.children = [
       new UIText({
-        textStyle: {...this.style.text},
+        style: {...this.style,
+          minSize: vecZero,
+        },
         text: "",
       }),
     ];
@@ -2372,8 +2381,8 @@ class UISettingText extends UISettingBase {
     this.keydownGlobalFunc = e => {return this.keydownGlobal(e)}
     this.registerEvent("mousedown", e=>{
       if (!this.focused) {
-        nde.registerEvent("mousedown", this.mousedownGlobalFunc);
-        nde.registerEvent("keydown", this.keydownGlobalFunc);
+        nde.registerEvent("mousedown", this.mousedownGlobalFunc, true);
+        nde.registerEvent("keydown", this.keydownGlobalFunc, true);
       }
       this.focused = true;
 
@@ -2412,8 +2421,8 @@ class UISettingText extends UISettingBase {
       if (activeSettingText && activeSettingText != this) activeSettingText.endFocus();
       activeSettingText = this;
       this.forceHover = true;
-      nde.registerEvent("mousemove", this.mousemoveGlobalFunc);
-      nde.registerEvent("mouseup", this.mouseupGlobalFunc);
+      nde.registerEvent("mousemove", this.mousemoveGlobalFunc, true);
+      nde.registerEvent("mouseup", this.mouseupGlobalFunc, true);
     });
   }
   
@@ -2433,7 +2442,7 @@ class UISettingText extends UISettingBase {
   mousedownGlobal(e) {
     this.endFocus();
   }
-  mousemoveGlobal(e) {
+  mousemoveGlobal(e) {        
     if (this.clicksInRow != 0) return;
 
     let charPos = this.getCharPos(this.getMousePos());
@@ -2597,21 +2606,30 @@ class UISettingText extends UISettingBase {
       if (e.key == "ArrowLeft") {
         this.maxCursorX = 0;
 
-        if (unselected) return;
-        if (cursor.x == 0) {
-          if (cursor.y == 0) return;
-
-          cursor.y--;
-          cursor.x = lines[cursor.y].length;
+        if (ctrl) {
+          let x = this.fillCursorLeft(cursor);
+          if (x == 0) {
+            this.moveCursorLeft(cursor);
+            this.fillCursorLeft(cursor);
+          }
         } else {
-          cursor.x--;
+          if (unselected) return;
+          this.moveCursorLeft(cursor);
         }
       }
       if (e.key == "ArrowRight") {
         this.maxCursorX = 0;
-        if (unselected) return;
 
-        this.moveCursorRight(cursor);
+        if (ctrl) {
+          let x = this.fillCursorRight(cursor);
+          if (x == 0) {
+            this.moveCursorRight(cursor);
+            this.fillCursorRight(cursor);
+          }
+        } else {
+          if (unselected) return;
+          this.moveCursorRight(cursor);
+        }
       }
 
       this.moveScreenToCursor(cursor);
@@ -2705,6 +2723,19 @@ class UISettingText extends UISettingBase {
     }
     return true;
   }
+  moveCursorLeft(cursor) {
+    let lines = this.getLines();
+
+    if (cursor.x == 0) {
+      if (cursor.y == 0) return false;
+
+      cursor.y--;
+      cursor.x = lines[cursor.y].length;
+    } else {
+      cursor.x--;
+    }
+    return true;
+  }
 
   getLines() {
     return this.value.split("\n");
@@ -2759,33 +2790,35 @@ class UISettingText extends UISettingBase {
   isCursorEmpty(cursor) {
     let line = this.getLines()[cursor.y];
 
-    return ((cursor.x == 0 || line[cursor.x - 1] == " ") && (cursor.x == line.length || line[cursor.x] == " "))
+    return ((cursor.x == 0 || !isAlphaNumeric(line[cursor.x - 1])) && (cursor.x == line.length || !isAlphaNumeric(line[cursor.x])))
   }
   fillCursorLeft(cursor) {
     let line = this.getLines()[cursor.y];
     let isEmpty = this.isCursorEmpty(cursor);
 
-    for (let x = 0; x < 100; x++) {      
-      if (cursor.x == 0) return;
+    for (let x = 0; x < 1000; x++) {      
+      if (cursor.x == 0) return x;
 
-      let charIsEmpty = line[cursor.x - 1] == " ";
-      if (isEmpty != charIsEmpty) return;
+      let charIsEmpty = !isAlphaNumeric(line[cursor.x - 1]);
+      if (isEmpty != charIsEmpty) return x;
 
       cursor.x--;
     }
+    return 1000;
   }
   fillCursorRight(cursor) {
     let line = this.getLines()[cursor.y];
     let isEmpty = this.isCursorEmpty(cursor);
 
-    for (let x = 0; x < 100; x++) {      
-      if (cursor.x == line.length) return;
+    for (let x = 0; x < 1000; x++) {      
+      if (cursor.x == line.length) return x;    
 
-      let charIsEmpty = line[cursor.x] == " ";
-      if (isEmpty != charIsEmpty) return;
+      let charIsEmpty = !isAlphaNumeric(line[cursor.x]);
+      if (isEmpty != charIsEmpty) return x;
 
       cursor.x++;
     }
+    return 1000;
   }
 
   removeAtCursor(cursor) {
@@ -2890,6 +2923,17 @@ class UISettingText extends UISettingBase {
     });
   }
 }
+
+
+
+//https://stackoverflow.com/questions/4434076/best-way-to-alphanumeric-check-in-javascript
+function isAlphaNumeric(char) {
+  let code = char.charCodeAt(i);
+  return ((code > 47 && code < 58) || // numeric (0-9)
+      (code > 64 && code < 91) || // upper alpha (A-Z)
+      (code > 96 && code < 123)) // lower alpha (a-z)
+  
+};
 
 
 
@@ -3212,7 +3256,6 @@ class NDE {
     this.w = undefined;
     this.ar = 9 / 16;
     this.targetFPS = undefined;
-    this.hoveredUIElement = undefined;
     this.transition = undefined;
     this.renderer = new Img(vecOne);
 
@@ -3226,9 +3269,11 @@ class NDE {
     this.timers = [];
 
     this.debug = false;
-    this.uiDebug = false;
     this.debugStats = {};
 
+    this.hoveredUIElement = undefined;
+    this.hoveredUIRoot = undefined;
+    this.uiDebug = false;
     
     this.mainElem = mainElem;
     this.mainImg = new Img(new Vec(1, 1));
@@ -3284,26 +3329,27 @@ class NDE {
       if (this.debug) console.log(e.key);
 
       
-      if (this.hoveredUIElement) {
-        if (!this.transition) {
-          if (this.hoveredUIElement.fireEvent("keydown", e) == false) return;
-        }
+      if (this.hoveredUIElement && !this.transition) {
+        if (this.hoveredUIElement.fireEvent("keydown", e) == false) return;
+        if (this.hoveredUIElement.fireEvent("inputdown", e.key.toLowerCase(), e) == false) return;
       }
     
       if (this.fireEvent("keydown", e))
-        this.pressed[e.key.toLowerCase()] = true;
+        if (this.fireEvent("inputdown", e.key.toLowerCase(), e))
+          this.pressed[e.key.toLowerCase()] = true;
     
       
     });
     document.addEventListener("keyup", e => {
-      if (this.hoveredUIElement) {
-        if (!this.transition) {
-          if (this.hoveredUIElement.fireEvent("keyup", e) == false) return;
-        }
+      if (this.hoveredUIElement && !this.transition) {
+        if (this.hoveredUIElement.fireEvent("keyup", e) == false) return;
+        if (this.hoveredUIElement.fireEvent("inputup", e.key.toLowerCase(), e) == false) return;
       }
 
-      if (this.fireEvent("keyup", e))
-        delete this.pressed[e.key.toLowerCase()];
+      this.fireEvent("keyup", e);
+      this.fireEvent("inputup", e.key.toLowerCase(), e);
+
+      delete this.pressed[e.key.toLowerCase()];
     
     });
     
@@ -3321,6 +3367,7 @@ class NDE {
     document.addEventListener("mousedown", e => {
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
+        if (!this.transition) this.hoveredUIElement.fireEvent("inputdown", "mouse" + e.button, e);
         return;
       }
     
@@ -3328,24 +3375,28 @@ class NDE {
 
       this.pressed["mouse" + e.button] = true;
       this.fireEvent("mousedown", e);
+      this.fireEvent("inputdown", "mouse" + e.button, e);
     });
     document.addEventListener("mouseup", e => {
       delete this.pressed["mouse" + e.button];
 
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
+        if (!this.transition) this.hoveredUIElement.fireEvent("inputup", "mouse" + e.button, e);
       }
       
       this.fireEvent("mouseup", e);
+      this.fireEvent("inputup", "mouse" + e.button, e);
     });
     document.addEventListener("wheel", e => {
       if (this.hoveredUIElement) {
         if (!this.transition) {
           if (this.hoveredUIElement.fireEvent("wheel", e) == false) return;
+          if (this.hoveredUIRoot?.wheel(e) == false) return;
         }
       }
 
-      this.fireEvent("wheel", e);
+      this.fireEvent("wheel", e);      
     });
 
     
@@ -3363,9 +3414,13 @@ class NDE {
     this.scene.hasStarted = true;
   }
 
-  registerEvent(eventName, func) {
+  registerEvent(eventName, func, isPriority = false) {
     if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
+    if (isPriority) {
+      this.events[eventName].unshift(func);
+    } else {
+      this.events[eventName].push(func);
+    }
   }
   unregisterEvent(eventName, func) {
     let events = this.events[eventName];
@@ -3465,6 +3520,8 @@ class NDE {
     
 
     this.hoveredUIElement = undefined;
+    this.hoveredUIRoot = undefined;
+
     this.debugStats = {};
     this.debugStats["frameTime"] = Math.round(averageDt);
     this.debugStats["fps"] = Math.round(1000 / averageDt);

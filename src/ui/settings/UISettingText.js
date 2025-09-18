@@ -57,8 +57,8 @@ class UISettingText extends UISettingBase {
     this.keydownGlobalFunc = e => {return this.keydownGlobal(e)}
     this.registerEvent("mousedown", e=>{
       if (!this.focused) {
-        nde.registerEvent("mousedown", this.mousedownGlobalFunc);
-        nde.registerEvent("keydown", this.keydownGlobalFunc);
+        nde.registerEvent("mousedown", this.mousedownGlobalFunc, true);
+        nde.registerEvent("keydown", this.keydownGlobalFunc, true);
       }
       this.focused = true;
 
@@ -97,8 +97,8 @@ class UISettingText extends UISettingBase {
       if (activeSettingText && activeSettingText != this) activeSettingText.endFocus();
       activeSettingText = this;
       this.forceHover = true;
-      nde.registerEvent("mousemove", this.mousemoveGlobalFunc);
-      nde.registerEvent("mouseup", this.mouseupGlobalFunc);
+      nde.registerEvent("mousemove", this.mousemoveGlobalFunc, true);
+      nde.registerEvent("mouseup", this.mouseupGlobalFunc, true);
     });
   }
   
@@ -118,7 +118,7 @@ class UISettingText extends UISettingBase {
   mousedownGlobal(e) {
     this.endFocus();
   }
-  mousemoveGlobal(e) {
+  mousemoveGlobal(e) {        
     if (this.clicksInRow != 0) return;
 
     let charPos = this.getCharPos(this.getMousePos());
