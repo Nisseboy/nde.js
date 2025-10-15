@@ -98,6 +98,12 @@ class Img extends Asset {
     this.ctx.fill();
     this.ctx.stroke();
   }
+  circle(pos, r) {    
+    this.ctx.beginPath();    
+    this.ctx.ellipse(pos.x, pos.y, r, r, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.stroke();
+  }
   line(pos1, pos2) {    
     this.ctx.beginPath();
     this.ctx.moveTo(pos1.x, pos1.y);

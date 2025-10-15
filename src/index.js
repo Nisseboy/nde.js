@@ -108,6 +108,7 @@ class NDE {
     this.unloadedAssets = [];
 
     this.lastFrameTime = 0;
+    this.lastGameDt = 1;
     this.latestDts = [];
 
     this.setScene(new Scene());
@@ -360,6 +361,10 @@ class NDE {
     }
   
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
+    let last = this.lastGameDt;
+    this.lastGameDt = gameDt;
+
+    gameDt = Math.min(gameDt, last * 10);
   
   
     this.renderer._(()=>{

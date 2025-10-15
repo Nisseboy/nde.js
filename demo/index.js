@@ -12,11 +12,7 @@ let settings = JSON.parse(localStorage.getItem(settingsName)) || {};
 setBackgroundCol();
 
 
-let scenes = {
-  game: new SceneGame(), 
-  mainMenu: new SceneMainMenu(),
-  settings: new SceneSettings(),
-};
+let scenes;
 
 nde.controls = {
   "Move Up": "w",
@@ -43,6 +39,12 @@ nde.registerEvent("keydown", e => {
 });
 
 nde.registerEvent("afterSetup", () => {
+  scenes = {
+    game: new SceneGame(), 
+    mainMenu: new SceneMainMenu(),
+    settings: new SceneSettings(),
+  }
+
   scenes.game.loadWorld(new World());
   nde.setScene(scenes.mainMenu);
 });

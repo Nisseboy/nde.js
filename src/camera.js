@@ -30,7 +30,7 @@ class Camera extends Serializable {
    */
   transformVec(v) {
     v = v._subV(this.pos);
-    v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 * this.ar));
+    v.addV(new Vec(this.w / 2, this.w / 2 * this.ar));
     v.mul(this.renderW / this.w);
 
     return v;

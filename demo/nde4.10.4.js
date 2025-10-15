@@ -454,7 +454,7 @@ class Camera extends Serializable {
    */
   transformVec(v) {
     v = v._subV(this.pos);
-    v.addV(new Vec(this.w / 2 / this.scale, this.w / 2 * this.ar));
+    v.addV(new Vec(this.w / 2, this.w / 2 * this.ar));
     v.mul(this.renderW / this.w);
 
     return v;
@@ -823,6 +823,12 @@ class Img extends Asset {
   ellipse(pos, size) {    
     this.ctx.beginPath();    
     this.ctx.ellipse(pos.x, pos.y, size.x, size.y, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.stroke();
+  }
+  circle(pos, r) {    
+    this.ctx.beginPath();    
+    this.ctx.ellipse(pos.x, pos.y, r, r, 0, 0, Math.PI * 2);
     this.ctx.fill();
     this.ctx.stroke();
   }
@@ -3280,6 +3286,7 @@ class NDE {
     this.unloadedAssets = [];
 
     this.lastFrameTime = 0;
+    this.lastGameDt = 1;
     this.latestDts = [];
 
     this.setScene(new Scene());
@@ -3532,6 +3539,10 @@ class NDE {
     }
   
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
+    let last = this.lastGameDt;
+    this.lastGameDt = gameDt;
+
+    gameDt = Math.min(gameDt, last * 10);
   
   
     this.renderer._(()=>{
