@@ -11,15 +11,26 @@ let texturesPaths = [
 
 
 function preloadAnimations() {
+  let frame = AnimationFrame;
+  let loop = AnimationFrameLoop;
+  let event = AnimationFrameEvent;
+
+  tex["duck/walk"] = new Animation([
+    new event("step"),
+    new frame(tex["duck/1"]),
+    new loop(),
+  ], 1/3);
+
+
   tex["duck/rot"] = new Animation([
-    new AnimationFrame(tex["duck/rot/1"]),
-    new AnimationFrame(tex["duck/rot/2"]),
-    new AnimationFrame(tex["duck/rot/3"]),
-    new AnimationFrame(tex["duck/rot/4"]),
-    new AnimationFrame(tex["duck/rot/5"]),
-    new AnimationFrame(tex["duck/rot/6"]),
-    new AnimationFrame(tex["duck/rot/7"]),
-    new AnimationFrame(tex["duck/rot/8"]),
-    new AnimationFrameLoop(),
+    new frame(tex["duck/rot/1"]),
+    new frame(tex["duck/rot/2"]),
+    new frame(tex["duck/rot/3"]),
+    new frame(tex["duck/rot/4"]),
+    new frame(tex["duck/rot/5"]),
+    new frame(tex["duck/rot/6"]),
+    new frame(tex["duck/rot/7"]),
+    new frame(tex["duck/rot/8"]),
+    new loop(),
   ], 1/10);
 }

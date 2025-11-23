@@ -43,12 +43,14 @@ class SceneGame extends Scene {
       nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),
       nde.getKeyPressed("Move Camera Down") - nde.getKeyPressed("Move Camera Up"),
     ).mul(dt * 5));
+    moveListener(this.cam.pos);
     
 
     for (let i = 0; i < this.world.entities.length; i++) {
       let e = this.world.entities[i];
       e.update(dt);
     }    
+
   }
 
   render() {

@@ -3,6 +3,7 @@ class EntityBase extends Serializable {
     super();
 
     this.pos = pos || new Vec(0, 0);
+    this.vel = new Vec(0, 0);
     this.dir = 0;
 
     this.size = undefined;
@@ -16,12 +17,13 @@ class EntityBase extends Serializable {
   }
 
   move(movement, dt) {
-    if (movement.sqMag() == 0) return false;
+    if (movement.sqMag() == 0) {this.vel.set(0, 0); return false};
 
-    this.pos.addV(movement._mul(dt));
+    this.vel.from(movement);
+    this.pos.addV(this.vel._mul(dt));
     
     let diff = getDeltaAngle((Math.atan2(movement.y, movement.x)), this.dir);
-    this.dir -= diff * 10 * dt;
+    this.dir -= diff * 20 * dt;
 
     return true;
   }

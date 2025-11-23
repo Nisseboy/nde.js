@@ -15,9 +15,10 @@ class StateMachineImg extends StateMachine {
     
     let choice = node?.result;
     if (choice != this.lastChoice) {      
-      if (choice instanceof Animation) {
-        this.chosen = choice.start();
-        this.chosen.registerEvent("*", (a, b) => {this.fireEvent(a, b);});
+      if (this.chosen instanceof RunningAnimation) this.chosen.stop();
+
+      if (choice instanceof Animation) {  
+        this.chosen = choice.start({events: {"*": [(a, b) => {this.fireEvent(a, b);}]}});
       } else {
         this.chosen = choice;
       }

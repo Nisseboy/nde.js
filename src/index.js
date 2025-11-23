@@ -117,7 +117,7 @@ class NDE {
     let i = 0;
     let lastLength = Infinity;
     let interval = setInterval(e => {
-      if (this.unloadedAssets.length == 0) {
+      if (this.unloadedAssets.length == 0) {        
         clearInterval(interval);
         
         this.fireEvent("beforeSetup");
@@ -425,12 +425,12 @@ class NDE {
       img.loading = false;
       if (img.onload) img.onload();
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img), 1);
     };
     image.onerror = e => {
       console.error(`"${path}" not found`);
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img), 1);
     };
 
     return img;
@@ -441,22 +441,22 @@ class NDE {
     aud.loading = true;
     aud.path = path;
     this.unloadedAssets.push(aud);
-
+    
     fetch(path).then(res => {
       res.arrayBuffer().then(arrayBuffer => {
-        audioContext.decodeAudioData(arrayBuffer).then(audioBuffer => {
+        audioContext.decodeAudioData(arrayBuffer).then(audioBuffer => {                    
           aud.audioBuffer = audioBuffer;
           aud.loading = false;
           aud.duration = audioBuffer.duration;
           if (aud.onload) aud.onload();
           
-          this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud));
+          this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud), 1);
         });
       });
     }).catch(e => {
       console.error(`"${path}" not found`);
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset), 1);
     });
 
     return aud;

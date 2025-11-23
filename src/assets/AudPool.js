@@ -22,3 +22,15 @@ class AudPool {
     return this.aud.copy();
   }
 }
+
+
+function moveListener(pos) {
+  audioContext.listener.positionX.value = pos.x;
+  audioContext.listener.positionY.value = 0;
+  audioContext.listener.positionZ.value = pos.y;
+}
+function playAudio(audPool, pos) {
+  let aud = audPool.get();
+  aud.setPosition(pos.x, 1, pos.y);
+  aud.play();
+}
