@@ -11,7 +11,7 @@ class EntityBase extends Serializable {
     this.name = undefined;
   }
 
-  update() {
+  update(dt) {
     
   }
 

@@ -725,8 +725,21 @@ class Asset {
 
 
 
+/* src/assets/Renderable.js */
+class Renderable extends Asset {
+  constructor() {
+    super();
+  }
+
+  getImg() {}
+}
+
+
+
+
+
 /* src/assets/Img.js */
-class Img extends Asset {
+class Img extends Renderable {
   constructor(size) {
     super();
 
@@ -739,6 +752,8 @@ class Img extends Asset {
     this.ctx = this.canvas.getContext("2d");
     if (this.ctx == null) throw new Error("2d context not supported?");
   }
+
+  getImg() {return this};
 
   resize(size) {
     this.size = size.copy();
@@ -843,8 +858,7 @@ class Img extends Asset {
       console.error("No image supplied to renderer.image()");
     }
 
-    if (img.isWrapper) img = img.get();
-    this.ctx.drawImage(img.canvas, pos.x, pos.y, size.x, size.y);
+    this.ctx.drawImage(img.getImg().canvas, pos.x, pos.y, size.x, size.y);
   }
 
   text(t, pos) {
@@ -900,49 +914,6 @@ class Img extends Asset {
     this.save();
     context();
     this.restore();
-  }
-}
-
-
-
-
-
-/* src/assets/ImgWrapper/ImgWrapperBase.js */
-class ImgWrapperBase {
-  constructor() {
-    this.isWrapper = true;
-  }
-
-  get() {}
-}
-
-
-
-
-
-/* src/assets/ImgWrapper/ImgAnimation.js */
-class ImgAnimation extends ImgWrapperBase {
-  constructor(texs, timer, loop) {
-    super();
-
-    this.texs = texs;
-    this.timer = timer;
-    this.timer.loop = loop;
-  }
-
-  get() {
-    let p = Math.floor(this.timer.progress * this.texs.length);
-    if (this.timer.progress == 1) p--;
-    let t = this.texs[p];
-    
-    return t;
-  }
-
-  start() {
-    this.timer.start();
-  }
-  stop() {
-    this.timer.stop();
   }
 }
 
@@ -1046,6 +1017,316 @@ class AudPool {
   }
   getNew() {
     return this.aud.copy();
+  }
+}
+
+
+
+
+
+/* src/assets/animation/frames/AnimationFrameBase.js */
+class AnimationFrameBase {
+  constructor() {
+    this.duration = 0;
+  }
+
+  step(runningAnimation) {}
+}
+
+
+
+
+
+/* src/assets/animation/frames/AnimationFrame.js */
+class AnimationFrame extends AnimationFrameBase {
+  constructor(img) {
+    super();
+    this.duration = 1;
+
+    this.img = img;
+  }
+
+  step(runningAnimation) {
+    runningAnimation.img = this.img;
+  }
+}
+
+
+
+
+
+/* src/assets/animation/frames/AnimationFrameEvent.js */
+class AnimationFrameEvent extends AnimationFrameBase {
+  constructor(eventName, ...eventArgs) {
+    super();
+
+    this.eventName = eventName;
+    this.eventArgs = eventArgs;
+  }
+
+  step(runningAnimation) {
+    runningAnimation.fireEvent(this.eventName, ...this.eventArgs);
+  }
+}
+
+
+
+
+
+/* src/assets/animation/frames/AnimationFrameLoop.js */
+class AnimationFrameLoop extends AnimationFrameBase {
+  constructor() {
+    super();
+  }
+
+  step(runningAnimation) {
+    runningAnimation.restart();
+  }
+}
+
+
+
+
+
+/* src/assets/animation/Animation.js */
+class Animation {
+  constructor(frames, dt) {
+    this.frames = frames;
+    this.dt = dt;
+
+    this.duration = 0;
+    for (let f of this.frames) this.duration += f.duration;
+    this.duration *= dt;
+  }
+
+  start() {
+    return new RunningAnimation(this);
+  }
+}
+
+
+
+
+
+/* src/assets/animation/RunningAnimation.js */
+class RunningAnimation extends Renderable {
+  constructor(animation) {
+    super();
+
+    this.frames = animation.frames;
+    this.dt = animation.dt;
+    this.duration = animation.duration;
+
+    this.img = undefined;
+
+    this.events = {};
+
+    this.timer = new TimerTime(this.duration, ()=>{this.step()});
+    this.executedFrames = 0;
+    this.executedTime = 0;
+    this.step();
+  }
+
+  step() {    
+    while (this.executedTime <= this.timer.elapsedTime) {
+      let frame = this.frames[this.executedFrames];
+      if (!frame) {
+        this.fireEvent("done");
+        return;
+      }
+
+      this.executedTime += frame.duration * this.dt;
+      this.executedFrames++;
+
+      frame.step(this);
+    }
+  }
+
+  registerEvent(eventName, func) {
+    if (!this.events[eventName]) this.events[eventName] = [];
+    this.events[eventName].push(func);
+  }
+  unregisterEvent(eventName, func) {
+    let events = this.events[eventName];
+    if (!events) return false;
+
+    let index = events.indexOf(func);
+    if (index == -1) return false;
+
+    events.splice(index, 1);
+    return;
+  }
+  fireEvent(eventName, ...args) {
+    let events = this.events[eventName];
+    if (events) {
+      for (let e of events) {
+        if (e(...args) == false) return false;
+      }
+    }
+
+    if (eventName != "*") this.fireEvent("*", eventName, ...args);
+      
+    return true;
+  }
+
+
+  getImg() {    
+    return this.img;
+  }
+
+  start() {
+    this.timer.start();
+  }
+  stop() {
+    this.timer.stop();
+  }
+
+  restart() {
+    this.timer.reset();
+    this.executedFrames = 0;
+    this.executedTime = 0;
+    this.step();
+  }
+}
+
+
+
+
+
+/* src/stateMachines/nodes/StateMachineNodeBase.js */
+class StateMachineNodeBase {
+  constructor(...children) {
+    this.children = children;
+  }
+
+  choose(stateMachine) {}
+}
+
+
+
+
+
+/* src/stateMachines/nodes/StateMachineNodeCondition.js */
+class StateMachineNodeCondition extends StateMachineNodeBase {
+  constructor(conditionF, ...children) {
+    super(...children);
+    
+    this.conditionF = conditionF;
+    this.children = children;
+  }
+
+  choose(stateMachine) {
+    let result = this.conditionF(stateMachine);
+    if (result == true) return this.children[0];
+    if (result == false) return this.children[1];
+    return this.children[2];
+  }
+}
+
+
+
+
+
+/* src/stateMachines/nodes/StateMachineNodeResult.js */
+class StateMachineNodeResult extends StateMachineNodeBase {
+  constructor(result) {
+    super();
+
+    this.result = result;
+  }
+}
+
+
+
+
+
+/* src/stateMachines/StateMachine.js */
+class StateMachine {
+  constructor(rootNode) {
+    this.rootNode = rootNode;
+
+    this.lastChoice = undefined;
+    this.events = {};
+  }
+
+  choose() {
+    let node = this.rootNode;
+
+    while (node && !node instanceof StateMachineNodeResult) {
+      node = node.choose(this);
+    }
+
+    
+    let choice = node?.result;
+    if (choice != this.lastChoice) this.fireEvent("change", choice);
+    this.lastChoice = choice;
+
+    return choice;
+  }
+
+
+  
+
+  registerEvent(eventName, func) {
+    if (!this.events[eventName]) this.events[eventName] = [];
+    this.events[eventName].push(func);
+  }
+  unregisterEvent(eventName, func) {
+    let events = this.events[eventName];
+    if (!events) return false;
+
+    let index = events.indexOf(func);
+    if (index == -1) return false;
+
+    events.splice(index, 1);
+    return;
+  }
+  fireEvent(eventName, ...args) {
+    let events = this.events[eventName];
+    if (events) {
+      for (let e of events) {
+        if (e(...args) == false) return false;
+      }
+    }
+      
+    return true;
+  }
+}
+
+
+
+
+
+/* src/stateMachines/StateMachineImg.js */
+class StateMachineImg extends StateMachine {
+  constructor(rootNode) {
+    super(rootNode);
+
+    this.chosen = undefined;
+  }
+
+  choose() {
+    let node = this.rootNode;
+
+    while (node && !(node instanceof StateMachineNodeResult)) {
+      node = node.choose(this);
+    }
+
+    
+    let choice = node?.result;
+    if (choice != this.lastChoice) {      
+      if (choice instanceof Animation) {
+        this.chosen = choice.start();
+        this.chosen.registerEvent("*", (a, b) => {this.fireEvent(a, b);});
+      } else {
+        this.chosen = choice;
+      }
+
+      this.fireEvent("change", this.chosen);
+    }
+    this.lastChoice = choice;
+
+    return this.chosen;
   }
 }
 
@@ -3139,35 +3420,60 @@ class TransitionSlide extends TransitionBase {
 
 /* src/transitions/TransitionNoise.js */
 class TransitionNoise extends TransitionBase {
-  constructor(newScene, timer) {
+  constructor(newScene, timer, sliding = false, w = 432) {
     super(newScene, timer);
+
+    this.sliding = sliding;
+
+    this.noiseTexture = new Img(new Vec(w, w / 16 * 9));
+    this.outImage = new Img(nde.renderer.size);
+    this.outImage.ctx.imageSmoothingEnabled = false;
   }
 
   render() {
     super.render();
-
-    let a = this.oldImg.ctx.getImageData(0, 0, this.oldImg.size.x, this.oldImg.size.y);
-    let b = this.newImg.ctx.getImageData(0, 0, this.newImg.size.x, this.newImg.size.y);
-
     let lastRandom = 0;
     const random = () => {
       lastRandom = (1103515245  * lastRandom + 12345) % (2 ** 31);
       return lastRandom / 10000000 % 1;
     };
 
-    let i = 0;
-    while (i < a.data.length) {
-      if (random() < this.timer.progress) {
-        a.data[i  ] = b.data[i  ];
-        a.data[i+1] = b.data[i+1];
-        a.data[i+2] = b.data[i+2];
-        a.data[i+3] = b.data[i+3];
+
+    let data = this.noiseTexture.ctx.getImageData(0, 0, this.noiseTexture.size.x, this.noiseTexture.size.y);
+    let i, threshold;
+    for (let x = 0; x < this.noiseTexture.size.x; x++) {
+      for (let y = 0; y < this.noiseTexture.size.y; y++) {
+        i = (x + y * this.noiseTexture.size.x) * 4;
+        threshold = this.timer.progress;
+
+        if (this.sliding) {
+          threshold = (this.timer.progress * 1.3 - x/this.noiseTexture.size.x) * 2;
+        }
+
+        if (random() < threshold) {
+          data.data[i  ] = 255;
+          data.data[i+1] = 255;
+          data.data[i+2] = 255;
+          data.data[i+3] = 255;
+        } else {
+          data.data[i  ] = 0;
+          data.data[i+1] = 0;
+          data.data[i+2] = 0;
+          data.data[i+3] = 0;
+        }
       }
-      i += 4;
     }
 
-    nde.renderer.ctx.putImageData(a, 0, 0);
+    this.noiseTexture.ctx.putImageData(data, 0, 0);
 
+    nde.renderer.image(this.oldImg, vecZero, nde.renderer.size);
+
+    this.outImage.image(this.noiseTexture, vecZero, nde.renderer.size);
+    this.outImage.ctx.globalCompositeOperation = 'source-in';
+    this.outImage.image(this.newImg, vecZero, nde.renderer.size);
+    this.outImage.ctx.globalCompositeOperation = 'source-over';
+
+    nde.renderer.image(this.outImage, vecZero, nde.renderer.size);
   }
 }
 
@@ -3268,6 +3574,7 @@ class NDE {
     this.events = {};
 
     this.mouse = new Vec(0, 0);
+    this.mainElemBoundingBox = new Vec(0, 0, 1, 1);
 
     this.controls = {};
     this.pressed = {};
@@ -3311,8 +3618,6 @@ class NDE {
 
         this.setupHandlers();
 
-      
-        this.lastFrameTime = performance.now();
         requestAnimationFrame(time => {this.draw(time)});
       }
       if (i >= 100) {
@@ -3361,8 +3666,8 @@ class NDE {
     });
     
     document.addEventListener("mousemove", e => {
-      this.mouse.x = e.clientX / this.mainImg.size.x * this.w;
-      this.mouse.y = e.clientY / this.mainImg.size.x * this.w;
+      this.mouse.x = (e.clientX - this.mainElemBoundingBox.x) / this.mainImg.size.x * this.w;
+      this.mouse.y = (e.clientY - this.mainElemBoundingBox.y) / this.mainImg.size.x * this.w;
 
 
       if (this.hoveredUIElement) {
@@ -3458,6 +3763,9 @@ class NDE {
   resize(e) {
     this.w = Math.min(window.innerWidth, window.innerHeight / this.ar);
     this.mainImg.resize(new Vec(this.w, this.w * this.ar));
+
+    let box = this.mainElem.getBoundingClientRect();
+    this.mainElemBoundingBox.set(box.x, box.y, box.width, box.height);
   
 
     let result = undefined;
@@ -3510,7 +3818,7 @@ class NDE {
     if (time == undefined) time = performance.now();
     
     let dt = Math.min(time - this.lastFrameTime, 200);
-  
+    
     if (this.targetFPS != undefined) {
       if ((time + 0.1) - this.lastFrameTime < 1000 / this.targetFPS) return; 
     }
@@ -3521,40 +3829,47 @@ class NDE {
   }
 
   updateGame(dt) {
-    this.latestDts.push(dt);
-    if (this.latestDts.length > 10) this.latestDts.shift();
-    let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
-    
-
+    let t1 = performance.now();
     this.hoveredUIElement = undefined;
     this.hoveredUIRoot = undefined;
 
-    this.debugStats = {};
-    this.debugStats["frameTime"] = Math.round(averageDt);
-    this.debugStats["fps"] = Math.round(1000 / averageDt);
-  
-    if (this.targetFPS != undefined) {
-      this.debugStats["target frameTime"] = 1000 / this.targetFPS;
-      this.debugStats["target fps"] = this.targetFPS;
-    }
-  
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
     let last = this.lastGameDt;
     this.lastGameDt = gameDt;
 
     gameDt = Math.min(gameDt, last * 10);
+    this.debugStats = {};
   
-  
-    this.renderer._(()=>{
+    this.renderer._(()=>{      
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
       
       if (!this.transition) this.scene.lastIndex = 0; 
       this.fireEvent("update", gameDt);
       this.fireEvent("afterUpdate", gameDt);
+
+      let t2 = performance.now();
     
       this.fireEvent("render");
       if (this.transition) this.transition.render();
       this.fireEvent("afterRender");
+
+
+      this.latestDts.push(dt);
+      if (this.latestDts.length > 10) this.latestDts.shift();
+      let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
+
+      let debugStats2 = {};
+      
+      debugStats2["updateTime"] = Math.round((t2 - t1) * 10) / 10;
+      debugStats2["renderTime"] = Math.round((performance.now() - t2) * 10) / 10;
+      debugStats2["fps"] = Math.round(1000 / averageDt);
+    
+      if (this.targetFPS != undefined) {
+        debugStats2["target frameTime"] = 1000 / this.targetFPS;
+        debugStats2["target fps"] = this.targetFPS;
+      }
+
+
     
       this.renderer.set("fill", 255);
       this.renderer.set("stroke", 0);
@@ -3563,6 +3878,10 @@ class NDE {
       this.renderer.set("textAlign", ["left", "top"]);
       if (this.debug) {
         let n = 0;
+        for (let i in debugStats2) {
+          this.renderer.text(`${i}: ${JSON.stringify(debugStats2[i])}`, new Vec(0, n * textSize));
+          n++;
+        }
         for (let i in this.debugStats) {
           this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
           n++;

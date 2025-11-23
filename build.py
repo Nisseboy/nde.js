@@ -18,6 +18,12 @@ files = [
   "src/assets/animation/Animation.js",
   "src/assets/animation/RunningAnimation.js",
 
+  "src/stateMachines/nodes/StateMachineNodeBase.js",
+  "src/stateMachines/nodes/StateMachineNodeCondition.js",
+  "src/stateMachines/nodes/StateMachineNodeResult.js",
+  "src/stateMachines/StateMachine.js",
+  "src/stateMachines/StateMachineImg.js",
+
   "src/ui/UIBase.js",
   "src/ui/UIRoot.js",
   "src/ui/UIText.js",

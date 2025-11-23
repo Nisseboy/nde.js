@@ -52,6 +52,8 @@ class RunningAnimation extends Renderable {
         if (e(...args) == false) return false;
       }
     }
+
+    if (eventName != "*") this.fireEvent("*", eventName, ...args);
       
     return true;
   }
