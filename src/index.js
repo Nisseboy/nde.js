@@ -90,6 +90,7 @@ class NDE {
     this.events = {};
 
     this.mouse = new Vec(0, 0);
+    this.mainElemBoundingBox = new Vec(0, 0, 1, 1);
 
     this.controls = {};
     this.pressed = {};
@@ -133,8 +134,6 @@ class NDE {
 
         this.setupHandlers();
 
-      
-        this.lastFrameTime = performance.now();
         requestAnimationFrame(time => {this.draw(time)});
       }
       if (i >= 100) {
@@ -183,8 +182,8 @@ class NDE {
     });
     
     document.addEventListener("mousemove", e => {
-      this.mouse.x = e.clientX / this.mainImg.size.x * this.w;
-      this.mouse.y = e.clientY / this.mainImg.size.x * this.w;
+      this.mouse.x = (e.clientX - this.mainElemBoundingBox.x) / this.mainImg.size.x * this.w;
+      this.mouse.y = (e.clientY - this.mainElemBoundingBox.y) / this.mainImg.size.x * this.w;
 
 
       if (this.hoveredUIElement) {
@@ -280,6 +279,9 @@ class NDE {
   resize(e) {
     this.w = Math.min(window.innerWidth, window.innerHeight / this.ar);
     this.mainImg.resize(new Vec(this.w, this.w * this.ar));
+
+    let box = this.mainElem.getBoundingClientRect();
+    this.mainElemBoundingBox.set(box.x, box.y, box.width, box.height);
   
 
     let result = undefined;
@@ -332,7 +334,7 @@ class NDE {
     if (time == undefined) time = performance.now();
     
     let dt = Math.min(time - this.lastFrameTime, 200);
-  
+    
     if (this.targetFPS != undefined) {
       if ((time + 0.1) - this.lastFrameTime < 1000 / this.targetFPS) return; 
     }
@@ -343,40 +345,47 @@ class NDE {
   }
 
   updateGame(dt) {
-    this.latestDts.push(dt);
-    if (this.latestDts.length > 10) this.latestDts.shift();
-    let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
-    
-
+    let t1 = performance.now();
     this.hoveredUIElement = undefined;
     this.hoveredUIRoot = undefined;
 
-    this.debugStats = {};
-    this.debugStats["frameTime"] = Math.round(averageDt);
-    this.debugStats["fps"] = Math.round(1000 / averageDt);
-  
-    if (this.targetFPS != undefined) {
-      this.debugStats["target frameTime"] = 1000 / this.targetFPS;
-      this.debugStats["target fps"] = this.targetFPS;
-    }
-  
     let gameDt = (this.targetFPS == undefined) ? dt * 0.001 : 1 / this.targetFPS;
     let last = this.lastGameDt;
     this.lastGameDt = gameDt;
 
     gameDt = Math.min(gameDt, last * 10);
+    this.debugStats = {};
   
-  
-    this.renderer._(()=>{
+    this.renderer._(()=>{      
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
       
       if (!this.transition) this.scene.lastIndex = 0; 
       this.fireEvent("update", gameDt);
       this.fireEvent("afterUpdate", gameDt);
+
+      let t2 = performance.now();
     
       this.fireEvent("render");
       if (this.transition) this.transition.render();
       this.fireEvent("afterRender");
+
+
+      this.latestDts.push(dt);
+      if (this.latestDts.length > 10) this.latestDts.shift();
+      let averageDt = this.latestDts.reduce((partialSum, a) => partialSum + a, 0) / this.latestDts.length;
+
+      let debugStats2 = {};
+      
+      debugStats2["updateTime"] = Math.round((t2 - t1) * 10) / 10;
+      debugStats2["renderTime"] = Math.round((performance.now() - t2) * 10) / 10;
+      debugStats2["fps"] = Math.round(1000 / averageDt);
+    
+      if (this.targetFPS != undefined) {
+        debugStats2["target frameTime"] = 1000 / this.targetFPS;
+        debugStats2["target fps"] = this.targetFPS;
+      }
+
+
     
       this.renderer.set("fill", 255);
       this.renderer.set("stroke", 0);
@@ -385,6 +394,10 @@ class NDE {
       this.renderer.set("textAlign", ["left", "top"]);
       if (this.debug) {
         let n = 0;
+        for (let i in debugStats2) {
+          this.renderer.text(`${i}: ${JSON.stringify(debugStats2[i])}`, new Vec(0, n * textSize));
+          n++;
+        }
         for (let i in this.debugStats) {
           this.renderer.text(`${i}: ${JSON.stringify(this.debugStats[i])}`, new Vec(0, n * textSize));
           n++;

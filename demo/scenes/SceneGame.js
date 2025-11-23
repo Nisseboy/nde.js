@@ -19,7 +19,7 @@ class SceneGame extends Scene {
   }
 
   start() {
-  
+
   }
 
   inputdown(key) {

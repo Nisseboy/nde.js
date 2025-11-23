@@ -40,7 +40,7 @@ class EntityBase extends Serializable {
       if (this.dir) renderer.rotate(this.dir);
       renderer.translate(this.size._mul(-0.5));
 
-      renderer.image(tex[this.texture], vecZero, this.size);
+      renderer.image(this.texture, vecZero, this.size);
     });
   }
 
@@ -52,7 +52,6 @@ class EntityBase extends Serializable {
 
     if (data.size) this.size = new Vec().from(data.size);
     if (data.speed) this.speed = data.speed;
-    if (data.texture) this.texture = data.texture;
     if (data.name) this.name = data.name;
 
     return this;

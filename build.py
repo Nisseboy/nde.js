@@ -7,11 +7,16 @@ files = [
   "src/scenes/Scene.js",
   
   "src/assets/Asset.js",
+  "src/assets/Renderable.js",
   "src/assets/Img.js",
-  "src/assets/ImgWrapper/ImgWrapperBase.js",
-  "src/assets/ImgWrapper/ImgAnimation.js",
   "src/assets/Aud.js",
   "src/assets/AudPool.js",
+  "src/assets/animation/frames/AnimationFrameBase.js",
+  "src/assets/animation/frames/AnimationFrame.js",
+  "src/assets/animation/frames/AnimationFrameEvent.js",
+  "src/assets/animation/frames/AnimationFrameLoop.js",
+  "src/assets/animation/Animation.js",
+  "src/assets/animation/RunningAnimation.js",
 
   "src/ui/UIBase.js",
   "src/ui/UIRoot.js",

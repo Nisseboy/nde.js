@@ -1,4 +1,4 @@
-class Img extends Asset {
+class Img extends Renderable {
   constructor(size) {
     super();
 
@@ -11,6 +11,8 @@ class Img extends Asset {
     this.ctx = this.canvas.getContext("2d");
     if (this.ctx == null) throw new Error("2d context not supported?");
   }
+
+  getImg() {return this};
 
   resize(size) {
     this.size = size.copy();
@@ -115,8 +117,7 @@ class Img extends Asset {
       console.error("No image supplied to renderer.image()");
     }
 
-    if (img.isWrapper) img = img.get();
-    this.ctx.drawImage(img.canvas, pos.x, pos.y, size.x, size.y);
+    this.ctx.drawImage(img.getImg().canvas, pos.x, pos.y, size.x, size.y);
   }
 
   text(t, pos) {

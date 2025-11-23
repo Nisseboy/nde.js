@@ -50,7 +50,17 @@ class SceneMainMenu extends Scene {
         text: "Noise",
 
         events: {mousedown: [() => {
-          nde.transition = new TransitionNoise(scenes.game, new TimerTime(0.2));
+          nde.transition = new TransitionNoise(scenes.game, new TimerTime(0.4), false, 160);
+        }]},
+      }),
+
+      new UIButtonText({
+        style: {...buttonStyle},
+        textStyle: {...buttonStyle},
+        text: "Slide Noise",
+
+        events: {mousedown: [() => {
+          nde.transition = new TransitionNoise(scenes.game, new TimerTime(0.4), true, 160);
         }]},
       }),
           
