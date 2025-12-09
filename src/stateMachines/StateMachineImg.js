@@ -1,32 +1,17 @@
 class StateMachineImg extends StateMachine {
   constructor(rootNode) {
     super(rootNode);
-
-    this.chosen = undefined;
   }
 
-  choose() {
-    let node = this.rootNode;
+  parseResult(result) {
+    if (this.result instanceof RunningAnimation) this.result.stop();
 
-    while (node && !(node instanceof StateMachineNodeResult)) {
-      node = node.choose(this);
+    if (result instanceof Animation) {  
+      this.result = result.start({events: {"*": [(a, b) => {this.fireEvent(a, b);}]}});
+    } else {
+      this.result = result;
     }
-
     
-    let choice = node?.result;
-    if (choice != this.lastChoice) {      
-      if (this.chosen instanceof RunningAnimation) this.chosen.stop();
-
-      if (choice instanceof Animation) {  
-        this.chosen = choice.start({events: {"*": [(a, b) => {this.fireEvent(a, b);}]}});
-      } else {
-        this.chosen = choice;
-      }
-
-      this.fireEvent("change", this.chosen);
-    }
-    this.lastChoice = choice;
-
-    return this.chosen;
+    return this.result;
   }
 }

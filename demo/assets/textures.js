@@ -3,8 +3,8 @@ let auds = {};
 
 function preloadTextures() {
   //Load all the textures
-  for (let i = 0; i < texturesPaths.length; i++) {
-    tex[texturesPaths[i]] = nde.loadImg("assets/textures/" + texturesPaths[i] + ".png");
+  for (let i = 0; i < texPaths.length; i++) {
+    tex[texPaths[i].path] = nde.loadImg("assets/textures/" + texPaths[i].path + ".png");
   }
 
   //Split all the spritemaps from files named for example "1,2,3,4" and makes "1", "2", "3", "4"
@@ -39,8 +39,9 @@ function preloadTextures() {
   }
 
   //Load all the audios
-  for (let i = 0; i < audiosPaths.length; i++) {
-    auds[audiosPaths[i]] = new AudPool(nde.loadAud("assets/audios/" + audiosPaths[i] + ".mp3"));
+  for (let i = 0; i < audsPaths.length; i++) {
+    let aud = new AudPool(nde.loadAud("assets/audios/" + audsPaths[i].path + ".mp3", {gain: audsPaths[i].gain}));
+    auds[audsPaths[i].path] = aud;
   }
 
 

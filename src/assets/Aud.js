@@ -14,6 +14,10 @@ class Aud extends Asset {
     this.panner.positionY.value = 1;
     this.panner.positionZ.value = 0;
 
+    this.baseGain = 1;
+    this.gainNode = audioContext.createGain();
+    this.gainNode.gain.value = 1;
+
     this.audioBuffer = undefined;
     this.currentSource = undefined;
 
@@ -24,6 +28,8 @@ class Aud extends Asset {
     const newAud = new Aud();
     newAud.path = this.path;
     newAud.audioBuffer = this.audioBuffer;
+    newAud.setGain(this.gainNode.gain.value);
+    newAud.baseGain = this.baseGain;
     return newAud;
   }
 
@@ -33,13 +39,20 @@ class Aud extends Asset {
     this.panner.positionZ.value = z;
   }
 
+  setGain(gain) {
+    this.gainNode.gain.value = this.baseGain * gain;    
+  }
+
   play() {
     if (!this.audioBuffer) return;
     
     const source = audioContext.createBufferSource();
     source.buffer = this.audioBuffer;
+
     source.connect(this.panner);
-    this.panner.connect(audioContext.destination);
+    this.panner.connect(this.gainNode);
+    this.gainNode.connect(audioContext.destination);
+
     source.start(0);
     this.currentSource = source;
     this.isPlaying = true;

@@ -3,22 +3,30 @@ class StateMachine {
     this.rootNode = rootNode;
 
     this.lastChoice = undefined;
+    this.result = undefined;
+
     this.events = {};
   }
 
   choose() {
-    let node = this.rootNode;
+    let choice = this.rootNode;
 
-    while (node && !node instanceof StateMachineNodeResult) {
-      node = node.choose(this);
+    while (choice && !(choice instanceof StateMachineNodeResult)) {
+      choice = choice.choose(this);
     }
 
-    
-    let choice = node?.result;
-    if (choice != this.lastChoice) this.fireEvent("change", choice);
-    this.lastChoice = choice;
 
-    return choice;
+    if (choice != this.lastChoice) {    
+      this.parseResult(choice.result);
+      this.fireEvent("change", this.result);
+      this.lastChoice = choice;
+    }
+
+    return this.result;
+  }
+
+  parseResult(result) {
+    this.result = result;
   }
 
 

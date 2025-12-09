@@ -13,7 +13,8 @@ class EntityPlayer extends EntityBase {
         new StateMachineNodeResult(tex["duck/1"]),
       )
     );
-    this.stateMachine.registerEvent("step", () => {
+    this.stateMachine.registerEvent("step", (angle) => {
+      this.dir += angle;
       playAudio(auds[`duck/step/${Math.floor(Math.random() * 4 + 1)}`], this.pos);
     });
   }

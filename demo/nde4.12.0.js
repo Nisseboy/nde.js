@@ -933,10 +933,14 @@ class Aud extends Asset {
     this.panner = audioContext.createPanner();
     this.panner.panningModel = 'HRTF';
     this.panner.distanceModel = 'inverse';
+    this.panner.rolloffFactor = 1;
     this.panner.positionX.value = 0;
     this.panner.positionY.value = 1;
     this.panner.positionZ.value = 0;
-    this.position = new Vec(0, 1, 0);
+
+    this.baseGain = 1;
+    this.gainNode = audioContext.createGain();
+    this.gainNode.gain.value = 1;
 
     this.audioBuffer = undefined;
     this.currentSource = undefined;
@@ -948,33 +952,35 @@ class Aud extends Asset {
     const newAud = new Aud();
     newAud.path = this.path;
     newAud.audioBuffer = this.audioBuffer;
-    newAud.setPosition(this.position);
+    newAud.setGain(this.gainNode.gain.value);
+    newAud.baseGain = this.baseGain;
     return newAud;
   }
 
-  setPosition(xorpos, y, z) {
-    if (xorpos.x != undefined) this.position.from(xorpos);
-    else this.position.set(xorpos, y, z);
-    
-    this.panner.positionX.value = this.position.x;
-    this.panner.positionY.value = this.position.y;
-    this.panner.positionZ.value = this.position.z;
+  setPosition(x, y, z) {
+    this.panner.positionX.value = x;
+    this.panner.positionY.value = y;
+    this.panner.positionZ.value = z;
+  }
+
+  setGain(gain) {
+    this.gainNode.gain.value = this.baseGain * gain;    
   }
 
   play() {
-    if (!this.audioBuffer) {
-      console.warn('Audio not loaded yet.');
-      return;
-    }
+    if (!this.audioBuffer) return;
     
     const source = audioContext.createBufferSource();
     source.buffer = this.audioBuffer;
+
     source.connect(this.panner);
-    this.panner.connect(audioContext.destination);
+    this.panner.connect(this.gainNode);
+    this.gainNode.connect(audioContext.destination);
+
     source.start(0);
     this.currentSource = source;
     this.isPlaying = true;
-    source.onended = () => {this.isPlaying = false;}
+    source.onended = () => {this.isPlaying = false; this.currentSource = null;}
   }
   stop() {    
     this.isPlaying = false;
@@ -1004,11 +1010,9 @@ class AudPool {
 
   get() {
     for (let i = 0; i < this.auds.length; i++) {
-      let aud = this.auds[i];
+      if (this.auds[i].isPlaying) continue;
 
-      if (aud.isPlaying) continue;
-
-      return aud;
+      return this.auds[i];
     }
     
     let aud = this.getNew();
@@ -1018,6 +1022,18 @@ class AudPool {
   getNew() {
     return this.aud.copy();
   }
+}
+
+
+function moveListener(pos) {
+  audioContext.listener.positionX.value = pos.x;
+  audioContext.listener.positionY.value = 0;
+  audioContext.listener.positionZ.value = pos.y;
+}
+function playAudio(audPool, pos) {
+  let aud = audPool.get();
+  aud.setPosition(pos.x, 1, pos.y);
+  aud.play();
 }
 
 
@@ -1093,14 +1109,15 @@ class Animation {
   constructor(frames, dt) {
     this.frames = frames;
     this.dt = dt;
+    this.speed = 1;
 
     this.duration = 0;
     for (let f of this.frames) this.duration += f.duration;
     this.duration *= dt;
   }
 
-  start() {
-    return new RunningAnimation(this);
+  start(props = {}) {
+    return new RunningAnimation(this, props);
   }
 }
 
@@ -1110,25 +1127,32 @@ class Animation {
 
 /* src/assets/animation/RunningAnimation.js */
 class RunningAnimation extends Renderable {
-  constructor(animation) {
+  constructor(animation, props = {}) {
     super();
 
     this.frames = animation.frames;
     this.dt = animation.dt;
     this.duration = animation.duration;
+    this.speed = animation.speed;
 
+    this.events = props.events || {}
+    
     this.img = undefined;
 
-    this.events = {};
-
     this.timer = new TimerTime(this.duration, ()=>{this.step()});
+    this.lastTimerElapsedTime = 0;
+    this.elapsedTime = 0;
     this.executedFrames = 0;
     this.executedTime = 0;
+    
     this.step();
   }
 
   step() {    
-    while (this.executedTime <= this.timer.elapsedTime) {
+    this.elapsedTime += (this.timer.elapsedTime - this.lastTimerElapsedTime) * this.speed;
+    this.lastTimerElapsedTime = this.timer.elapsedTime;
+
+    while (this.executedTime <= this.elapsedTime) {
       let frame = this.frames[this.executedFrames];
       if (!frame) {
         this.fireEvent("done");
@@ -1138,7 +1162,7 @@ class RunningAnimation extends Renderable {
       this.executedTime += frame.duration * this.dt;
       this.executedFrames++;
 
-      frame.step(this);
+      frame.step(this);      
     }
   }
 
@@ -1183,6 +1207,8 @@ class RunningAnimation extends Renderable {
 
   restart() {
     this.timer.reset();
+    this.lastTimerElapsedTime = 0;
+    this.elapsedTime = 0;
     this.executedFrames = 0;
     this.executedTime = 0;
     this.step();
@@ -1246,22 +1272,30 @@ class StateMachine {
     this.rootNode = rootNode;
 
     this.lastChoice = undefined;
+    this.result = undefined;
+
     this.events = {};
   }
 
   choose() {
-    let node = this.rootNode;
+    let choice = this.rootNode;
 
-    while (node && !node instanceof StateMachineNodeResult) {
-      node = node.choose(this);
+    while (choice && !(choice instanceof StateMachineNodeResult)) {
+      choice = choice.choose(this);
     }
 
-    
-    let choice = node?.result;
-    if (choice != this.lastChoice) this.fireEvent("change", choice);
-    this.lastChoice = choice;
 
-    return choice;
+    if (choice != this.lastChoice) {    
+      this.parseResult(choice.result);
+      this.fireEvent("change", this.result);
+      this.lastChoice = choice;
+    }
+
+    return this.result;
+  }
+
+  parseResult(result) {
+    this.result = result;
   }
 
 
@@ -1301,32 +1335,18 @@ class StateMachine {
 class StateMachineImg extends StateMachine {
   constructor(rootNode) {
     super(rootNode);
-
-    this.chosen = undefined;
   }
 
-  choose() {
-    let node = this.rootNode;
+  parseResult(result) {
+    if (this.result instanceof RunningAnimation) this.result.stop();
 
-    while (node && !(node instanceof StateMachineNodeResult)) {
-      node = node.choose(this);
+    if (result instanceof Animation) {  
+      this.result = result.start({events: {"*": [(a, b) => {this.fireEvent(a, b);}]}});
+    } else {
+      this.result = result;
     }
-
     
-    let choice = node?.result;
-    if (choice != this.lastChoice) {      
-      if (choice instanceof Animation) {
-        this.chosen = choice.start();
-        this.chosen.registerEvent("*", (a, b) => {this.fireEvent(a, b);});
-      } else {
-        this.chosen = choice;
-      }
-
-      this.fireEvent("change", this.chosen);
-    }
-    this.lastChoice = choice;
-
-    return this.chosen;
+    return this.result;
   }
 }
 
@@ -3601,7 +3621,7 @@ class NDE {
     let i = 0;
     let lastLength = Infinity;
     let interval = setInterval(e => {
-      if (this.unloadedAssets.length == 0) {
+      if (this.unloadedAssets.length == 0) {        
         clearInterval(interval);
         
         this.fireEvent("beforeSetup");
@@ -3909,38 +3929,41 @@ class NDE {
       img.loading = false;
       if (img.onload) img.onload();
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img), 1);
     };
     image.onerror = e => {
       console.error(`"${path}" not found`);
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img), 1);
     };
 
     return img;
   }
 
-  loadAud(path) {
+  loadAud(path, props = {}) {
     let aud = new Aud();
     aud.loading = true;
     aud.path = path;
+    aud.baseGain = props.gain || 1;
+    aud.setGain(1);
+    
     this.unloadedAssets.push(aud);
-
+    
     fetch(path).then(res => {
       res.arrayBuffer().then(arrayBuffer => {
-        audioContext.decodeAudioData(arrayBuffer).then(audioBuffer => {
+        audioContext.decodeAudioData(arrayBuffer).then(audioBuffer => {                    
           aud.audioBuffer = audioBuffer;
           aud.loading = false;
           aud.duration = audioBuffer.duration;
           if (aud.onload) aud.onload();
           
-          this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud));
+          this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud), 1);
         });
       });
     }).catch(e => {
       console.error(`"${path}" not found`);
 
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset));
+      this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset), 1);
     });
 
     return aud;

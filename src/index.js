@@ -436,10 +436,13 @@ class NDE {
     return img;
   }
 
-  loadAud(path) {
+  loadAud(path, props = {}) {
     let aud = new Aud();
     aud.loading = true;
     aud.path = path;
+    aud.baseGain = props.gain || 1;
+    aud.setGain(1);
+    
     this.unloadedAssets.push(aud);
     
     fetch(path).then(res => {

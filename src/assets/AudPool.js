@@ -7,11 +7,9 @@ class AudPool {
 
   get() {
     for (let i = 0; i < this.auds.length; i++) {
-      let aud = this.auds[i];
+      if (this.auds[i].isPlaying) continue;
 
-      if (aud.isPlaying) continue;
-
-      return aud;
+      return this.auds[i];
     }
     
     let aud = this.getNew();

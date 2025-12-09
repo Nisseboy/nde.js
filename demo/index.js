@@ -9,7 +9,7 @@ preloadTextures();
 
 let settingsName = "ndeSettings";
 let settings = JSON.parse(localStorage.getItem(settingsName)) || {};
-setBackgroundCol();
+setBackgroundCol(); //Set the background color if it was overridden by settings
 
 
 let scenes;
