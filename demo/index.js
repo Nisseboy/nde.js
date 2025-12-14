@@ -12,7 +12,7 @@ let settings = JSON.parse(localStorage.getItem(settingsName)) || {};
 setBackgroundCol(); //Set the background color if it was overridden by settings
 
 
-let scenes;
+let scenes = {};
 
 nde.controls = {
   "Move Up": "w",
@@ -39,11 +39,11 @@ nde.registerEvent("keydown", e => {
 });
 
 nde.registerEvent("afterSetup", () => {
-  scenes = {
+  Object.assign(scenes, {
     game: new SceneGame(), 
     mainMenu: new SceneMainMenu(),
     settings: new SceneSettings(),
-  }
+  })
 
   scenes.game.loadWorld(new World());
   nde.setScene(scenes.mainMenu);
@@ -60,12 +60,12 @@ nde.registerEvent("resize", e => {
 });
 
 
-//https://gist.github.com/yomotsu/165ba9ee0dc991cb6db5
-var getDeltaAngle = function () {
-  var TAU = 2 * Math.PI;
-  var mod = function (a, n) { return ( a % n + n ) % n; } // modulo
-  var equivalent = function (a) { return mod(a + Math.PI, TAU) - Math.PI } // [-π, +π]
-  return function (current, target) {
-    return equivalent(target - current);
+
+
+//For nde-Editor
+function getContext() {
+  return {
+    nde,
+    scenes,
   }
-}();
+}

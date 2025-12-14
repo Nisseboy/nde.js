@@ -1,6 +1,6 @@
 
 /*
-This is a built version of nde (Nils Delicious Engine) and is basically all the source files stitched together, go to the github for source
+This is a built version of nde (Nils Delicious Engine) and is all the source files stitched together, https://github.com/nisseboy/nde.js
 
 
 */
@@ -574,7 +574,7 @@ class Camera extends Serializable {
 
 
 
-/* src/scenes/Scene.js */
+/* src/Scene.js */
 class Scene {
   constructor() {
     this.hasStarted = false;    
@@ -701,6 +701,12 @@ class Scene {
  * 
  */
   afterRender() {}
+
+
+/**
+ * 
+ */
+  audioContextStarted() {}
 }
 
 
@@ -922,14 +928,34 @@ class Img extends Renderable {
 
 
 /* src/assets/Aud.js */
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
 class Aud extends Asset {
-  constructor() {
+  constructor(props = {}) {
     super();
 
     this.duration = undefined;
+    this.baseGain = props.baseGain || 1;
 
+    this.queueNodes();
+
+    this.audioBuffer = undefined;
+    this.currentSource = undefined;
+
+    this.isPlaying = false;
+  }
+
+  queueNodes() {
+    if (audioContext.state != "suspended") {
+      this.createNodes();
+      return;
+    } else {
+      
+      nde.registerEvent("audioContextStarted", () => {
+        this.createNodes();
+      });
+    }
+  }
+
+  createNodes() {
     this.panner = audioContext.createPanner();
     this.panner.panningModel = 'HRTF';
     this.panner.distanceModel = 'inverse';
@@ -938,14 +964,8 @@ class Aud extends Asset {
     this.panner.positionY.value = 1;
     this.panner.positionZ.value = 0;
 
-    this.baseGain = 1;
     this.gainNode = audioContext.createGain();
-    this.gainNode.gain.value = 1;
-
-    this.audioBuffer = undefined;
-    this.currentSource = undefined;
-
-    this.isPlaying = false;
+    this.gainNode.gain.value = this.baseGain;
   }
 
   copy() {
@@ -1026,9 +1046,13 @@ class AudPool {
 
 
 function moveListener(pos) {
-  audioContext.listener.positionX.value = pos.x;
-  audioContext.listener.positionY.value = 0;
-  audioContext.listener.positionZ.value = pos.y;
+  if (audioContext.listener.positionX != undefined) {
+    audioContext.listener.positionX.value = pos.x;
+    audioContext.listener.positionY.value = 0;
+    audioContext.listener.positionZ.value = pos.y;
+  } else {
+    audioContext.listener.setPosition(pos.x, 0, pos.y);
+  }
 }
 function playAudio(audPool, pos) {
   let aud = audPool.get();
@@ -3527,19 +3551,28 @@ renderer: which renderer to use, pass all drawing code into this pls, see engine
 
 
 Events:
+
 beforeSetup
 afterSetup
+
 keydown
 keyup
+
 mousemove
 mousedown
 mouseup
 wheel
+
 resize
+
 update
 afterUpdate
+
 render
 afterRender
+
+beforeScene
+afterScene
 
 
 
@@ -3581,6 +3614,8 @@ Project:
   ...
 
 */  
+
+let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 class NDE {
   constructor(mainElem) {
@@ -3652,12 +3687,18 @@ class NDE {
       
       i++;
     }, 50);
+
   }
 
   setupHandlers() {
     window.addEventListener("resize", e => {this.resize(e)});
 
     document.addEventListener("keydown", e => {
+      if (!audioContext.state == "running") {
+        audioContext.resume();
+        this.fireEvent("audioContextStarted");
+      }
+
       if (this.debug) console.log(e.key);
 
       
@@ -3697,6 +3738,12 @@ class NDE {
       this.fireEvent("mousemove", e);
     });
     document.addEventListener("mousedown", e => {
+      if (audioContext.state != "running") {
+        audioContext.resume();
+        this.fireEvent("audioContextStarted");
+      }
+
+
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
         if (!this.transition) this.hoveredUIElement.fireEvent("inputdown", "mouse" + e.button, e);
@@ -3740,10 +3787,29 @@ class NDE {
   }
 
   setScene(newScene) {
+    if (this.events["beforeScene"]) {
+      for (let ee of this.events["beforeScene"]) {
+        let res = ee(newScene); 
+        if (res == false) break;
+        if (res) {
+          newScene = res;
+          break;
+        }
+      };
+    }
+
+
     if (this.scene) this.scene.stop();
     this.scene = newScene;
     this.scene.start();
     this.scene.hasStarted = true;
+
+    if (this.events["afterScene"]) {
+      for (let ee of this.events["afterScene"]) {
+        let res = ee(newScene); 
+        if (res == false) break;
+      };
+    }
   }
 
   registerEvent(eventName, func, isPriority = false) {
@@ -3941,11 +4007,9 @@ class NDE {
   }
 
   loadAud(path, props = {}) {
-    let aud = new Aud();
+    let aud = new Aud({baseGain: props.gain || 1});
     aud.loading = true;
     aud.path = path;
-    aud.baseGain = props.gain || 1;
-    aud.setGain(1);
     
     this.unloadedAssets.push(aud);
     
@@ -3969,6 +4033,17 @@ class NDE {
     return aud;
   }
 }
+
+
+
+var getDeltaAngle = function () {
+  var TAU = 2 * Math.PI;
+  var mod = function (a, n) { return ( a % n + n ) % n; } // modulo
+  var equivalent = function (a) { return mod(a + Math.PI, TAU) - Math.PI } // [-π, +π]
+  return function (current, target) {
+    return equivalent(target - current);
+  }
+}();
 
 
 

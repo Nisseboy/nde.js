@@ -1,11 +1,31 @@
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
 class Aud extends Asset {
-  constructor() {
+  constructor(props = {}) {
     super();
 
     this.duration = undefined;
+    this.baseGain = props.baseGain || 1;
 
+    this.queueNodes();
+
+    this.audioBuffer = undefined;
+    this.currentSource = undefined;
+
+    this.isPlaying = false;
+  }
+
+  queueNodes() {
+    if (audioContext.state != "suspended") {
+      this.createNodes();
+      return;
+    } else {
+      
+      nde.registerEvent("audioContextStarted", () => {
+        this.createNodes();
+      });
+    }
+  }
+
+  createNodes() {
     this.panner = audioContext.createPanner();
     this.panner.panningModel = 'HRTF';
     this.panner.distanceModel = 'inverse';
@@ -14,14 +34,8 @@ class Aud extends Asset {
     this.panner.positionY.value = 1;
     this.panner.positionZ.value = 0;
 
-    this.baseGain = 1;
     this.gainNode = audioContext.createGain();
-    this.gainNode.gain.value = 1;
-
-    this.audioBuffer = undefined;
-    this.currentSource = undefined;
-
-    this.isPlaying = false;
+    this.gainNode.gain.value = this.baseGain;
   }
 
   copy() {

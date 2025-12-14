@@ -71,6 +71,13 @@ class SceneGame extends Scene {
 
         e.render();
       }
+
+
+      
+      renderer.set("fill", "rgb(255,255,255)");
+      renderer.set("textAlign", ["center", "middle"]);
+      renderer.set("font", "1px monospace");
+      renderer.text("[w a s d shift], [arrow keys]", new Vec(0, -4));
     });
   }
 }

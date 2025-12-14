@@ -19,7 +19,7 @@ function preloadTextures() {
     for (let i = 0; i < s2.length; i++) {
       let newImg = new Img(new Vec(1, 1));
       newImg.loading = true;
-      tex[pathName + "/" + s2[i]] = newImg;
+      tex[pathName + (pathName != "" ? "/" : "") + s2[i]] = newImg;
     }      
 
     let img = tex[textureName];
@@ -29,7 +29,7 @@ function preloadTextures() {
       let size = new Vec(img.size.x / s2.length, img.size.y);
       
       for (let i = 0; i < s2.length; i++) {
-        let newImg = tex[pathName + "/" + s2[i]];
+        let newImg = tex[pathName + (pathName != "" ? "/" : "") + s2[i]];
         newImg.resize(size);
         newImg.ctx.putImageData(img.ctx.getImageData(size.x * i, 0, size.x, size.y), 0, 0);
         

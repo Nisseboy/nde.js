@@ -28,7 +28,9 @@ class EntityPlayer extends EntityBase {
 
   from(data) {
     super.from(data);
+    
     //Whatever extra data here
+
     return this;
   }
 }

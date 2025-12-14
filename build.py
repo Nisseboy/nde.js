@@ -4,7 +4,7 @@ files = [
   "src/Serializable.js",
   "src/Vec.js",
   "src/Camera.js",
-  "src/scenes/Scene.js",
+  "src/Scene.js",
   
   "src/assets/Asset.js",
   "src/assets/Renderable.js",
@@ -55,7 +55,7 @@ files = [
 outputFile = "release/nde" + sys.argv[1] + ".js"
 fileHeader = '''
 /*
-This is a built version of nde (Nils Delicious Engine) and is basically all the source files stitched together, go to the github for source
+This is a built version of nde (Nils Delicious Engine) and is all the source files stitched together, https://github.com/nisseboy/nde.js
 
 
 */

@@ -40,9 +40,8 @@ class EntityBase extends Serializable {
     renderer._(()=>{
       renderer.translate(this.pos);
       if (this.dir) renderer.rotate(this.dir);
-      renderer.translate(this.size._mul(-0.5));
 
-      renderer.image(this.texture, vecZero, this.size);
+      renderer.image(this.texture, this.size._mul(-0.5), this.size);
     });
   }
 

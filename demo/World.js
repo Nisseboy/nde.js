@@ -4,7 +4,6 @@ class World extends Serializable {
 
     this.entities = [
       new EntityPlayer(new Vec(0, 0)), 
-      new EntityText(new Vec(0, -4), "[w a s d shift], [arrow keys]"),
     ];
   }
 

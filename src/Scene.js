@@ -124,5 +124,11 @@ class Scene {
  * 
  */
   afterRender() {}
+
+
+/**
+ * 
+ */
+  audioContextStarted() {}
 }
 

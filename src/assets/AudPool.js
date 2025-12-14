@@ -23,9 +23,13 @@ class AudPool {
 
 
 function moveListener(pos) {
-  audioContext.listener.positionX.value = pos.x;
-  audioContext.listener.positionY.value = 0;
-  audioContext.listener.positionZ.value = pos.y;
+  if (audioContext.listener.positionX != undefined) {
+    audioContext.listener.positionX.value = pos.x;
+    audioContext.listener.positionY.value = 0;
+    audioContext.listener.positionZ.value = pos.y;
+  } else {
+    audioContext.listener.setPosition(pos.x, 0, pos.y);
+  }
 }
 function playAudio(audPool, pos) {
   let aud = audPool.get();

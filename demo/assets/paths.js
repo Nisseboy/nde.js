@@ -1,14 +1,14 @@
 let audsPaths = [
-  {path: "duck/step/1"},
-  {path: "duck/step/2"},
-  {path: "duck/step/3"},
-  {path: "duck/step/4"},
-];
-let texPaths = [
-  {path: "duck/1"},
-  {path: "duck/rot/1,2,3,4,5,6,7,8"},
+  {"path": "duck/step/1"},
+  {"path": "duck/step/2"},
+  {"path": "duck/step/3"},
+  {"path": "duck/step/4"},
 ];
 
+let texPaths = [
+  {"path": "duck/1"},
+  {"path": "duck/rot/1,2,3,4,5,6,7,8"},
+];
 
 function preloadAnimations() {
   let frame = AnimationFrame;

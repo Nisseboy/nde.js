@@ -23,19 +23,28 @@ renderer: which renderer to use, pass all drawing code into this pls, see engine
 
 
 Events:
+
 beforeSetup
 afterSetup
+
 keydown
 keyup
+
 mousemove
 mousedown
 mouseup
 wheel
+
 resize
+
 update
 afterUpdate
+
 render
 afterRender
+
+beforeScene
+afterScene
 
 
 
@@ -77,6 +86,8 @@ Project:
   ...
 
 */  
+
+let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 class NDE {
   constructor(mainElem) {
@@ -148,12 +159,18 @@ class NDE {
       
       i++;
     }, 50);
+
   }
 
   setupHandlers() {
     window.addEventListener("resize", e => {this.resize(e)});
 
     document.addEventListener("keydown", e => {
+      if (!audioContext.state == "running") {
+        audioContext.resume();
+        this.fireEvent("audioContextStarted");
+      }
+
       if (this.debug) console.log(e.key);
 
       
@@ -193,6 +210,12 @@ class NDE {
       this.fireEvent("mousemove", e);
     });
     document.addEventListener("mousedown", e => {
+      if (audioContext.state != "running") {
+        audioContext.resume();
+        this.fireEvent("audioContextStarted");
+      }
+
+
       if (this.hoveredUIElement) {
         if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
         if (!this.transition) this.hoveredUIElement.fireEvent("inputdown", "mouse" + e.button, e);
@@ -236,10 +259,29 @@ class NDE {
   }
 
   setScene(newScene) {
+    if (this.events["beforeScene"]) {
+      for (let ee of this.events["beforeScene"]) {
+        let res = ee(newScene); 
+        if (res == false) break;
+        if (res) {
+          newScene = res;
+          break;
+        }
+      };
+    }
+
+
     if (this.scene) this.scene.stop();
     this.scene = newScene;
     this.scene.start();
     this.scene.hasStarted = true;
+
+    if (this.events["afterScene"]) {
+      for (let ee of this.events["afterScene"]) {
+        let res = ee(newScene); 
+        if (res == false) break;
+      };
+    }
   }
 
   registerEvent(eventName, func, isPriority = false) {
@@ -437,11 +479,9 @@ class NDE {
   }
 
   loadAud(path, props = {}) {
-    let aud = new Aud();
+    let aud = new Aud({baseGain: props.gain || 1});
     aud.loading = true;
     aud.path = path;
-    aud.baseGain = props.gain || 1;
-    aud.setGain(1);
     
     this.unloadedAssets.push(aud);
     
@@ -465,3 +505,14 @@ class NDE {
     return aud;
   }
 }
+
+
+
+var getDeltaAngle = function () {
+  var TAU = 2 * Math.PI;
+  var mod = function (a, n) { return ( a % n + n ) % n; } // modulo
+  var equivalent = function (a) { return mod(a + Math.PI, TAU) - Math.PI } // [-π, +π]
+  return function (current, target) {
+    return equivalent(target - current);
+  }
+}();
