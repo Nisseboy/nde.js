@@ -947,7 +947,8 @@ class Aud extends Asset {
     if (audioContext.state != "suspended") {
       this.createNodes();
       return;
-    } else {      
+    } else {
+      
       nde.registerEvent("audioContextStarted", () => {
         this.createNodes();
       });
@@ -3524,6 +3525,224 @@ class TransitionNoise extends TransitionBase {
 
 
 
+/* src/ECS/components/Component.js */
+class Component extends Serializable {
+  constructor() {
+    super();
+
+    this.hasStarted = false;
+
+    this.parent = undefined;
+    this.transform = undefined;
+  }
+
+
+  start() {}
+  update(dt) {}
+  render() {}
+
+  remove() {}
+
+
+  getComponent(type) {
+    return this.parent.getComponent(type);
+  }
+
+
+  from(data) {
+    super.from(data);
+
+    return this;
+  }
+}
+
+
+
+
+
+/* src/ECS/components/Transform.js */
+class Transform extends Component {
+  constructor(pos = undefined, dir = 0, size = undefined) {
+    super();
+
+    this.pos = pos;
+    if (!pos) this.pos = new Vec(0, 0);
+
+    this.dir = dir;
+
+    this.size = size;
+    if (!size) this.size = new Vec(1, 1);
+  }
+
+  from(data) {
+    super.from(data);
+
+    this.pos = new Vec().from(data.pos);
+    this.dir = data.dir;
+    this.size = new Vec().from(data.size);
+
+    return this;
+  }
+}
+
+
+
+
+
+/* src/ECS/components/Sprite.js */
+class Sprite extends Component {
+  constructor(texOrTexture) {
+    super();
+
+    if (typeof texOrTexture == "string") {
+      this.tex = texOrTexture;
+    } else {
+      this.tex = Object.keys(nde.tex).find(key => nde.tex[key] == texOrTexture);
+      if (this.tex == undefined) {
+        this.tex = Math.floor(Math.random() * 100000) + "";
+        nde.tex[this.tex] = texOrTexture;
+      }
+    }
+  }
+
+  render() {
+    nde.renderer._(() => {
+      nde.renderer.translate(this.transform.pos);
+      if (this.transform.dir) nde.renderer.rotate(this.transform.dir);
+
+      nde.renderer.image(nde.tex[this.tex], this.transform.size._mul(-0.5), this.transform.size);
+    });
+  }
+
+  from(data) {
+    super.from(data);
+
+    this.tex = data.tex;
+
+    return this;
+  }
+}
+
+
+
+
+
+/* src/ECS/Ob.js */
+class Ob extends Serializable {
+  constructor(props = {}, components = [], children = []) {
+    super();
+
+    this.name = props.name || "";
+
+    this.components = components;
+    this.transform = this.getComponent(Transform);
+    if (!this.transform) {
+      this.transform = new Transform();
+      this.components.unshift(this.transform);
+    }
+
+    for (let c of this.components) {
+      c.parent = this;
+      c.transform = this.transform;
+    }
+
+
+    this.children = children;
+  }
+
+
+
+  update(dt) {
+    for (let c of this.components) {
+      if (!c.hasStarted) {
+        c.start();
+        c.hasStarted = true;
+      }
+
+      c.update(dt);
+    }
+
+    for (let c of this.children) {
+      c.update(dt);
+    }
+  }
+  render() {
+    for (let c of this.components) {
+      c.render();
+    }
+
+    for (let c of this.children) {
+      c.render();
+    }
+  }
+
+
+  getComponent(type) {
+    return this.components.find(e=>{return e instanceof type});
+  }
+
+
+  appendChild(ob) {
+    if (ob.parent) {
+      ob.parent.removeChild(ob);
+    }
+
+    this.children.push(ob);
+    ob.parent = this;
+  }
+  removeChild(ob) {
+    let index = this.children.indexOf(ob);
+    if (index == -1) return false;
+
+    this.children.splice(index, 1);
+    ob.parent = undefined;
+    return true;
+  }
+
+  remove() {
+    if (this.parent) this.parent.removeChild(this);
+
+    for (let c of this.components) {
+      c.remove();
+    }
+    for (let c of this.children) {
+      c.remove();
+    }
+  }
+
+
+  from(data) {
+    super.from(data);
+
+    this.name = data.name;
+
+
+    this.components = [];
+    for (let c of data.components) this.components.push(cloneData(c));
+    this.transform = this.getComponent(Transform);
+
+    for (let c of this.components) {
+      c.parent = this;
+      c.transform = this.transform;
+    }
+
+  
+    for (c of data.children) {
+      let c2 = cloneData(c);
+      this.appendChild(c2);
+      c2.start();
+      c2.hasStarted = true;
+    }
+
+
+    return this;
+  }
+}
+
+
+
+
+
 /* src/index.js */
 /*
 scene: the current active scene, is set by setScene, see engine/scenes/scene.js for base class
@@ -3626,6 +3845,9 @@ class NDE {
     this.renderer = new Img(vecOne);
 
     this.events = {};
+
+    this.tex = {};
+    this.auds = {};
 
     this.mouse = new Vec(0, 0);
     this.mainElemBoundingBox = new Vec(0, 0, 1, 1);

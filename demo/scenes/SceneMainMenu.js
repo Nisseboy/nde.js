@@ -11,7 +11,7 @@ class SceneMainMenu extends Scene {
     
     this.ui = createDefaultUIRoot([
       new UIButtonImage({
-        image: tex["duck/1"],
+        image: nde.tex["duck/1"],
 
         style: {...buttonStyle},
         imageStyle: {

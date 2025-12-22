@@ -100,6 +100,9 @@ class NDE {
 
     this.events = {};
 
+    this.tex = {};
+    this.auds = {};
+
     this.mouse = new Vec(0, 0);
     this.mainElemBoundingBox = new Vec(0, 0, 1, 1);
 

@@ -50,6 +50,11 @@ files = [
   "src/transitions/TransitionSlide.js",
   "src/transitions/TransitionNoise.js",
 
+  "src/ECS/components/Component.js",
+  "src/ECS/components/Transform.js",
+  "src/ECS/components/Sprite.js",
+  "src/ECS/Ob.js",
+
   "src/index.js",
 ] 
 outputFile = "release/nde" + sys.argv[1] + ".js"

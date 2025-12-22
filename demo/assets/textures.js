@@ -1,14 +1,11 @@
-let tex = {};
-let auds = {};
-
 function preloadTextures() {
   //Load all the textures
   for (let i = 0; i < texPaths.length; i++) {
-    tex[texPaths[i].path] = nde.loadImg("assets/textures/" + texPaths[i].path + ".png");
+    nde.tex[texPaths[i].path] = nde.loadImg("assets/textures/" + texPaths[i].path + ".png");
   }
 
   //Split all the spritemaps from files named for example "1,2,3,4" and makes "1", "2", "3", "4"
-  for (textureName in tex) {
+  for (textureName in nde.tex) {
     let s1 = textureName.split("/");
     let fileName = s1.splice(s1.length - 1, 1)[0];
     let pathName = s1.join("/");
@@ -19,17 +16,17 @@ function preloadTextures() {
     for (let i = 0; i < s2.length; i++) {
       let newImg = new Img(new Vec(1, 1));
       newImg.loading = true;
-      tex[pathName + (pathName != "" ? "/" : "") + s2[i]] = newImg;
+      nde.tex[pathName + (pathName != "" ? "/" : "") + s2[i]] = newImg;
     }      
 
-    let img = tex[textureName];
-    delete tex[textureName];
+    let img = nde.tex[textureName];
+    delete nde.tex[textureName];
       
     img.onload = () => {
       let size = new Vec(img.size.x / s2.length, img.size.y);
       
       for (let i = 0; i < s2.length; i++) {
-        let newImg = tex[pathName + (pathName != "" ? "/" : "") + s2[i]];
+        let newImg = nde.tex[pathName + (pathName != "" ? "/" : "") + s2[i]];
         newImg.resize(size);
         newImg.ctx.putImageData(img.ctx.getImageData(size.x * i, 0, size.x, size.y), 0, 0);
         
@@ -41,7 +38,7 @@ function preloadTextures() {
   //Load all the audios
   for (let i = 0; i < audsPaths.length; i++) {
     let aud = new AudPool(nde.loadAud("assets/audios/" + audsPaths[i].path + ".mp3", {gain: audsPaths[i].gain}));
-    auds[audsPaths[i].path] = aud;
+    nde.auds[audsPaths[i].path] = aud;
   }
 
 
