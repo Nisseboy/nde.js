@@ -10,6 +10,7 @@ class Ob extends Serializable {
       this.transform = new Transform();
       this.components.unshift(this.transform);
     }
+    if (props.pos) this.transform.pos.from(props.pos);
 
     for (let c of this.components) {
       c.parent = this;
@@ -69,6 +70,10 @@ class Ob extends Serializable {
     ob.parent = undefined;
     return true;
   }
+  setParent(ob) {
+    if (this.parent) this.parent.removeChild(this);
+    ob.appendChild(this);
+  }
 
   remove() {
     if (this.parent) this.parent.removeChild(this);
@@ -98,14 +103,26 @@ class Ob extends Serializable {
     }
 
   
-    for (c of data.children) {
+    for (let c of data.children) {
       let c2 = cloneData(c);
       this.appendChild(c2);
-      c2.start();
-      c2.hasStarted = true;
     }
 
 
     return this;
+  }
+  strip() {
+    delete this.transform;
+    delete this.parent;
+    
+    for (let c of this.components) {
+      delete c.parent;
+      delete c.transform;
+      delete c.hasStarted;
+    }
+
+    for (let c of this.children) {
+      c.strip();
+    }
   }
 }

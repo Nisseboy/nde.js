@@ -53,6 +53,7 @@ files = [
   "src/ECS/components/Component.js",
   "src/ECS/components/Transform.js",
   "src/ECS/components/Sprite.js",
+  "src/ECS/components/TextRenderer.js",
   "src/ECS/Ob.js",
 
   "src/index.js",

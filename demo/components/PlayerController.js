@@ -43,11 +43,4 @@ class PlayerController extends Component {
     if (t instanceof RunningAnimation) t.speed = speed / this.speed;      
     
   }
-
-  from(data) {
-    super.from(data);
-
-    
-    return this;
-  }
 }

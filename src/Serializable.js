@@ -10,9 +10,13 @@ class Serializable {
   copy() {
     return cloneData(this);
   }
-
+  strip() {}
   serialize() {
-    return JSON.stringify(this);
+    let ob = this.copy();
+
+    ob.strip();
+
+    return JSON.stringify(ob);
   }
 }
 

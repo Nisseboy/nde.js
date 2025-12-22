@@ -11,6 +11,13 @@ class SceneGame extends Scene {
 
     this.player = EntityPlayer.copy();
     this.world.appendChild(this.player);
+
+    this.camHolder = new Ob({name: "Cam Holder"}, [new CamController()]);
+    this.world.appendChild(this.camHolder);
+
+    this.world.appendChild(new Ob({name: "text", pos: new Vec(0, -4)}, [
+      new TextRenderer("[w a s d shift], [arrow keys]", {}),
+    ]));
   }
 
   start() {
@@ -27,24 +34,10 @@ class SceneGame extends Scene {
   }
 
   update(dt) {  
-    /*  
-    let speedMult = nde.getKeyPressed("Run") ? 2 : 1;
-    this.player.move(new Vec(
-      nde.getKeyPressed("Move Right") - nde.getKeyPressed("Move Left"),
-      nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
-    ).normalize().mul(this.player.speed * speedMult), dt);
-
- */
-    this.cam.pos.addV(new Vec(
-      nde.getKeyPressed("Move Camera Right") - nde.getKeyPressed("Move Camera Left"),
-      nde.getKeyPressed("Move Camera Down") - nde.getKeyPressed("Move Camera Up"),
-    ).mul(dt * 5));
-    moveListener(this.cam.pos);
-    
-    
-   
-
     this.world.update(dt);
+
+    this.cam.pos.from(this.camHolder.transform.pos);
+    moveListener(this.cam.pos);
   }
 
   render() {
@@ -61,14 +54,6 @@ class SceneGame extends Scene {
 
     cam._(renderer, () => {
       this.world.render();
-
-
-
-      
-      renderer.set("fill", "rgb(255,255,255)");
-      renderer.set("textAlign", ["center", "middle"]);
-      renderer.set("font", "1px monospace");
-      renderer.text("[w a s d shift], [arrow keys]", new Vec(0, -4));
     });
   }
 }

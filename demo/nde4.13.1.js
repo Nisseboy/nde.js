@@ -17,9 +17,13 @@ class Serializable {
   copy() {
     return cloneData(this);
   }
-
+  strip() {}
   serialize() {
-    return JSON.stringify(this);
+    let ob = this.copy();
+
+    ob.strip();
+
+    return JSON.stringify(ob);
   }
 }
 
@@ -3627,6 +3631,40 @@ class Sprite extends Component {
 
 
 
+/* src/ECS/components/TextRenderer.js */
+class TextRenderer extends Component {
+  constructor(text = "", props = {}) {
+    super();
+
+    this.text = text;
+    this.style = {
+      fill: props.fill || "rgb(255,255,255)",
+      textAlign: props.textAlign || ["center", "middle"],
+      font: props.font || "1px monospace",
+    };
+  }
+
+  render() {
+    nde.renderer._(() => {
+      nde.renderer.setAll(this.style);
+      nde.renderer.text(this.text, this.transform.pos);
+    });
+  }
+
+  from(data) {
+    super.from(data);
+
+    this.text = data.text;
+    this.style = data.style;
+
+    return this;
+  }
+}
+
+
+
+
+
 /* src/ECS/Ob.js */
 class Ob extends Serializable {
   constructor(props = {}, components = [], children = []) {
@@ -3640,6 +3678,7 @@ class Ob extends Serializable {
       this.transform = new Transform();
       this.components.unshift(this.transform);
     }
+    if (props.pos) this.transform.pos.from(props.pos);
 
     for (let c of this.components) {
       c.parent = this;
@@ -3647,6 +3686,7 @@ class Ob extends Serializable {
     }
 
 
+    this.parent = undefined;
     this.children = children;
   }
 
@@ -3698,6 +3738,10 @@ class Ob extends Serializable {
     ob.parent = undefined;
     return true;
   }
+  setParent(ob) {
+    if (this.parent) this.parent.removeChild(this);
+    ob.appendChild(this);
+  }
 
   remove() {
     if (this.parent) this.parent.removeChild(this);
@@ -3727,15 +3771,27 @@ class Ob extends Serializable {
     }
 
   
-    for (c of data.children) {
+    for (let c of data.children) {
       let c2 = cloneData(c);
       this.appendChild(c2);
-      c2.start();
-      c2.hasStarted = true;
     }
 
 
     return this;
+  }
+  strip() {
+    delete this.transform;
+    delete this.parent;
+    
+    for (let c of this.components) {
+      delete c.parent;
+      delete c.transform;
+      delete c.hasStarted;
+    }
+
+    for (let c of this.children) {
+      c.strip();
+    }
   }
 }
 
