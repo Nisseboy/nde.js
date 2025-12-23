@@ -45,7 +45,7 @@ nde.on("afterSetup", () => {
     settings: new SceneSettings(),
   })
 
-  scenes.game.loadWorld(new Ob());
+  scenes.game.createWorld();
   nde.setScene(scenes.mainMenu);
 });
 

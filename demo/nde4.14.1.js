@@ -3867,7 +3867,9 @@ class Ob extends Serializable {
 
 
   update(dt) {
-    for (let c of this.components) {
+    for (let i = 0; i < this.components.length; i++) {
+      let c = this.components[i];
+
       if (!c.hasStarted) {
         c.start();
         c.hasStarted = true;
@@ -3876,17 +3878,17 @@ class Ob extends Serializable {
       c.update(dt);
     }
 
-    for (let c of this.children) {
-      c.update(dt);
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].update(dt);
     }
   }
   render() {
-    for (let c of this.components) {
-      c.render();
+    for (let i = 0; i < this.components.length; i++) {
+      this.components[i].render();
     }
 
-    for (let c of this.children) {
-      c.render();
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].render();
     }
   }
   
@@ -3898,6 +3900,15 @@ class Ob extends Serializable {
 
   getComponent(type) {
     return this.components.find(e=>{return e instanceof type});
+  }
+  getComponentRecursive(type) {
+    let comp = this.components.find(e=>{return e instanceof type});
+    if (comp) return comp;
+
+    for (let i = 0; i < this.children.length; i++) {
+      let comp = this.children[i].getComponentRecursive(type);
+      if (comp) return comp;
+    }
   }
   addComponent(component) {
     if (component.ob) {
@@ -3919,13 +3930,19 @@ class Ob extends Serializable {
   }
 
 
-  appendChild(ob) {
-    if (ob.parent) {
-      ob.parent.removeChild(ob);
-    }
+  appendChild(...obs) {
+    for (let i = 0; i < obs.length; i++) {
+      let ob = obs[i];
+      
+      if (ob.parent) {
+        ob.parent.removeChild(ob);
+      }
 
-    this.children.push(ob);
-    ob.parent = this;
+      this.children.push(ob);
+      ob.parent = this;
+    }
+    
+    
   }
   removeChild(ob) {
     let index = this.children.indexOf(ob);
@@ -3944,11 +3961,12 @@ class Ob extends Serializable {
   remove() {
     if (this.parent) this.parent.removeChild(this);
 
-    for (let c of this.components) {
-      c.remove();
+    for (let i = 0; i < this.components.length; i++) {
+      this.components[i].remove();
     }
-    for (let c of this.children) {
-      c.remove();
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].remove();
     }
   }
 
@@ -3964,14 +3982,15 @@ class Ob extends Serializable {
     for (let c of data.components) this.components.push(cloneData(c));
     this.transform = this.getComponent(Transform);
 
-    for (let c of this.components) {
+    for (let i = 0; i < this.components.length; i++) {
+      let c = this.components[i];
       c.ob = this;
       c.transform = this.transform;
     }
 
   
-    for (let c of data.children) {
-      let c2 = cloneData(c);
+    for (let i = 0; i < this.children.length; i++) {
+      let c2 = cloneData(this.children[i]);
       this.appendChild(c2);
     }
 
@@ -3982,12 +4001,12 @@ class Ob extends Serializable {
     delete this.transform;
     delete this.parent;
     
-    for (let c of this.components) {
-      c.strip();
+    for (let i = 0; i < this.components.length; i++) {
+      this.components[i].strip();
     }
 
-    for (let c of this.children) {
-      c.strip();
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].strip();
     }
   }
 }
@@ -4341,8 +4360,8 @@ class NDE {
    * @param {string} controlName
    * @return {string} keyCode
    */
-  getKeyCode(controlName) {
-    return this.controls[controlName].toLowerCase();
+  getKeyCodes(controlName) {
+    return this.controls[controlName].toLowerCase().split(",");
   }
   /**
    * Gets if keycode is equal to control keycode
@@ -4352,7 +4371,7 @@ class NDE {
    * @return {boolean} equal
    */
   getKeyEqual(keyCode, controlName) {
-    return keyCode.toLowerCase() == this.getKeyCode(controlName);
+    return this.getKeyCodes(controlName).includes(keyCode.toLowerCase);
   }
   /**
    * Gets if a key is pressed
@@ -4361,7 +4380,12 @@ class NDE {
    * @return {boolean} pressed
    */
   getKeyPressed(controlName) {
-    return !!this.pressed[this.getKeyCode(controlName)];
+    let keyCodes = this.getKeyCodes(controlName);
+
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (this.pressed[keyCodes[i]]) return true;
+    }
+    return false;
   }
   /**
    * Gets if a key got pressed this frame
@@ -4370,7 +4394,12 @@ class NDE {
    * @return {boolean} pressed
    */
   getKeyDown(controlName) {
-    return this.pressedFrame.includes(this.getKeyCode(controlName));
+    let keyCodes = this.getKeyCodes(controlName);
+
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (this.pressedFrame.includes(keyCodes[i])) return true;
+    }
+    return false;
   }
   /**
    * Gets if a key got released this frame
@@ -4379,7 +4408,12 @@ class NDE {
    * @return {boolean} pressed
    */
   getKeyUp(controlName) {
-    return this.releasedFrame.includes(this.getKeyCode(controlName));
+    let keyCodes = this.getKeyCodes(controlName);
+
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (this.releasedFrame.includes(keyCodes[i])) return true;
+    }
+    return false;
   }
 
 

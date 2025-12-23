@@ -342,8 +342,8 @@ class NDE {
    * @param {string} controlName
    * @return {string} keyCode
    */
-  getKeyCode(controlName) {
-    return this.controls[controlName].toLowerCase();
+  getKeyCodes(controlName) {
+    return this.controls[controlName].toLowerCase().split(",");
   }
   /**
    * Gets if keycode is equal to control keycode
@@ -353,7 +353,7 @@ class NDE {
    * @return {boolean} equal
    */
   getKeyEqual(keyCode, controlName) {
-    return keyCode.toLowerCase() == this.getKeyCode(controlName);
+    return this.getKeyCodes(controlName).includes(keyCode.toLowerCase);
   }
   /**
    * Gets if a key is pressed
@@ -362,7 +362,12 @@ class NDE {
    * @return {boolean} pressed
    */
   getKeyPressed(controlName) {
-    return !!this.pressed[this.getKeyCode(controlName)];
+    let keyCodes = this.getKeyCodes(controlName);
+
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (this.pressed[keyCodes[i]]) return true;
+    }
+    return false;
   }
   /**
    * Gets if a key got pressed this frame
@@ -371,7 +376,12 @@ class NDE {
    * @return {boolean} pressed
    */
   getKeyDown(controlName) {
-    return this.pressedFrame.includes(this.getKeyCode(controlName));
+    let keyCodes = this.getKeyCodes(controlName);
+
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (this.pressedFrame.includes(keyCodes[i])) return true;
+    }
+    return false;
   }
   /**
    * Gets if a key got released this frame
@@ -380,7 +390,12 @@ class NDE {
    * @return {boolean} pressed
    */
   getKeyUp(controlName) {
-    return this.releasedFrame.includes(this.getKeyCode(controlName));
+    let keyCodes = this.getKeyCodes(controlName);
+
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (this.releasedFrame.includes(keyCodes[i])) return true;
+    }
+    return false;
   }
 
 

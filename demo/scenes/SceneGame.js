@@ -6,18 +6,23 @@ class SceneGame extends Scene {
     this.cam.w = 16;
     this.cam.renderW = nde.w;
   }
+  createWorld() {
+    let w = new Ob({name: "Root"}, [], [
+      EntityPlayer.copy(),
+      new Ob({name: "Cam Holder"}, [new CamController()]),
+
+      new Ob({name: "text", pos: new Vec(0, -4)}, [
+        new TextRenderer("[w a s d shift], [arrow keys]", {}),
+      ])
+    ]);
+
+    this.loadWorld(w);
+  }
   loadWorld(w) {
     this.world = w;
 
-    this.player = EntityPlayer.copy();
-    this.world.appendChild(this.player);
-
-    this.camHolder = new Ob({name: "Cam Holder"}, [new CamController()]);
-    this.world.appendChild(this.camHolder);
-
-    this.world.appendChild(new Ob({name: "text", pos: new Vec(0, -4)}, [
-      new TextRenderer("[w a s d shift], [arrow keys]", {}),
-    ]));
+    this.player = this.world.getComponentRecursive(PlayerController).ob;
+    this.camHolder = this.world.getComponentRecursive(CamController).ob;
   }
 
   start() {

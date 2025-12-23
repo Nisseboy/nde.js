@@ -18,8 +18,7 @@ class PlayerController extends Component {
       )
     );
 
-
-    
+    //From "duck/walk" when thats the state
     this.on("step", (angle) => {
       this.transform.dir += angle;
       this.audioSource.play(nde.aud[`duck/step/${Math.floor(Math.random() * 4 + 1)}`]);
@@ -28,23 +27,20 @@ class PlayerController extends Component {
   
   update(dt) {
     let speedMult = nde.getKeyPressed("Run") ? 2 : 1;
+    this.sprite.speed = speedMult;   
 
-    let vel = new Vec(
+    this.vel.set(
       nde.getKeyPressed("Move Right") - nde.getKeyPressed("Move Left"),
       nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
-    ).normalize().mul(this.speed * speedMult);
+    ).normalize().mul(this.speed * speedMult * dt);
 
-
-    this.vel.from(vel);
-    let speed = this.vel.mag();
-    vel.mul(dt);
-
-    this.transform.pos.addV(vel);
+    this.transform.pos.addV(this.vel);
     
-    let diff = getDeltaAngle((Math.atan2(vel.y, vel.x)), this.transform.dir);
-    if (speed != 0) this.transform.dir -= diff * 20 * dt;
+    if (this.vel.sqMag() != 0) {
+      let diff = getDeltaAngle((Math.atan2(this.vel.y, this.vel.x)), this.transform.dir);
+      this.transform.dir -= diff * 20 * dt;
+    }
 
-    this.sprite.speed = speed / this.speed;   
     
   }
 }
