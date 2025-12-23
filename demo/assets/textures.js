@@ -38,7 +38,7 @@ function preloadTextures() {
   //Load all the audios
   for (let i = 0; i < audsPaths.length; i++) {
     let aud = new AudPool(nde.loadAud("assets/audios/" + audsPaths[i].path + ".mp3", {gain: audsPaths[i].gain}));
-    nde.auds[audsPaths[i].path] = aud;
+    nde.aud[audsPaths[i].path] = aud;
   }
 
 

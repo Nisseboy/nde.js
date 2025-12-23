@@ -41,13 +41,13 @@ class UISettingCollection extends UISettingBase {
         if (this.value[name] != undefined) c.setValue(this.value[name]);
         else this.value[name] = c.value;
   
-        c.registerEvent("input", value => {
+        c.on("input", value => {
           this.value[name] = value;
-          this.fireEvent("input", this.value);
+          this.fire("input", this.value);
         });
-        c.registerEvent("change", value => {
+        c.on("change", value => {
           this.value[name] = value;
-          this.fireEvent("change", this.value);
+          this.fire("change", this.value);
         });
       }
     }

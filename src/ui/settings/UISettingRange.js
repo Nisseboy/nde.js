@@ -41,13 +41,13 @@ class UISettingRange extends UISettingBase {
     this.funcA = e=>this.mousemove(e);
     this.funcB = e=>this.mouseup(e);
 
-    this.registerEvent("mousedown", e=>{
+    this.on("mousedown", e=>{
       this.forceHover = true;
 
       this.mousemove(e);
 
-      nde.registerEvent("mousemove", this.funcA);
-      nde.registerEvent("mouseup", this.funcB);
+      nde.on("mousemove", this.funcA);
+      nde.on("mouseup", this.funcB);
     });
   }
 
@@ -120,8 +120,8 @@ class UISettingRange extends UISettingBase {
   mouseup(e) {
     this.forceHover = false;
 
-    nde.unregisterEvent("mousemove", this.funcA);
-    nde.unregisterEvent("mouseup", this.funcB);
+    nde.off("mousemove", this.funcA);
+    nde.off("mouseup", this.funcB);
 
     this.fireChange();
   }

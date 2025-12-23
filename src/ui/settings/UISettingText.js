@@ -55,10 +55,10 @@ class UISettingText extends UISettingBase {
     this.mousemoveGlobalFunc = e => {this.mousemoveGlobal(e)}
     this.mouseupGlobalFunc = e => {this.mouseupGlobal(e)}
     this.keydownGlobalFunc = e => {return this.keydownGlobal(e)}
-    this.registerEvent("mousedown", e=>{
+    this.on("mousedown", e=>{
       if (!this.focused) {
-        nde.registerEvent("mousedown", this.mousedownGlobalFunc, true);
-        nde.registerEvent("keydown", this.keydownGlobalFunc, true);
+        nde.on("mousedown", this.mousedownGlobalFunc, true);
+        nde.on("keydown", this.keydownGlobalFunc, true);
       }
       this.focused = true;
 
@@ -97,8 +97,8 @@ class UISettingText extends UISettingBase {
       if (activeSettingText && activeSettingText != this) activeSettingText.endFocus();
       activeSettingText = this;
       this.forceHover = true;
-      nde.registerEvent("mousemove", this.mousemoveGlobalFunc, true);
-      nde.registerEvent("mouseup", this.mouseupGlobalFunc, true);
+      nde.on("mousemove", this.mousemoveGlobalFunc, true);
+      nde.on("mouseup", this.mouseupGlobalFunc, true);
     });
   }
   
@@ -130,8 +130,8 @@ class UISettingText extends UISettingBase {
   }
   mouseupGlobal(e) {
     this.forceHover = false;
-    nde.unregisterEvent("mousemove", this.mousemoveGlobalFunc);
-    nde.unregisterEvent("mouseup", this.mouseupGlobalFunc);
+    nde.off("mousemove", this.mousemoveGlobalFunc);
+    nde.off("mouseup", this.mouseupGlobalFunc);
   }
 
   keydownGlobal(e) {
@@ -345,8 +345,8 @@ class UISettingText extends UISettingBase {
   }
 
   endFocus() {
-    nde.unregisterEvent("mousedown", this.mousedownGlobalFunc);
-    nde.unregisterEvent("keydown", this.keydownGlobalFunc);
+    nde.off("mousedown", this.mousedownGlobalFunc);
+    nde.off("keydown", this.keydownGlobalFunc);
     this.focused = false;
     this.fireChange();
   }

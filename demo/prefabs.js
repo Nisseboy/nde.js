@@ -6,4 +6,5 @@ const EntityPlayer = new Ob({
 }, [
   new Sprite("duck/1"),
   new PlayerController(),
+  new AudioSource(),
 ]);

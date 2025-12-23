@@ -33,12 +33,12 @@ nde.controls = {
 };
 
 
-nde.registerEvent("keydown", e => {
+nde.on("keydown", e => {
   if (nde.getKeyEqual(e.key,"Debug Mode")) nde.debug = !nde.debug;
   if (nde.getKeyEqual(e.key,"UI Debug Mode")) nde.uiDebug = !nde.uiDebug;
 });
 
-nde.registerEvent("afterSetup", () => {
+nde.on("afterSetup", () => {
   Object.assign(scenes, {
     game: new SceneGame(), 
     mainMenu: new SceneMainMenu(),
@@ -49,12 +49,12 @@ nde.registerEvent("afterSetup", () => {
   nde.setScene(scenes.mainMenu);
 });
 
-nde.registerEvent("update", dt => {
+nde.on("update", dt => {
   renderer.set("font", "16px monospace");
   renderer.set("imageSmoothing", false);
 });
 
-nde.registerEvent("resize", e => {
+nde.on("resize", e => {
   return nde.w * settings.renderResolution / 100;
   //return 432; //new width
 });

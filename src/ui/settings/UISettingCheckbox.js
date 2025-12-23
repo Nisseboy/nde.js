@@ -17,11 +17,11 @@ class UISettingCheckbox extends UISettingBase {
     
 
     this.funcA = e=>this.mouseupGlobal(e);
-    this.registerEvent("mouseup", e=>{this.mouseupLocal(e)});
-    this.registerEvent("mousedown", e=>{
+    this.on("mouseup", e=>{this.mouseupLocal(e)});
+    this.on("mousedown", e=>{
       this.forceHover = true;
 
-      nde.registerEvent("mouseup", this.funcA);
+      nde.on("mouseup", this.funcA);
     });
 
     
@@ -61,6 +61,6 @@ class UISettingCheckbox extends UISettingBase {
   mouseupGlobal(e) {
     this.forceHover = false;
 
-    nde.unregisterEvent("mouseup", this.funcA);
+    nde.off("mouseup", this.funcA);
   }
 }

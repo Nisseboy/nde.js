@@ -7,6 +7,6 @@ class AnimationFrameEvent extends AnimationFrameBase {
   }
 
   step(runningAnimation) {
-    runningAnimation.fireEvent(this.eventName, ...this.eventArgs);
+    runningAnimation.fire(this.eventName, ...this.eventArgs);
   }
 }

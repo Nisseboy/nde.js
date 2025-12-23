@@ -5,7 +5,7 @@ class StateMachine {
     this.lastChoice = undefined;
     this.result = undefined;
 
-    this.events = {};
+    this.e = new EventHandler();
   }
 
   choose() {
@@ -18,7 +18,7 @@ class StateMachine {
 
     if (choice != this.lastChoice) {    
       this.parseResult(choice.result);
-      this.fireEvent("change", this.result);
+      this.fire("change", this.result);
       this.lastChoice = choice;
     }
 
@@ -32,28 +32,7 @@ class StateMachine {
 
   
 
-  registerEvent(eventName, func) {
-    if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
-  }
-  unregisterEvent(eventName, func) {
-    let events = this.events[eventName];
-    if (!events) return false;
-
-    let index = events.indexOf(func);
-    if (index == -1) return false;
-
-    events.splice(index, 1);
-    return;
-  }
-  fireEvent(eventName, ...args) {
-    let events = this.events[eventName];
-    if (events) {
-      for (let e of events) {
-        if (e(...args) == false) return false;
-      }
-    }
-      
-    return true;
-  }
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 }

@@ -41,7 +41,8 @@ class UIBase {
     this.uiRoot = undefined;
 
     this.children = props.children || [];
-    this.events = props.events || {};
+    this.e = new EventHandler();
+    if (props.events) this.e.events = props.events;
 
     this.interactable = false;
     
@@ -59,23 +60,9 @@ class UIBase {
 
   }
 
-  registerEvent(eventName, func) {
-    if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
-  }
-  unregisterEvent(eventName, func) {
-    let events = this.events[eventName];
-    if (!events) return;
-    let index = events.indexOf(func);
-    if (index == -1) return;
-
-    events.splice(index, 1);
-  }
-  fireEvent(eventName, ...args) {    
-    let events = this.events[eventName];
-    if (events) 
-      for (let e of events) e(...args);
-  }
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 
 
   fillStyle(style) {

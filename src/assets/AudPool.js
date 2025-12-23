@@ -34,5 +34,7 @@ function moveListener(pos) {
 function playAudio(audPool, pos) {
   let aud = audPool.get();
   aud.setPosition(pos.x, 1, pos.y);
-  aud.play();
+  aud.gain = 1;
+  aud.play();  
+  return aud;
 }

@@ -68,6 +68,34 @@ class Vec extends Serializable {
     this.w = w;
   }
 
+  get r() {
+    return this.x;
+  }
+  set r(value) {
+    this.x = value;
+  }
+
+  get g() {
+    return this.y;
+  }
+  set g(value) {
+    this.y = value;
+  }
+
+  get b() {
+    return this.z;
+  }
+  set b(value) {
+    this.z = value;
+  }
+
+  get a() {
+    return this.w;
+  }
+  set a(value) {
+    this.w = value;
+  }
+
   /**
    * Creates a copy of this vector
    * 
@@ -719,6 +747,52 @@ class Scene {
 
 
 
+/* src/EventHandler.js */
+class EventHandler {
+  constructor() {
+    this.events = {};
+
+    this.listeners = [];
+  }
+
+  on(eventName, func, isPriority = false) {
+    if (!this.events[eventName]) this.events[eventName] = [];
+    if (isPriority) {
+      this.events[eventName].unshift(func);
+    } else {
+      this.events[eventName].push(func);
+    }
+  }
+  off(eventName, func) {
+    let events = this.events[eventName];
+    if (!events) return false;
+
+    let index = events.indexOf(func);
+    if (index == -1) return false;
+
+    events.splice(index, 1);
+    return true;
+  }
+  fire(eventName, ...args) {
+    let events = this.events[eventName];
+    if (events) {
+      for (let i = 0; i < events.length; i++) {
+        if (events[i](...args) == false) return false;
+      }
+    }
+    
+    for (let i = 0; i < this.listeners.length; i++) {
+      this.listeners[i].fire(eventName, ...args);
+    }
+      
+    return true;
+  }
+}
+
+
+
+
+
 /* src/assets/Asset.js */
 class Asset {
   constructor() {
@@ -953,7 +1027,7 @@ class Aud extends Asset {
       return;
     } else {
       
-      nde.registerEvent("audioContextStarted", () => {
+      nde.on("audioContextStarted", () => {
         this.createNodes();
       });
     }
@@ -976,8 +1050,8 @@ class Aud extends Asset {
     const newAud = new Aud();
     newAud.path = this.path;
     newAud.audioBuffer = this.audioBuffer;
-    newAud.setGain(this.gainNode.gain.value);
     newAud.baseGain = this.baseGain;
+    newAud.gain = this.gain;
     return newAud;
   }
 
@@ -987,8 +1061,11 @@ class Aud extends Asset {
     this.panner.positionZ.value = z;
   }
 
-  setGain(gain) {
-    this.gainNode.gain.value = this.baseGain * gain;    
+  set gain(value) {
+    this.gainNode.gain.value = this.baseGain * value;    
+  }
+  get gain() {
+    return this.gainNode.gain.value / this.baseGain;    
   }
 
   play() {
@@ -1061,7 +1138,9 @@ function moveListener(pos) {
 function playAudio(audPool, pos) {
   let aud = audPool.get();
   aud.setPosition(pos.x, 1, pos.y);
-  aud.play();
+  aud.gain = 1;
+  aud.play();  
+  return aud;
 }
 
 
@@ -1109,7 +1188,7 @@ class AnimationFrameEvent extends AnimationFrameBase {
   }
 
   step(runningAnimation) {
-    runningAnimation.fireEvent(this.eventName, ...this.eventArgs);
+    runningAnimation.fire(this.eventName, ...this.eventArgs);
   }
 }
 
@@ -1163,11 +1242,13 @@ class RunningAnimation extends Renderable {
     this.duration = animation.duration;
     this.speed = animation.speed;
 
-    this.events = props.events || {}
+    this.e = new EventHandler();
+    if (props.events) this.e.events = props.events;
+    if (props.listeners) this.e.listeners = props.listeners;
     
     this.img = undefined;
 
-    this.timer = new TimerTime(this.duration, ()=>{this.step()});
+    this.timer = new TimerTime(100000000, ()=>{this.step()});
     this.lastTimerElapsedTime = 0;
     this.elapsedTime = 0;
     this.executedFrames = 0;
@@ -1177,49 +1258,27 @@ class RunningAnimation extends Renderable {
   }
 
   step() {    
+    
     this.elapsedTime += (this.timer.elapsedTime - this.lastTimerElapsedTime) * this.speed;
     this.lastTimerElapsedTime = this.timer.elapsedTime;
 
     while (this.executedTime <= this.elapsedTime) {
       let frame = this.frames[this.executedFrames];
       if (!frame) {
-        this.fireEvent("done");
+        this.fire("done");
         return;
       }
 
       this.executedTime += frame.duration * this.dt;
       this.executedFrames++;
 
-      frame.step(this);      
+      frame.step(this);            
     }
   }
 
-  registerEvent(eventName, func) {
-    if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
-  }
-  unregisterEvent(eventName, func) {
-    let events = this.events[eventName];
-    if (!events) return false;
-
-    let index = events.indexOf(func);
-    if (index == -1) return false;
-
-    events.splice(index, 1);
-    return;
-  }
-  fireEvent(eventName, ...args) {
-    let events = this.events[eventName];
-    if (events) {
-      for (let e of events) {
-        if (e(...args) == false) return false;
-      }
-    }
-
-    if (eventName != "*") this.fireEvent("*", eventName, ...args);
-      
-    return true;
-  }
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 
 
   getImg() {    
@@ -1302,7 +1361,7 @@ class StateMachine {
     this.lastChoice = undefined;
     this.result = undefined;
 
-    this.events = {};
+    this.e = new EventHandler();
   }
 
   choose() {
@@ -1315,7 +1374,7 @@ class StateMachine {
 
     if (choice != this.lastChoice) {    
       this.parseResult(choice.result);
-      this.fireEvent("change", this.result);
+      this.fire("change", this.result);
       this.lastChoice = choice;
     }
 
@@ -1329,30 +1388,9 @@ class StateMachine {
 
   
 
-  registerEvent(eventName, func) {
-    if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
-  }
-  unregisterEvent(eventName, func) {
-    let events = this.events[eventName];
-    if (!events) return false;
-
-    let index = events.indexOf(func);
-    if (index == -1) return false;
-
-    events.splice(index, 1);
-    return;
-  }
-  fireEvent(eventName, ...args) {
-    let events = this.events[eventName];
-    if (events) {
-      for (let e of events) {
-        if (e(...args) == false) return false;
-      }
-    }
-      
-    return true;
-  }
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 }
 
 
@@ -1363,13 +1401,26 @@ class StateMachine {
 class StateMachineImg extends StateMachine {
   constructor(rootNode) {
     super(rootNode);
+
+    this._speed = 1;
+  }
+
+  set speed(value) {
+    if (this.result && this.result instanceof RunningAnimation) {
+      this.result.speed = value;
+    }
+    this._speed = value;
+  }
+  get speed() {
+    return this._speed;
   }
 
   parseResult(result) {
     if (this.result instanceof RunningAnimation) this.result.stop();
 
     if (result instanceof Animation) {  
-      this.result = result.start({events: {"*": [(a, b) => {this.fireEvent(a, b);}]}});
+      this.result = result.start({listeners: [this.e]});
+      this.result.speed *= this.speed;
     } else {
       this.result = result;
     }
@@ -1426,7 +1477,8 @@ class UIBase {
     this.uiRoot = undefined;
 
     this.children = props.children || [];
-    this.events = props.events || {};
+    this.e = new EventHandler();
+    if (props.events) this.e.events = props.events;
 
     this.interactable = false;
     
@@ -1444,23 +1496,9 @@ class UIBase {
 
   }
 
-  registerEvent(eventName, func) {
-    if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
-  }
-  unregisterEvent(eventName, func) {
-    let events = this.events[eventName];
-    if (!events) return;
-    let index = events.indexOf(func);
-    if (index == -1) return;
-
-    events.splice(index, 1);
-  }
-  fireEvent(eventName, ...args) {    
-    let events = this.events[eventName];
-    if (events) 
-      for (let e of events) e(...args);
-  }
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 
 
   fillStyle(style) {
@@ -1795,7 +1833,7 @@ class UIRoot extends UIBase {
     this.growSizePass();
     this.positionPass();
 
-    this.fireEvent("init");
+    this.fire("init");
   }
 
   renderUI() {
@@ -2114,10 +2152,10 @@ class UISettingBase extends UIBase {
   }
 
   fireInput() {
-    this.fireEvent("input", this.value);
+    this.fire("input", this.value);
   }
   fireChange() {
-    this.fireEvent("change", this.value);
+    this.fire("change", this.value);
   }
 }
 
@@ -2169,13 +2207,13 @@ class UISettingCollection extends UISettingBase {
         if (this.value[name] != undefined) c.setValue(this.value[name]);
         else this.value[name] = c.value;
   
-        c.registerEvent("input", value => {
+        c.on("input", value => {
           this.value[name] = value;
-          this.fireEvent("input", this.value);
+          this.fire("input", this.value);
         });
-        c.registerEvent("change", value => {
+        c.on("change", value => {
           this.value[name] = value;
-          this.fireEvent("change", this.value);
+          this.fire("change", this.value);
         });
       }
     }
@@ -2251,8 +2289,8 @@ class UISettingChoice extends UISettingBase {
 
           this.updateColors();
           
-          this.fireEvent("input", this.value);
-          this.fireEvent("change", this.value);
+          this.fire("input", this.value);
+          this.fire("change", this.value);
         }]},
       });
 
@@ -2372,8 +2410,8 @@ class UISettingDropdown extends UISettingBase {
 
           this.switchOpen();
           
-          this.fireEvent("input", this.value);
-          this.fireEvent("change", this.value);
+          this.fire("input", this.value);
+          this.fire("change", this.value);
         }]},
       });
 
@@ -2450,11 +2488,11 @@ class UISettingCheckbox extends UISettingBase {
     
 
     this.funcA = e=>this.mouseupGlobal(e);
-    this.registerEvent("mouseup", e=>{this.mouseupLocal(e)});
-    this.registerEvent("mousedown", e=>{
+    this.on("mouseup", e=>{this.mouseupLocal(e)});
+    this.on("mousedown", e=>{
       this.forceHover = true;
 
-      nde.registerEvent("mouseup", this.funcA);
+      nde.on("mouseup", this.funcA);
     });
 
     
@@ -2494,7 +2532,7 @@ class UISettingCheckbox extends UISettingBase {
   mouseupGlobal(e) {
     this.forceHover = false;
 
-    nde.unregisterEvent("mouseup", this.funcA);
+    nde.off("mouseup", this.funcA);
   }
 }
 
@@ -2546,13 +2584,13 @@ class UISettingRange extends UISettingBase {
     this.funcA = e=>this.mousemove(e);
     this.funcB = e=>this.mouseup(e);
 
-    this.registerEvent("mousedown", e=>{
+    this.on("mousedown", e=>{
       this.forceHover = true;
 
       this.mousemove(e);
 
-      nde.registerEvent("mousemove", this.funcA);
-      nde.registerEvent("mouseup", this.funcB);
+      nde.on("mousemove", this.funcA);
+      nde.on("mouseup", this.funcB);
     });
   }
 
@@ -2625,8 +2663,8 @@ class UISettingRange extends UISettingBase {
   mouseup(e) {
     this.forceHover = false;
 
-    nde.unregisterEvent("mousemove", this.funcA);
-    nde.unregisterEvent("mouseup", this.funcB);
+    nde.off("mousemove", this.funcA);
+    nde.off("mouseup", this.funcB);
 
     this.fireChange();
   }
@@ -2714,10 +2752,10 @@ class UISettingText extends UISettingBase {
     this.mousemoveGlobalFunc = e => {this.mousemoveGlobal(e)}
     this.mouseupGlobalFunc = e => {this.mouseupGlobal(e)}
     this.keydownGlobalFunc = e => {return this.keydownGlobal(e)}
-    this.registerEvent("mousedown", e=>{
+    this.on("mousedown", e=>{
       if (!this.focused) {
-        nde.registerEvent("mousedown", this.mousedownGlobalFunc, true);
-        nde.registerEvent("keydown", this.keydownGlobalFunc, true);
+        nde.on("mousedown", this.mousedownGlobalFunc, true);
+        nde.on("keydown", this.keydownGlobalFunc, true);
       }
       this.focused = true;
 
@@ -2756,8 +2794,8 @@ class UISettingText extends UISettingBase {
       if (activeSettingText && activeSettingText != this) activeSettingText.endFocus();
       activeSettingText = this;
       this.forceHover = true;
-      nde.registerEvent("mousemove", this.mousemoveGlobalFunc, true);
-      nde.registerEvent("mouseup", this.mouseupGlobalFunc, true);
+      nde.on("mousemove", this.mousemoveGlobalFunc, true);
+      nde.on("mouseup", this.mouseupGlobalFunc, true);
     });
   }
   
@@ -2789,8 +2827,8 @@ class UISettingText extends UISettingBase {
   }
   mouseupGlobal(e) {
     this.forceHover = false;
-    nde.unregisterEvent("mousemove", this.mousemoveGlobalFunc);
-    nde.unregisterEvent("mouseup", this.mouseupGlobalFunc);
+    nde.off("mousemove", this.mousemoveGlobalFunc);
+    nde.off("mouseup", this.mouseupGlobalFunc);
   }
 
   keydownGlobal(e) {
@@ -3004,8 +3042,8 @@ class UISettingText extends UISettingBase {
   }
 
   endFocus() {
-    nde.unregisterEvent("mousedown", this.mousedownGlobalFunc);
-    nde.unregisterEvent("keydown", this.keydownGlobalFunc);
+    nde.off("mousedown", this.mousedownGlobalFunc);
+    nde.off("keydown", this.keydownGlobalFunc);
     this.focused = false;
     this.fireChange();
   }
@@ -3388,13 +3426,13 @@ class TransitionBase {
 
     this.timer = timer;
 
-    nde.fireEvent("render");
+    nde.fire("render");
     this.oldImg.ctx.imageSmoothingEnabled = false;
     this.oldImg.image(nde.renderer, vecZero, this.oldImg.size);
 
     nde.setScene(newScene);
     newScene.update(1/60);
-    nde.fireEvent("render");
+    nde.fire("render");
     this.newImg.ctx.imageSmoothingEnabled = false;
     this.newImg.image(nde.renderer, vecZero, this.newImg.size);
   }
@@ -3536,20 +3574,23 @@ class Component extends Serializable {
 
     this.hasStarted = false;
 
-    this.parent = undefined;
+    this.ob = undefined;
     this.transform = undefined;
   }
 
 
   start() {}
+  remove() {}
   update(dt) {}
   render() {}
 
-  remove() {}
 
 
+  on(...args) {return this.ob.on(...args)}
+  off(...args) {return this.ob.off(...args)}
+  fire(...args) {return this.ob.fire(...args)}
   getComponent(type) {
-    return this.parent.getComponent(type);
+    return this.ob.getComponent(type);
   }
 
 
@@ -3557,6 +3598,11 @@ class Component extends Serializable {
     super.from(data);
 
     return this;
+  }
+  strip() {
+    delete this.ob;
+    delete this.transform;
+    delete this.hasStarted;
   }
 }
 
@@ -3598,32 +3644,91 @@ class Sprite extends Component {
   constructor(texOrTexture) {
     super();
 
-    if (typeof texOrTexture == "string") {
-      this.tex = texOrTexture;
-    } else {
-      this.tex = Object.keys(nde.tex).find(key => nde.tex[key] == texOrTexture);
-      if (this.tex == undefined) {
-        this.tex = Math.floor(Math.random() * 100000) + "";
-        nde.tex[this.tex] = texOrTexture;
-      }
+    this._tex = texOrTexture;
+
+    this.texture = undefined;    
+
+    //For animations/state machines
+    this.animation = undefined;
+    this._speed = 1;
+    this.stateMachineImg = undefined;
+  }
+
+  set tex(value) {
+    this._tex = value;
+    
+    this.texture = undefined;
+    this.animation = undefined;
+    this.stateMachineImg = undefined;
+  }
+  get tex() {
+    return this._tex;
+  }
+  set speed(value) {
+    if (this.stateMachineImg) {
+      this.stateMachineImg.speed = value;
+
+    } else if (this.texture instanceof RunningAnimation) {
+      this.texture.speed = value;      
+      
     }
+
+    this._speed = value;
+  }
+  get speed() {
+    return this._speed;
   }
 
   render() {
+    if (!this.texture) {
+      this.tex = nde.getTex(this.tex);
+      let texture = nde.tex[this.tex];
+
+      if (texture instanceof Animation) {
+        this.animation = texture;
+        this.texture = this.animation.start({listeners: [this.e]});
+        this.texture.speed *= this.speed;        
+
+      } else if (texture instanceof RunningAnimation) {
+        this.texture = texture;
+        this.texture.speed *= this.speed;        
+        this.texture.e.listeners.push(this.ob.e);
+
+      } else if (texture instanceof StateMachineImg) {
+        this.stateMachineImg = texture;
+        this.stateMachineImg.speed = this.speed;
+        this.stateMachineImg.e.listeners.push(this.ob.e);
+
+      } else {
+        this.texture = texture;
+      }
+    }
+
+    if (this.stateMachineImg) {
+      this.texture = this.stateMachineImg.choose();
+    }
+
     nde.renderer._(() => {
       nde.renderer.translate(this.transform.pos);
       if (this.transform.dir) nde.renderer.rotate(this.transform.dir);
 
-      nde.renderer.image(nde.tex[this.tex], this.transform.size._mul(-0.5), this.transform.size);
+      nde.renderer.image(this.texture, this.transform.size._mul(-0.5), this.transform.size);
     });
   }
 
   from(data) {
     super.from(data);
 
-    this.tex = data.tex;
+    this.tex = data._tex;
+    this.speed = data._speed;
 
     return this;
+  }
+  strip() {
+    super.strip();
+    delete this._texture;
+    delete this.animation;
+    delete this.stateMachineImg;
   }
 }
 
@@ -3633,14 +3738,14 @@ class Sprite extends Component {
 
 /* src/ECS/components/TextRenderer.js */
 class TextRenderer extends Component {
-  constructor(text = "", props = {}) {
+  constructor(text = "", style = {}) {
     super();
 
     this.text = text;
     this.style = {
-      fill: props.fill || "rgb(255,255,255)",
-      textAlign: props.textAlign || ["center", "middle"],
-      font: props.font || "1px monospace",
+      fill: style.fill || "rgb(255,255,255)",
+      textAlign: style.textAlign || ["center", "middle"],
+      font: style.font || "1px monospace",
     };
   }
 
@@ -3656,6 +3761,72 @@ class TextRenderer extends Component {
 
     this.text = data.text;
     this.style = data.style;
+
+    return this;
+  }
+}
+
+
+
+
+
+/* src/ECS/components/AudioSource.js */
+class AudioSource extends Component {
+  constructor(props = {}) {
+    super();
+
+    this._gain = undefined;
+    this.playing = [];
+
+    this.gain = props.gain != undefined ? props.gain : 1;
+  }
+
+  set gain(value) {
+    this._gain = value;
+    for (let i = 0; i < this.playing.length; i++) {
+      this.playing[i].gain = value;
+    }
+  }
+  get gain() {
+    return this._gain;
+  }
+
+
+  start() {
+    this.lastPos = this.transform.pos.copy();
+  }
+
+
+  update() {
+    let hasMoved = !this.transform.pos.isEqualTo(this.lastPos);
+    this.lastPos.from(this.transform.pos);
+
+    for (let i = 0; i < this.playing.length; i++) {
+      let aud = this.playing[i];
+      if (!aud.isPlaying) {
+        this.playing.splice(i, 1);
+        i--;
+        continue;
+      }
+
+      if (hasMoved) {
+        aud.setPosition(this.transform.pos.x, 1, this.transform.pos.y);
+      }
+    }
+
+  }
+
+
+  play(audPool) {
+    let aud = playAudio(audPool, this.transform.pos);
+    aud.gain = this.gain;
+    this.playing.push(aud);
+  }
+
+  from(data) {
+    super.from(data);
+
+    this.gain = data._gain;
 
     return this;
   }
@@ -3681,13 +3852,16 @@ class Ob extends Serializable {
     if (props.pos) this.transform.pos.from(props.pos);
 
     for (let c of this.components) {
-      c.parent = this;
+      c.ob = this;
       c.transform = this.transform;
     }
 
 
     this.parent = undefined;
     this.children = children;
+
+
+    this.e = new EventHandler();
   }
 
 
@@ -3715,10 +3889,33 @@ class Ob extends Serializable {
       c.render();
     }
   }
+  
+  
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 
 
   getComponent(type) {
     return this.components.find(e=>{return e instanceof type});
+  }
+  addComponent(component) {
+    if (component.ob) {
+      component.ob.removeComponent(component);
+    }
+
+    this.components.push(component);
+    component.ob = this;
+    component.transform = this.transform;
+  }
+  removeComponent(component) {
+    let index = this.components.indexOf(component);
+    if (index == -1) return false;
+
+    this.component.splice(index, 1);
+    component.ob = undefined;
+    component.transform = undefined;
+    return true;
   }
 
 
@@ -3743,6 +3940,7 @@ class Ob extends Serializable {
     ob.appendChild(this);
   }
 
+
   remove() {
     if (this.parent) this.parent.removeChild(this);
 
@@ -3753,6 +3951,7 @@ class Ob extends Serializable {
       c.remove();
     }
   }
+
 
 
   from(data) {
@@ -3766,7 +3965,7 @@ class Ob extends Serializable {
     this.transform = this.getComponent(Transform);
 
     for (let c of this.components) {
-      c.parent = this;
+      c.ob = this;
       c.transform = this.transform;
     }
 
@@ -3784,9 +3983,7 @@ class Ob extends Serializable {
     delete this.parent;
     
     for (let c of this.components) {
-      delete c.parent;
-      delete c.transform;
-      delete c.hasStarted;
+      c.strip();
     }
 
     for (let c of this.children) {
@@ -3852,8 +4049,13 @@ afterScene
 
 use these to handle key input:
 getKeyCode: Get keycode from control name
-getKeyPressed: Get if key corresponding to control name is pressed
 getKeyEqual: Get if keycode is same as controlName
+
+getKeyPressed: Get if key corresponding to control name is pressed
+getKeyDown: Get if key corresponding to control name was pressed this frame
+getKeyUp: Get if key corresponding to control name was released this frame
+
+.scrolled: how far has scrolled from last frame
 
 
 
@@ -3900,16 +4102,19 @@ class NDE {
     this.transition = undefined;
     this.renderer = new Img(vecOne);
 
-    this.events = {};
+    this.e = new EventHandler();
 
     this.tex = {};
-    this.auds = {};
+    this.aud = {};
 
     this.mouse = new Vec(0, 0);
     this.mainElemBoundingBox = new Vec(0, 0, 1, 1);
 
     this.controls = {};
     this.pressed = {};
+    this.pressedFrame = [];
+    this.releasedFrame = [];
+    this.scrolled = 0;
 
     this.timers = [];
 
@@ -3936,7 +4141,7 @@ class NDE {
       if (this.unloadedAssets.length == 0) {        
         clearInterval(interval);
         
-        this.fireEvent("beforeSetup");
+        this.fire("beforeSetup");
 
         this.mainElem.appendChild(this.mainImg.canvas);
         this.resize();
@@ -3945,7 +4150,7 @@ class NDE {
         this.renderer.set("textAlign", ["left", "top"]);
         this.renderer.set("imageSmoothing", false);
         
-        this.fireEvent("afterSetup");
+        this.fire("afterSetup");
 
 
         this.setupHandlers();
@@ -3973,34 +4178,38 @@ class NDE {
     document.addEventListener("keydown", e => {
       if (!audioContext.state == "running") {
         audioContext.resume();
-        this.fireEvent("audioContextStarted");
+        this.fire("audioContextStarted");
       }
-
-      if (this.debug) console.log(e.key);
 
       
-      if (this.hoveredUIElement && !this.transition) {
-        if (this.hoveredUIElement.fireEvent("keydown", e) == false) return;
-        if (this.hoveredUIElement.fireEvent("inputdown", e.key.toLowerCase(), e) == false) return;
+      if (this.hoveredUIElement) {
+        if (this.hoveredUIElement.fire("keydown", e) == false) return;
+        if (this.hoveredUIElement.fire("inputdown", e.key.toLowerCase(), e) == false) return;
       }
     
-      if (this.fireEvent("keydown", e))
-        if (this.fireEvent("inputdown", e.key.toLowerCase(), e))
-          this.pressed[e.key.toLowerCase()] = true;
+      if (!this.pressed[e.key.toLowerCase()]) {
+        if (this.debug) console.log(e.key);
+
+        if (!this.fire("keydown", e)) return;
+        if (!this.fire("inputdown", e.key.toLowerCase(), e)) return;
+
+        this.pressed[e.key.toLowerCase()] = true;
+        this.pressedFrame.push(e.key.toLowerCase());
+      }
     
       
     });
     document.addEventListener("keyup", e => {
-      if (this.hoveredUIElement && !this.transition) {
-        if (this.hoveredUIElement.fireEvent("keyup", e) == false) return;
-        if (this.hoveredUIElement.fireEvent("inputup", e.key.toLowerCase(), e) == false) return;
+      delete this.pressed[e.key.toLowerCase()];
+      this.releasedFrame.push(e.key.toLowerCase());
+
+      if (this.hoveredUIElement) {
+        this.hoveredUIElement.fire("keyup", e);
+        this.hoveredUIElement.fire("inputup", e.key.toLowerCase(), e);
       }
 
-      this.fireEvent("keyup", e);
-      this.fireEvent("inputup", e.key.toLowerCase(), e);
-
-      delete this.pressed[e.key.toLowerCase()];
-    
+      this.fire("keyup", e);
+      this.fire("inputup", e.key.toLowerCase(), e);
     });
     
     document.addEventListener("mousemove", e => {
@@ -4009,50 +4218,55 @@ class NDE {
 
 
       if (this.hoveredUIElement) {
-        if (!this.transition) this.hoveredUIElement.fireEvent("mousemove", e);
+        this.hoveredUIElement.fire("mousemove", e);
       }
       
-      this.fireEvent("mousemove", e);
+      this.fire("mousemove", e);
     });
     document.addEventListener("mousedown", e => {
       if (audioContext.state != "running") {
         audioContext.resume();
-        this.fireEvent("audioContextStarted");
+        this.fire("audioContextStarted");
       }
 
 
       if (this.hoveredUIElement) {
-        if (!this.transition) this.hoveredUIElement.fireEvent("mousedown", e);
-        if (!this.transition) this.hoveredUIElement.fireEvent("inputdown", "mouse" + e.button, e);
+        if (this.hoveredUIElement.fire("mousedown", e) == false) return;
+        this.hoveredUIElement.fire("inputdown", "mouse" + e.button, e);
         return;
       }
     
-      if (this.debug) console.log("mouse" + e.button);
 
-      this.pressed["mouse" + e.button] = true;
-      this.fireEvent("mousedown", e);
-      this.fireEvent("inputdown", "mouse" + e.button, e);
+      if (!this.pressed["mouse" + e.button]) {
+        if (this.debug) console.log("mouse" + e.button);
+
+        if (!this.fire("mousedown", e)) return;
+        if (!this.fire("inputdown", "mouse" + e.button, e)) return;
+
+        this.pressed["mouse" + e.button] = true;
+        this.pressedFrame.push("mouse" + e.button);
+      }
     });
     document.addEventListener("mouseup", e => {
       delete this.pressed["mouse" + e.button];
+      this.releasedFrame.push("mouse" + e.button);
 
       if (this.hoveredUIElement) {
-        if (!this.transition) this.hoveredUIElement.fireEvent("mouseup", e);
-        if (!this.transition) this.hoveredUIElement.fireEvent("inputup", "mouse" + e.button, e);
+        this.hoveredUIElement.fire("mouseup", e);
+        this.hoveredUIElement.fire("inputup", "mouse" + e.button, e);
       }
       
-      this.fireEvent("mouseup", e);
-      this.fireEvent("inputup", "mouse" + e.button, e);
+      this.fire("mouseup", e);
+      this.fire("inputup", "mouse" + e.button, e);
     });
     document.addEventListener("wheel", e => {
       if (this.hoveredUIElement) {
-        if (!this.transition) {
-          if (this.hoveredUIElement.fireEvent("wheel", e) == false) return;
-          if (this.hoveredUIRoot?.wheel(e) == false) return;
-        }
+        if (this.hoveredUIElement.fire("wheel", e) == false) return;
+        if (this.hoveredUIRoot?.wheel(e) == false) return;
       }
 
-      this.fireEvent("wheel", e);      
+      this.scrolled += e.deltaY;
+      this.fire("wheel", e);      
     });
 
     
@@ -4064,8 +4278,8 @@ class NDE {
   }
 
   setScene(newScene) {
-    if (this.events["beforeScene"]) {
-      for (let ee of this.events["beforeScene"]) {
+    if (this.e.events["beforeScene"]) {
+      for (let ee of this.e.events["beforeScene"]) {
         let res = ee(newScene); 
         if (res == false) break;
         if (res) {
@@ -4081,45 +4295,20 @@ class NDE {
     this.scene.start();
     this.scene.hasStarted = true;
 
-    if (this.events["afterScene"]) {
-      for (let ee of this.events["afterScene"]) {
+    if (this.e.events["afterScene"]) {
+      for (let ee of this.e.events["afterScene"]) {
         let res = ee(newScene); 
         if (res == false) break;
       };
     }
   }
 
-  registerEvent(eventName, func, isPriority = false) {
-    if (!this.events[eventName]) this.events[eventName] = [];
-    if (isPriority) {
-      this.events[eventName].unshift(func);
-    } else {
-      this.events[eventName].push(func);
-    }
-  }
-  unregisterEvent(eventName, func) {
-    let events = this.events[eventName];
-    if (!events) return false;
 
-    let index = events.indexOf(func);
-    if (index == -1) return false;
-
-    events.splice(index, 1);
-    return;
-  }
-
-  fireEvent(eventName, ...args) {
-    if (this.transition) return;
-    
-    let events = this.events[eventName];
-    if (events) {
-      for (let e of events) {
-        if (e(...args) == false) return false;
-      }
-    }
-    
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(eventName, ...args) {
+    if (this.e.fire(eventName, ...args) == false) return false;
     if (this.scene[eventName](...args) == false) return false;
-      
     return true;
   }
 
@@ -4132,8 +4321,8 @@ class NDE {
   
 
     let result = undefined;
-    if  (this.events["resize"]) {
-      for (let ee of this.events["resize"]) {
+    if  (this.e.events["resize"]) {
+      for (let ee of this.e.events["resize"]) {
         let res = ee(e); if (res) result = res
       };
     }
@@ -4143,7 +4332,7 @@ class NDE {
     this.renderer.resize(new Vec(this.w, this.w * this.ar));
     
     this.scene.resize(e);
-    //this.fireEvent("resize", e);
+    //this.fire("resize", e);
   }
 
   /**
@@ -4156,15 +4345,6 @@ class NDE {
     return this.controls[controlName].toLowerCase();
   }
   /**
-   * Gets if a key is pressed
-   * 
-   * @param {string} controlName
-   * @return {boolean} pressed
-   */
-  getKeyPressed(controlName) {
-    return !!this.pressed[this.getKeyCode(controlName)];
-  }
-  /**
    * Gets if keycode is equal to control keycode
    * 
    * @param {string} keyCode
@@ -4174,6 +4354,35 @@ class NDE {
   getKeyEqual(keyCode, controlName) {
     return keyCode.toLowerCase() == this.getKeyCode(controlName);
   }
+  /**
+   * Gets if a key is pressed
+   * 
+   * @param {string} controlName
+   * @return {boolean} pressed
+   */
+  getKeyPressed(controlName) {
+    return !!this.pressed[this.getKeyCode(controlName)];
+  }
+  /**
+   * Gets if a key got pressed this frame
+   * 
+   * @param {string} controlName
+   * @return {boolean} pressed
+   */
+  getKeyDown(controlName) {
+    return this.pressedFrame.includes(this.getKeyCode(controlName));
+  }
+  /**
+   * Gets if a key got released this frame
+   * 
+   * @param {string} controlName
+   * @return {boolean} pressed
+   */
+  getKeyUp(controlName) {
+    return this.releasedFrame.includes(this.getKeyCode(controlName));
+  }
+
+
 
   draw(time) {
     requestAnimationFrame(time => {this.draw(time)});
@@ -4190,7 +4399,6 @@ class NDE {
   
     this.updateGame(dt);
   }
-
   updateGame(dt) {
     let t1 = performance.now();
     this.hoveredUIElement = undefined;
@@ -4206,15 +4414,20 @@ class NDE {
     this.renderer._(()=>{      
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
       
-      if (!this.transition) this.scene.lastIndex = 0; 
-      this.fireEvent("update", gameDt);
-      this.fireEvent("afterUpdate", gameDt);
+      this.scene.lastIndex = 0; 
+      this.fire("update", gameDt);
+      this.fire("afterUpdate", gameDt);
 
       let t2 = performance.now();
     
-      this.fireEvent("render");
+      this.fire("render");
       if (this.transition) this.transition.render();
-      this.fireEvent("afterRender");
+      this.fire("afterRender");
+
+
+      this.pressedFrame.length = 0;
+      this.releasedFrame.length = 0;
+      this.scrolled = 0;
 
 
       this.latestDts.push(dt);
@@ -4257,6 +4470,7 @@ class NDE {
     this.mainImg.image(this.renderer, vecZero, this.mainImg.size);
   }
 
+
   loadImg(path) {
     let img = new Img(new Vec(1, 1));
     let image = new Image();
@@ -4282,7 +4496,6 @@ class NDE {
 
     return img;
   }
-
   loadAud(path, props = {}) {
     let aud = new Aud({baseGain: props.gain || 1});
     aud.loading = true;
@@ -4308,6 +4521,19 @@ class NDE {
     });
 
     return aud;
+  }
+
+
+  getTex(texOrTexture) {
+    if (typeof texOrTexture == "string") return texOrTexture;
+   
+    let index = Object.keys(nde.tex).find(key => nde.tex[key] == texOrTexture);
+    if (index != undefined) return index;
+    
+    index = Math.floor(Math.random() * 100000) + "";
+    nde.tex[index] = texOrTexture;
+    
+    return index;
   }
 }
 

@@ -5,6 +5,7 @@ files = [
   "src/Vec.js",
   "src/Camera.js",
   "src/Scene.js",
+  "src/EventHandler.js",
   
   "src/assets/Asset.js",
   "src/assets/Renderable.js",
@@ -54,6 +55,7 @@ files = [
   "src/ECS/components/Transform.js",
   "src/ECS/components/Sprite.js",
   "src/ECS/components/TextRenderer.js",
+  "src/ECS/components/AudioSource.js",
   "src/ECS/Ob.js",
 
   "src/index.js",

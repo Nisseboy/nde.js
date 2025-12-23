@@ -13,13 +13,16 @@ class Ob extends Serializable {
     if (props.pos) this.transform.pos.from(props.pos);
 
     for (let c of this.components) {
-      c.parent = this;
+      c.ob = this;
       c.transform = this.transform;
     }
 
 
     this.parent = undefined;
     this.children = children;
+
+
+    this.e = new EventHandler();
   }
 
 
@@ -47,10 +50,33 @@ class Ob extends Serializable {
       c.render();
     }
   }
+  
+  
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 
 
   getComponent(type) {
     return this.components.find(e=>{return e instanceof type});
+  }
+  addComponent(component) {
+    if (component.ob) {
+      component.ob.removeComponent(component);
+    }
+
+    this.components.push(component);
+    component.ob = this;
+    component.transform = this.transform;
+  }
+  removeComponent(component) {
+    let index = this.components.indexOf(component);
+    if (index == -1) return false;
+
+    this.component.splice(index, 1);
+    component.ob = undefined;
+    component.transform = undefined;
+    return true;
   }
 
 
@@ -75,6 +101,7 @@ class Ob extends Serializable {
     ob.appendChild(this);
   }
 
+
   remove() {
     if (this.parent) this.parent.removeChild(this);
 
@@ -85,6 +112,7 @@ class Ob extends Serializable {
       c.remove();
     }
   }
+
 
 
   from(data) {
@@ -98,7 +126,7 @@ class Ob extends Serializable {
     this.transform = this.getComponent(Transform);
 
     for (let c of this.components) {
-      c.parent = this;
+      c.ob = this;
       c.transform = this.transform;
     }
 
@@ -116,9 +144,7 @@ class Ob extends Serializable {
     delete this.parent;
     
     for (let c of this.components) {
-      delete c.parent;
-      delete c.transform;
-      delete c.hasStarted;
+      c.strip();
     }
 
     for (let c of this.children) {

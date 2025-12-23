@@ -1,12 +1,12 @@
 class TextRenderer extends Component {
-  constructor(text = "", props = {}) {
+  constructor(text = "", style = {}) {
     super();
 
     this.text = text;
     this.style = {
-      fill: props.fill || "rgb(255,255,255)",
-      textAlign: props.textAlign || ["center", "middle"],
-      font: props.font || "1px monospace",
+      fill: style.fill || "rgb(255,255,255)",
+      textAlign: style.textAlign || ["center", "middle"],
+      font: style.font || "1px monospace",
     };
   }
 

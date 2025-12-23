@@ -19,7 +19,7 @@ class Aud extends Asset {
       return;
     } else {
       
-      nde.registerEvent("audioContextStarted", () => {
+      nde.on("audioContextStarted", () => {
         this.createNodes();
       });
     }
@@ -42,8 +42,8 @@ class Aud extends Asset {
     const newAud = new Aud();
     newAud.path = this.path;
     newAud.audioBuffer = this.audioBuffer;
-    newAud.setGain(this.gainNode.gain.value);
     newAud.baseGain = this.baseGain;
+    newAud.gain = this.gain;
     return newAud;
   }
 
@@ -53,8 +53,11 @@ class Aud extends Asset {
     this.panner.positionZ.value = z;
   }
 
-  setGain(gain) {
-    this.gainNode.gain.value = this.baseGain * gain;    
+  set gain(value) {
+    this.gainNode.gain.value = this.baseGain * value;    
+  }
+  get gain() {
+    return this.gainNode.gain.value / this.baseGain;    
   }
 
   play() {

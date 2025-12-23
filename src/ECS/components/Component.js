@@ -4,20 +4,23 @@ class Component extends Serializable {
 
     this.hasStarted = false;
 
-    this.parent = undefined;
+    this.ob = undefined;
     this.transform = undefined;
   }
 
 
   start() {}
+  remove() {}
   update(dt) {}
   render() {}
 
-  remove() {}
 
 
+  on(...args) {return this.ob.on(...args)}
+  off(...args) {return this.ob.off(...args)}
+  fire(...args) {return this.ob.fire(...args)}
   getComponent(type) {
-    return this.parent.getComponent(type);
+    return this.ob.getComponent(type);
   }
 
 
@@ -25,5 +28,10 @@ class Component extends Serializable {
     super.from(data);
 
     return this;
+  }
+  strip() {
+    delete this.ob;
+    delete this.transform;
+    delete this.hasStarted;
   }
 }

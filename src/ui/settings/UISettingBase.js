@@ -18,9 +18,9 @@ class UISettingBase extends UIBase {
   }
 
   fireInput() {
-    this.fireEvent("input", this.value);
+    this.fire("input", this.value);
   }
   fireChange() {
-    this.fireEvent("change", this.value);
+    this.fire("change", this.value);
   }
 }

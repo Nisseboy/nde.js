@@ -8,16 +8,22 @@ class PlayerController extends Component {
   }
 
   start() {
-    this.stateMachine = new StateMachineImg(
+    this.audioSource = this.getComponent(AudioSource);
+    this.sprite = this.getComponent(Sprite);
+
+    this.sprite.tex = new StateMachineImg(
       new StateMachineNodeCondition(()=>{return (this.vel.x != 0 || this.vel.y != 0)}, 
         new StateMachineNodeResult(nde.tex["duck/walk"]),
         new StateMachineNodeResult(nde.tex["duck/1"]),
       )
     );
-    this.stateMachine.registerEvent("step", (angle) => {
+
+
+    
+    this.on("step", (angle) => {
       this.transform.dir += angle;
-      playAudio(nde.auds[`duck/step/${Math.floor(Math.random() * 4 + 1)}`], this.transform.pos);
-    });
+      this.audioSource.play(nde.aud[`duck/step/${Math.floor(Math.random() * 4 + 1)}`]);
+    })
   }
   
   update(dt) {
@@ -28,6 +34,7 @@ class PlayerController extends Component {
       nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
     ).normalize().mul(this.speed * speedMult);
 
+
     this.vel.from(vel);
     let speed = this.vel.mag();
     vel.mul(dt);
@@ -37,10 +44,7 @@ class PlayerController extends Component {
     let diff = getDeltaAngle((Math.atan2(vel.y, vel.x)), this.transform.dir);
     if (speed != 0) this.transform.dir -= diff * 20 * dt;
 
-
-    
-    let t = this.stateMachine.choose();
-    if (t instanceof RunningAnimation) t.speed = speed / this.speed;      
+    this.sprite.speed = speed / this.speed;   
     
   }
 }

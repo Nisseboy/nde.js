@@ -7,11 +7,13 @@ class RunningAnimation extends Renderable {
     this.duration = animation.duration;
     this.speed = animation.speed;
 
-    this.events = props.events || {}
+    this.e = new EventHandler();
+    if (props.events) this.e.events = props.events;
+    if (props.listeners) this.e.listeners = props.listeners;
     
     this.img = undefined;
 
-    this.timer = new TimerTime(this.duration, ()=>{this.step()});
+    this.timer = new TimerTime(100000000, ()=>{this.step()});
     this.lastTimerElapsedTime = 0;
     this.elapsedTime = 0;
     this.executedFrames = 0;
@@ -21,49 +23,27 @@ class RunningAnimation extends Renderable {
   }
 
   step() {    
+    
     this.elapsedTime += (this.timer.elapsedTime - this.lastTimerElapsedTime) * this.speed;
     this.lastTimerElapsedTime = this.timer.elapsedTime;
 
     while (this.executedTime <= this.elapsedTime) {
       let frame = this.frames[this.executedFrames];
       if (!frame) {
-        this.fireEvent("done");
+        this.fire("done");
         return;
       }
 
       this.executedTime += frame.duration * this.dt;
       this.executedFrames++;
 
-      frame.step(this);      
+      frame.step(this);            
     }
   }
 
-  registerEvent(eventName, func) {
-    if (!this.events[eventName]) this.events[eventName] = [];
-    this.events[eventName].push(func);
-  }
-  unregisterEvent(eventName, func) {
-    let events = this.events[eventName];
-    if (!events) return false;
-
-    let index = events.indexOf(func);
-    if (index == -1) return false;
-
-    events.splice(index, 1);
-    return;
-  }
-  fireEvent(eventName, ...args) {
-    let events = this.events[eventName];
-    if (events) {
-      for (let e of events) {
-        if (e(...args) == false) return false;
-      }
-    }
-
-    if (eventName != "*") this.fireEvent("*", eventName, ...args);
-      
-    return true;
-  }
+  on(...args) {return this.e.on(...args)}
+  off(...args) {return this.e.off(...args)}
+  fire(...args) {return this.e.fire(...args)}
 
 
   getImg() {    

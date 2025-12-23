@@ -86,8 +86,8 @@ class UISettingDropdown extends UISettingBase {
 
           this.switchOpen();
           
-          this.fireEvent("input", this.value);
-          this.fireEvent("change", this.value);
+          this.fire("input", this.value);
+          this.fire("change", this.value);
         }]},
       });
 
