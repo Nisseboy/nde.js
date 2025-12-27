@@ -93,6 +93,7 @@ Project:
 */  
 
 let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let assetFolder = "assets";
 
 class NDE {
   constructor(mainElem) {
@@ -102,11 +103,16 @@ class NDE {
     this.targetFPS = undefined;
     this.transition = undefined;
     this.renderer = new Img(vecOne);
+    this.hasStarted = false;
 
     this.e = new EventHandler();
 
-    this.tex = {};
-    this.aud = {};
+    this.assetLoaders = {
+      "ob": EvalAsset,
+      "component": EvalAsset,
+      "png": Img,
+      "mp3": Aud,
+    };
 
     this.mouse = new Vec(0, 0);
     this.mainElemBoundingBox = new Vec(0, 0, 1, 1);
@@ -141,6 +147,10 @@ class NDE {
     let interval = setInterval(e => {
       if (this.unloadedAssets.length == 0) {        
         clearInterval(interval);
+        this.hasStarted = true;
+        for (let a of unloadedEvalAssets) {
+          a.eval();
+        }
         
         this.fire("beforeSetup");
 
@@ -152,7 +162,6 @@ class NDE {
         this.renderer.set("imageSmoothing", false);
         
         this.fire("afterSetup");
-
 
         this.setupHandlers();
 
@@ -493,56 +502,33 @@ class NDE {
   }
 
 
-  loadImg(path) {
-    let img = new Img(new Vec(1, 1));
-    let image = new Image();
-    image.src = path;
+  loadAsset(assetDescriptor) {
+    if (typeof assetDescriptor == "string") assetDescriptor = {path: assetDescriptor};
 
-    img.loading = true;
-    img.path = path;
-    this.unloadedAssets.push(img);
+    let path = assetDescriptor.path;
+    let split1 = path.split(".");
+    let fileType = split1.splice(-1, 1)[0];
+    path = split1.join(".");
 
-    image.onload = e => {
-      img.resize(new Vec(image.width, image.height));
-      img.ctx.drawImage(image, 0, 0);
-      img.loading = false;
-      if (img.onload) img.onload();
-
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img), 1);
-    };
-    image.onerror = e => {
-      console.error(`"${path}" not found`);
-
-      this.unloadedAssets.splice(this.unloadedAssets.indexOf(img), 1);
-    };
-
-    return img;
-  }
-  loadAud(path, props = {}) {
-    let aud = new Aud({baseGain: props.gain || 1});
-    aud.loading = true;
-    aud.path = path;
+    if (!assetDescriptor.name) assetDescriptor.name = path;
     
-    this.unloadedAssets.push(aud);
-    
-    fetch(path).then(res => {
-      res.arrayBuffer().then(arrayBuffer => {
-        audioContext.decodeAudioData(arrayBuffer).then(audioBuffer => {                    
-          aud.audioBuffer = audioBuffer;
-          aud.loading = false;
-          aud.duration = audioBuffer.duration;
-          if (aud.onload) aud.onload();
-          
-          this.unloadedAssets.splice(this.unloadedAssets.indexOf(aud), 1);
-        });
-      });
-    }).catch(e => {
-      console.error(`"${path}" not found`);
+    let assetLoader = this.assetLoaders[fileType];
+    if (!assetLoader) {
+      console.error("Unsupported filetype: " + assetDescriptor.path);
+      return;
+    }
+    assetDescriptor.path = assetFolder + "/" + assetDescriptor.path;
 
+    let asset = new assetLoader();
+    this.unloadedAssets.push(asset);
+    asset.loading = true;
+    asset.path = assetDescriptor.path;
+    asset.load(assetDescriptor).then(() => {
+      asset.loading = false;
       this.unloadedAssets.splice(this.unloadedAssets.indexOf(asset), 1);
     });
-
-    return aud;
+    
+    return asset;
   }
 
 

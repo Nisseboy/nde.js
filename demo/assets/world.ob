@@ -1,0 +1,15 @@
+(()=>{
+
+
+let ob = new Ob({name: "Root"}, [], [
+  EntityPlayer.copy(),
+
+  new Ob({name: "text", pos: new Vec(0, -4)}, [
+    new TextRenderer("[w a s d shift], [arrow keys]", {}),
+  ])
+]);
+
+return ob;
+
+
+})();

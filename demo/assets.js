@@ -1,19 +1,20 @@
-let audsPaths = [
-  {"path": "duck/step/1"},
-  {"path": "duck/step/2"},
-  {"path": "duck/step/3"},
-  {"path": "duck/step/4"},
-];
+let assetPaths = [
+  {"path": "world.ob"},
 
-let texPaths = [
-  {"path": "duck/1"},
-  {"path": "duck/rot/1,2,3,4,5,6,7,8"},
+  {"path": "duck/1.png"},
+  {"path": "duck/rot/1,2,3,4,5,6,7,8.png"},
+
+  {"path": "duck/step/1.mp3"},
+  {"path": "duck/step/2.mp3"},
+  {"path": "duck/step/3.mp3"},
+  {"path": "duck/step/4.mp3"},
 ];
 
 function preloadAnimations() {
   let frame = AnimationFrame;
   let loop = AnimationFrameLoop;
   let event = AnimationFrameEvent;
+  
 
   { //duck/walk
     nde.tex["duck/walk"] = new Animation([

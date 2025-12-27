@@ -6,18 +6,7 @@ class SceneGame extends Scene {
     this.cam.w = 16;
     this.cam.renderW = nde.w;
   }
-  createWorld() {
-    let w = new Ob({name: "Root"}, [], [
-      EntityPlayer.copy(),
-
-      new Ob({name: "text", pos: new Vec(0, -4)}, [
-        new TextRenderer("[w a s d shift], [arrow keys]", {}),
-      ])
-    ]);
-
-    this.loadWorld(w);
-  }
-  loadWorld(w) {
+  loadWorld(w) {    
     this.world = w;
 
     this.player = this.world.getComponents(PlayerInput)[0].ob;

@@ -13,6 +13,31 @@ class Aud extends Asset {
     this.isPlaying = false;
   }
 
+  load({path, name, gain = 1}) {
+    return new Promise((resolve) => {
+      this.baseGain = gain;
+      
+      fetch(path).then(res => {
+        res.arrayBuffer().then(arrayBuffer => {
+          audioContext.decodeAudioData(arrayBuffer).then(audioBuffer => {                    
+            this.audioBuffer = audioBuffer;
+            this.duration = audioBuffer.duration;
+
+            resolve(this);
+          });
+        });
+      }).catch(e => {
+        console.error(`"${path}" not found`);
+
+        resolve(this);
+      });
+
+      
+      if (!nde.aud) nde.aud = {};
+      nde.aud[name] = new AudPool(this);
+    });
+  }
+
   queueNodes() {
     if (audioContext.state != "suspended") {
       this.createNodes();

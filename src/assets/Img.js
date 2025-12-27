@@ -1,5 +1,5 @@
 class Img extends Renderable {
-  constructor(size) {
+  constructor(size = vecOne) {
     super();
 
     this.size = size.copy();
@@ -11,6 +11,76 @@ class Img extends Renderable {
     this.ctx = this.canvas.getContext("2d");
     if (this.ctx == null) throw new Error("2d context not supported?");
   }
+
+
+  load({path, name}) {
+    return new Promise((resolve) => {
+
+      let split = name.split("/");
+      let lastName = split.splice(-1, 1)[0];
+      let segmentNames = lastName.split(",").map(e => split.join("/") + "/" + e);
+      let segments = (segmentNames.length > 1) ? [] : undefined;
+    
+      let image = new Image();
+      image.src = path;
+
+      image.onload = e => {
+        this.resize(new Vec(image.width, image.height));
+        this.ctx.drawImage(image, 0, 0);
+
+        if (segmentNames.length > 1) {
+          this.split(segmentNames.length, 1, segments);   
+          
+          for (let i of segments) {
+            i.loading = false;
+          }
+        }
+
+        resolve(this);
+        
+      };
+      image.onerror = e => {
+        console.error(`"${path}" not found`);
+
+        resolve(this);
+      };
+
+      if (!nde.tex) nde.tex = {};
+      nde.tex[name] = this;
+
+      if (segments) {
+        for (let i of segmentNames) {
+          let img = new Img();
+          img.path = path;
+          img.loading = true;
+
+          nde.tex[i] = img;
+
+          segments.push(img);
+        }
+      }
+    });
+  }
+
+  split(xSplits, ySplits = 1, arr = []) {
+    let i = 0;
+    let size = this.size._divV(new Vec(xSplits, ySplits)).floor();
+
+    for (let x = 0; x < xSplits; x++) {
+      for (let y = 0; y < ySplits; y++) {
+        if (!arr[i]) arr[i] = new Img(size);
+        let img = arr[i];
+        if (!img.size.isEqualTo(size)) img.resize(size);
+
+        img.ctx.drawImage(this.canvas, x * size.x, y * size.y, size.x, size.y, 0, 0, size.x, size.y);
+        
+        i++;
+      }
+    }
+
+    return arr;
+  }
+
 
   getImg() {return this};
 

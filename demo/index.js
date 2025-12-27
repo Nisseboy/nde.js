@@ -4,7 +4,10 @@ nde.uiDebug = false;
 //nde.targetFPS = 60;
 
 let renderer = nde.renderer;
-preloadTextures();
+for (let asset of assetPaths) {
+  nde.loadAsset(asset);
+}
+preloadAnimations();
 
 
 let settingsName = "ndeSettings";
@@ -45,7 +48,7 @@ nde.on("afterSetup", () => {
     settings: new SceneSettings(),
   })
 
-  scenes.game.createWorld();
+  scenes.game.loadWorld(nde.assets.world);
   nde.setScene(scenes.mainMenu);
 });
 

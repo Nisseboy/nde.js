@@ -8,6 +8,7 @@ files = [
   "src/EventHandler.js",
   
   "src/assets/Asset.js",
+  "src/assets/EvalAsset.js",
   "src/assets/Renderable.js",
   "src/assets/Img.js",
   "src/assets/Aud.js",
