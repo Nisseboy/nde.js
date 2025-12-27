@@ -183,6 +183,18 @@ class Vec extends Serializable {
     this.w = w;
     return this;
   }
+  /**
+   * Sets x,y from angle and length
+   * 
+   * @param {number} angle
+   * @param {number} length
+   * @return {Vec} this
+   */
+  fromAngle(angle, length = 1) {
+    this.x = Math.cos(angle) * length;
+    this.y = Math.sin(angle) * length;
+    return this;
+  }
 
   /**
    * Return the square length of this vector
@@ -221,6 +233,15 @@ class Vec extends Serializable {
     if (this.w) result += this.w * v.w;
 
     return result;
+  }
+
+  /**
+   * Returns angle of this
+   * 
+   * @return {number} angle
+   */
+  angle() {
+    return Math.atan2(this.y, this.x);
   }
 
   /**
@@ -779,6 +800,13 @@ class EventHandler {
       for (let i = 0; i < events.length; i++) {
         if (events[i](...args) == false) return false;
       }
+    } else {
+      events = this.events["*"];
+      if (events) {
+        for (let i = 0; i < events.length; i++) {
+          if (events[i](eventName, ...args) == false) return false;
+        }
+      }
     }
     
     for (let i = 0; i < this.listeners.length; i++) {
@@ -1056,20 +1084,24 @@ class Aud extends Asset {
   }
 
   setPosition(x, y, z) {
+    if (!this.panner) return;
+
     this.panner.positionX.value = x;
     this.panner.positionY.value = y;
     this.panner.positionZ.value = z;
   }
 
   set gain(value) {
+    if (!this.gainNode) return;
     this.gainNode.gain.value = this.baseGain * value;    
   }
   get gain() {
+    if (!this.gainNode) return 1;
     return this.gainNode.gain.value / this.baseGain;    
   }
 
   play() {
-    if (!this.audioBuffer) return;
+    if (!this.audioBuffer || !this.panner) return;
     
     const source = audioContext.createBufferSource();
     source.buffer = this.audioBuffer;
@@ -3344,7 +3376,7 @@ class TimerBase {
     
     this.calculateProgress();
 
-    this.callback(this);
+    this.callback(dt);
 
     if (this.progress == 1 && this.playing) {
       this.stop();
@@ -3576,6 +3608,8 @@ class Component extends Serializable {
 
     this.ob = undefined;
     this.transform = undefined;
+
+    this.clientOnly = false;
   }
 
 
@@ -3589,13 +3623,19 @@ class Component extends Serializable {
   on(...args) {return this.ob.on(...args)}
   off(...args) {return this.ob.off(...args)}
   fire(...args) {return this.ob.fire(...args)}
-  getComponent(type) {
-    return this.ob.getComponent(type);
-  }
 
+  getComponent(...args) {return this.ob.getComponent(...args); }
+  getComponents(...args) {return this.ob.getComponent(...args); }
+  find(...args) {return this.ob.getComponent(...args); }
+  findAll(...args) {return this.ob.getComponent(...args); }
+  findId(...args) {return this.ob.getComponent(...args); }
+  addComponent(...args) {return this.ob.addComponent(...args); }
+  removeComponent(...args) {return this.ob.addComponent(...args); }
 
   from(data) {
     super.from(data);
+
+    this.clientOnly = data.clientOnly;
 
     return this;
   }
@@ -3679,7 +3719,13 @@ class Sprite extends Component {
     return this._speed;
   }
 
+  start() {
+    this.ob.sprite = this;
+  }
+
   render() {
+    if (!this.tex) return;
+    
     if (!this.texture) {
       this.tex = nde.getTex(this.tex);
       let texture = nde.tex[this.tex];
@@ -3729,6 +3775,7 @@ class Sprite extends Component {
     delete this._texture;
     delete this.animation;
     delete this.stateMachineImg;
+    delete this.ob.sprite;
   }
 }
 
@@ -3793,6 +3840,8 @@ class AudioSource extends Component {
 
 
   start() {
+    this.ob.audioSource = this;
+
     this.lastPos = this.transform.pos.copy();
   }
 
@@ -3830,6 +3879,12 @@ class AudioSource extends Component {
 
     return this;
   }
+
+  strip() {
+    delete this.ob.audioSource;
+
+    super.strip();
+  }
 }
 
 
@@ -3842,6 +3897,9 @@ class Ob extends Serializable {
     super();
 
     this.name = props.name || "";
+    this.id = props.id;
+    if (this.id == undefined) this.randomizeId();
+    this.active = true;
 
     this.components = components;
     this.transform = this.getComponent(Transform);
@@ -3858,7 +3916,8 @@ class Ob extends Serializable {
 
 
     this.parent = undefined;
-    this.children = children;
+    this.children = [];
+    this.appendChild(...children);
 
 
     this.e = new EventHandler();
@@ -3883,6 +3942,8 @@ class Ob extends Serializable {
     }
   }
   render() {
+    if (!this.active) return;
+
     for (let i = 0; i < this.components.length; i++) {
       this.components[i].render();
     }
@@ -3898,37 +3959,83 @@ class Ob extends Serializable {
   fire(...args) {return this.e.fire(...args)}
 
 
-  getComponent(type) {
-    return this.components.find(e=>{return e instanceof type});
-  }
-  getComponentRecursive(type) {
-    let comp = this.components.find(e=>{return e instanceof type});
-    if (comp) return comp;
+  addComponent(...components) {
+    for (let i = 0; i < components.length; i++) {
+      let component = components[i];
 
-    for (let i = 0; i < this.children.length; i++) {
-      let comp = this.children[i].getComponentRecursive(type);
-      if (comp) return comp;
-    }
-  }
-  addComponent(component) {
-    if (component.ob) {
-      component.ob.removeComponent(component);
-    }
+      if (component.ob) {
+        component.ob.removeComponent(component);
+      }
 
-    this.components.push(component);
-    component.ob = this;
-    component.transform = this.transform;
+      this.components.push(component);
+      component.ob = this;
+      component.transform = this.transform;
+    }
   }
   removeComponent(component) {
     let index = this.components.indexOf(component);
     if (index == -1) return false;
 
-    this.component.splice(index, 1);
+    this.components.splice(index, 1);
     component.ob = undefined;
     component.transform = undefined;
     return true;
   }
 
+  getComponent(type) {
+    return this.components.find(e=>{return e instanceof type});
+  }
+  getComponents(type, limit = 9999, arr = []) {
+    let comp = this.components.find(e=>{return e instanceof type});
+    if (comp) arr.push(comp);
+
+    for (let i = 0; i < this.children.length; i++) {
+      if (arr.length == limit) return arr;
+      
+      this.children[i].getComponents(type, limit, arr);
+    }
+
+    return arr;
+  }
+
+  find(fn) {
+    let arr = this.findAll(fn, 1);
+    if (arr) return arr[0];
+  }
+  findAll(fn, limit = 9999, arr = []) {
+    if (fn(this)) arr.push(this);
+
+    for (let i = 0; i < this.children.length; i++) {
+      if (arr.length == limit) return arr;
+      
+      this.children[i].findAll(fn, limit, arr);
+    }
+
+    return arr;
+  }
+
+  findId(id) {
+    if (this.id == id) return this;
+
+    for (let i = 0; i < this.children.length; i++) {
+      let res = this.children[i].findId(1);
+      
+      if (res) return res;
+    }
+  }
+  randomizeId() {
+    this.id = Math.floor(Math.random() * 1000000);
+    return this.id;
+  }
+  createLookupTable(table = {}) {
+    table[this.id] = this;
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].createLookupTable(table);
+    }
+    
+    return table;
+  }
 
   appendChild(...obs) {
     for (let i = 0; i < obs.length; i++) {
@@ -3976,6 +4083,8 @@ class Ob extends Serializable {
     super.from(data);
 
     this.name = data.name;
+    this.id = data.id;
+    this.active = data.active;
 
 
     this.components = [];
@@ -3989,24 +4098,48 @@ class Ob extends Serializable {
     }
 
   
-    for (let i = 0; i < this.children.length; i++) {
-      let c2 = cloneData(this.children[i]);
+    for (let i = 0; i < data.children.length; i++) {
+      let c2 = cloneData(data.children[i]);
       this.appendChild(c2);
     }
 
 
     return this;
   }
-  strip() {
-    delete this.transform;
-    delete this.parent;
-    
+  
+  stripComponents() {
     for (let i = 0; i < this.components.length; i++) {
       this.components[i].strip();
     }
 
     for (let i = 0; i < this.children.length; i++) {
-      this.children[i].strip();
+      this.children[i].stripComponents();
+    }
+  }
+  stripObs() {
+    delete this.transform;
+    delete this.parent;
+    delete this.e;
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].stripObs();
+    }
+  }
+  strip() {
+    this.stripComponents();
+    this.stripObs();
+    
+  }
+  stripClientComponents() {
+    for (let i = 0; i < this.components.length; i++) {
+      if (this.components[i].clientOnly) {
+        this.removeComponent(this.components[i]);
+        i--;
+      }
+    }
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].stripClientComponents();
     }
   }
 }
@@ -4197,7 +4330,10 @@ class NDE {
     document.addEventListener("keydown", e => {
       if (!audioContext.state == "running") {
         audioContext.resume();
-        this.fire("audioContextStarted");
+        
+        setTimeout(() => {
+          this.fire("audioContextStarted");
+        }, 0);
       }
 
       
@@ -4245,7 +4381,10 @@ class NDE {
     document.addEventListener("mousedown", e => {
       if (audioContext.state != "running") {
         audioContext.resume();
-        this.fire("audioContextStarted");
+        
+        setTimeout(() => {
+          this.fire("audioContextStarted");
+        }, 0);
       }
 
 
@@ -4371,7 +4510,7 @@ class NDE {
    * @return {boolean} equal
    */
   getKeyEqual(keyCode, controlName) {
-    return this.getKeyCodes(controlName).includes(keyCode.toLowerCase);
+    return this.getKeyCodes(controlName).includes(keyCode.toLowerCase());
   }
   /**
    * Gets if a key is pressed

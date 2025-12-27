@@ -9,7 +9,6 @@ class SceneGame extends Scene {
   createWorld() {
     let w = new Ob({name: "Root"}, [], [
       EntityPlayer.copy(),
-      new Ob({name: "Cam Holder"}, [new CamController()]),
 
       new Ob({name: "text", pos: new Vec(0, -4)}, [
         new TextRenderer("[w a s d shift], [arrow keys]", {}),
@@ -21,8 +20,7 @@ class SceneGame extends Scene {
   loadWorld(w) {
     this.world = w;
 
-    this.player = this.world.getComponentRecursive(PlayerController).ob;
-    this.camHolder = this.world.getComponentRecursive(CamController).ob;
+    this.player = this.world.getComponents(PlayerInput)[0].ob;
   }
 
   start() {
@@ -41,7 +39,7 @@ class SceneGame extends Scene {
   update(dt) {  
     this.world.update(dt);
 
-    this.cam.pos.from(this.camHolder.transform.pos);
+    this.cam.pos.from(this.player.transform.pos);
     moveListener(this.cam.pos);
   }
 

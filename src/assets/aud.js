@@ -48,20 +48,24 @@ class Aud extends Asset {
   }
 
   setPosition(x, y, z) {
+    if (!this.panner) return;
+
     this.panner.positionX.value = x;
     this.panner.positionY.value = y;
     this.panner.positionZ.value = z;
   }
 
   set gain(value) {
+    if (!this.gainNode) return;
     this.gainNode.gain.value = this.baseGain * value;    
   }
   get gain() {
+    if (!this.gainNode) return 1;
     return this.gainNode.gain.value / this.baseGain;    
   }
 
   play() {
-    if (!this.audioBuffer) return;
+    if (!this.audioBuffer || !this.panner) return;
     
     const source = audioContext.createBufferSource();
     source.buffer = this.audioBuffer;

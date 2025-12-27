@@ -20,6 +20,8 @@ class AudioSource extends Component {
 
 
   start() {
+    this.ob.audioSource = this;
+
     this.lastPos = this.transform.pos.copy();
   }
 
@@ -56,5 +58,11 @@ class AudioSource extends Component {
     this.gain = data._gain;
 
     return this;
+  }
+
+  strip() {
+    delete this.ob.audioSource;
+
+    super.strip();
   }
 }

@@ -3,6 +3,9 @@ class Ob extends Serializable {
     super();
 
     this.name = props.name || "";
+    this.id = props.id;
+    if (this.id == undefined) this.randomizeId();
+    this.active = true;
 
     this.components = components;
     this.transform = this.getComponent(Transform);
@@ -19,7 +22,8 @@ class Ob extends Serializable {
 
 
     this.parent = undefined;
-    this.children = children;
+    this.children = [];
+    this.appendChild(...children);
 
 
     this.e = new EventHandler();
@@ -44,6 +48,8 @@ class Ob extends Serializable {
     }
   }
   render() {
+    if (!this.active) return;
+
     for (let i = 0; i < this.components.length; i++) {
       this.components[i].render();
     }
@@ -59,37 +65,83 @@ class Ob extends Serializable {
   fire(...args) {return this.e.fire(...args)}
 
 
-  getComponent(type) {
-    return this.components.find(e=>{return e instanceof type});
-  }
-  getComponentRecursive(type) {
-    let comp = this.components.find(e=>{return e instanceof type});
-    if (comp) return comp;
+  addComponent(...components) {
+    for (let i = 0; i < components.length; i++) {
+      let component = components[i];
 
-    for (let i = 0; i < this.children.length; i++) {
-      let comp = this.children[i].getComponentRecursive(type);
-      if (comp) return comp;
-    }
-  }
-  addComponent(component) {
-    if (component.ob) {
-      component.ob.removeComponent(component);
-    }
+      if (component.ob) {
+        component.ob.removeComponent(component);
+      }
 
-    this.components.push(component);
-    component.ob = this;
-    component.transform = this.transform;
+      this.components.push(component);
+      component.ob = this;
+      component.transform = this.transform;
+    }
   }
   removeComponent(component) {
     let index = this.components.indexOf(component);
     if (index == -1) return false;
 
-    this.component.splice(index, 1);
+    this.components.splice(index, 1);
     component.ob = undefined;
     component.transform = undefined;
     return true;
   }
 
+  getComponent(type) {
+    return this.components.find(e=>{return e instanceof type});
+  }
+  getComponents(type, limit = 9999, arr = []) {
+    let comp = this.components.find(e=>{return e instanceof type});
+    if (comp) arr.push(comp);
+
+    for (let i = 0; i < this.children.length; i++) {
+      if (arr.length == limit) return arr;
+      
+      this.children[i].getComponents(type, limit, arr);
+    }
+
+    return arr;
+  }
+
+  find(fn) {
+    let arr = this.findAll(fn, 1);
+    if (arr) return arr[0];
+  }
+  findAll(fn, limit = 9999, arr = []) {
+    if (fn(this)) arr.push(this);
+
+    for (let i = 0; i < this.children.length; i++) {
+      if (arr.length == limit) return arr;
+      
+      this.children[i].findAll(fn, limit, arr);
+    }
+
+    return arr;
+  }
+
+  findId(id) {
+    if (this.id == id) return this;
+
+    for (let i = 0; i < this.children.length; i++) {
+      let res = this.children[i].findId(1);
+      
+      if (res) return res;
+    }
+  }
+  randomizeId() {
+    this.id = Math.floor(Math.random() * 1000000);
+    return this.id;
+  }
+  createLookupTable(table = {}) {
+    table[this.id] = this;
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].createLookupTable(table);
+    }
+    
+    return table;
+  }
 
   appendChild(...obs) {
     for (let i = 0; i < obs.length; i++) {
@@ -137,6 +189,8 @@ class Ob extends Serializable {
     super.from(data);
 
     this.name = data.name;
+    this.id = data.id;
+    this.active = data.active;
 
 
     this.components = [];
@@ -150,24 +204,48 @@ class Ob extends Serializable {
     }
 
   
-    for (let i = 0; i < this.children.length; i++) {
-      let c2 = cloneData(this.children[i]);
+    for (let i = 0; i < data.children.length; i++) {
+      let c2 = cloneData(data.children[i]);
       this.appendChild(c2);
     }
 
 
     return this;
   }
-  strip() {
-    delete this.transform;
-    delete this.parent;
-    
+  
+  stripComponents() {
     for (let i = 0; i < this.components.length; i++) {
       this.components[i].strip();
     }
 
     for (let i = 0; i < this.children.length; i++) {
-      this.children[i].strip();
+      this.children[i].stripComponents();
+    }
+  }
+  stripObs() {
+    delete this.transform;
+    delete this.parent;
+    delete this.e;
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].stripObs();
+    }
+  }
+  strip() {
+    this.stripComponents();
+    this.stripObs();
+    
+  }
+  stripClientComponents() {
+    for (let i = 0; i < this.components.length; i++) {
+      if (this.components[i].clientOnly) {
+        this.removeComponent(this.components[i]);
+        i--;
+      }
+    }
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].stripClientComponents();
     }
   }
 }

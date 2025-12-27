@@ -179,7 +179,10 @@ class NDE {
     document.addEventListener("keydown", e => {
       if (!audioContext.state == "running") {
         audioContext.resume();
-        this.fire("audioContextStarted");
+        
+        setTimeout(() => {
+          this.fire("audioContextStarted");
+        }, 0);
       }
 
       
@@ -227,7 +230,10 @@ class NDE {
     document.addEventListener("mousedown", e => {
       if (audioContext.state != "running") {
         audioContext.resume();
-        this.fire("audioContextStarted");
+        
+        setTimeout(() => {
+          this.fire("audioContextStarted");
+        }, 0);
       }
 
 
@@ -353,7 +359,7 @@ class NDE {
    * @return {boolean} equal
    */
   getKeyEqual(keyCode, controlName) {
-    return this.getKeyCodes(controlName).includes(keyCode.toLowerCase);
+    return this.getKeyCodes(controlName).includes(keyCode.toLowerCase());
   }
   /**
    * Gets if a key is pressed

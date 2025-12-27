@@ -1,13 +1,12 @@
-class PlayerController extends Component {
+class Duck extends Component {
   constructor() {
     super();
-
-    this.speed = 4;
-
-    this.vel = new Vec(0, 0);
   }
 
   start() {
+    this.lastPos = new Vec(0, 0);
+    this.vel = new Vec(0, 0);
+
     this.audioSource = this.getComponent(AudioSource);
     this.sprite = this.getComponent(Sprite);
 
@@ -26,21 +25,14 @@ class PlayerController extends Component {
   }
   
   update(dt) {
-    let speedMult = nde.getKeyPressed("Run") ? 2 : 1;
-    this.sprite.speed = speedMult;   
+    this.vel.from(this.transform.pos).subV(this.lastPos).mul(1/dt);
+    this.lastPos.from(this.transform.pos);
 
-    this.vel.set(
-      nde.getKeyPressed("Move Right") - nde.getKeyPressed("Move Left"),
-      nde.getKeyPressed("Move Down") - nde.getKeyPressed("Move Up"),
-    ).normalize().mul(this.speed * speedMult * dt);
-
-    this.transform.pos.addV(this.vel);
+    this.sprite.speed = this.vel.mag() / 4;   
     
     if (this.vel.sqMag() != 0) {
       let diff = getDeltaAngle((Math.atan2(this.vel.y, this.vel.x)), this.transform.dir);
       this.transform.dir -= diff * 20 * dt;
-    }
-
-    
+    }    
   }
 }

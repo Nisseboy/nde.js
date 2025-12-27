@@ -20,7 +20,7 @@ class TimerBase {
     
     this.calculateProgress();
 
-    this.callback(this);
+    this.callback(dt);
 
     if (this.progress == 1 && this.playing) {
       this.stop();

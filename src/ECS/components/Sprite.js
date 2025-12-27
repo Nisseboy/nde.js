@@ -37,7 +37,13 @@ class Sprite extends Component {
     return this._speed;
   }
 
+  start() {
+    this.ob.sprite = this;
+  }
+
   render() {
+    if (!this.tex) return;
+    
     if (!this.texture) {
       this.tex = nde.getTex(this.tex);
       let texture = nde.tex[this.tex];
@@ -87,5 +93,6 @@ class Sprite extends Component {
     delete this._texture;
     delete this.animation;
     delete this.stateMachineImg;
+    delete this.ob.sprite;
   }
 }

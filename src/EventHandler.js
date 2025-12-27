@@ -29,6 +29,13 @@ class EventHandler {
       for (let i = 0; i < events.length; i++) {
         if (events[i](...args) == false) return false;
       }
+    } else {
+      events = this.events["*"];
+      if (events) {
+        for (let i = 0; i < events.length; i++) {
+          if (events[i](eventName, ...args) == false) return false;
+        }
+      }
     }
     
     for (let i = 0; i < this.listeners.length; i++) {

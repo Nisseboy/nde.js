@@ -139,6 +139,18 @@ class Vec extends Serializable {
     this.w = w;
     return this;
   }
+  /**
+   * Sets x,y from angle and length
+   * 
+   * @param {number} angle
+   * @param {number} length
+   * @return {Vec} this
+   */
+  fromAngle(angle, length = 1) {
+    this.x = Math.cos(angle) * length;
+    this.y = Math.sin(angle) * length;
+    return this;
+  }
 
   /**
    * Return the square length of this vector
@@ -177,6 +189,15 @@ class Vec extends Serializable {
     if (this.w) result += this.w * v.w;
 
     return result;
+  }
+
+  /**
+   * Returns angle of this
+   * 
+   * @return {number} angle
+   */
+  angle() {
+    return Math.atan2(this.y, this.x);
   }
 
   /**
