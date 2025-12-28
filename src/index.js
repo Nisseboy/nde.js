@@ -131,7 +131,10 @@ class NDE {
     this.hoveredUIElement = undefined;
     this.hoveredUIRoot = undefined;
     this.uiDebug = false;
-    
+
+    this.resolvePopupFunc = undefined;
+    this.scenePopup = undefined;
+
     this.mainElem = mainElem;
     this.mainImg = new Img(new Vec(1, 1));
     this.unloadedAssets = [];
@@ -502,6 +505,26 @@ class NDE {
   }
 
 
+  openPopup(ui = new UIBase({})) {
+    return new Promise(resolve => {
+      this.resolvePopupFunc = resolve;
+
+      if (!this.scenePopup) this.scenePopup = new ScenePopup();
+      this.scenePopup.lastScene = this.scene;
+      this.scenePopup.captureScreen();
+      this.scenePopup.ui.children[0].children[0] = ui;
+      this.scenePopup.ui.initUI();
+      this.setScene(this.scenePopup);
+    });
+  }
+  resolvePopup(...args) {
+    if (!this.resolvePopupFunc) return;
+    
+    this.resolvePopupFunc(...args);
+    this.resolvePopupFunc = undefined;
+    this.setScene(this.scenePopup.lastScene);
+  }
+
   loadAsset(assetDescriptor) {
     if (typeof assetDescriptor == "string") assetDescriptor = {path: assetDescriptor};
 
@@ -530,7 +553,6 @@ class NDE {
     
     return asset;
   }
-
 
   getTex(texOrTexture) {
     if (typeof texOrTexture == "string") return texOrTexture;

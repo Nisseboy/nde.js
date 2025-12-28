@@ -3,6 +3,7 @@ class Ob extends Serializable {
     super();
 
     this.name = props.name || "";
+    this.children = [];
     this.id = props.id;
     if (this.id == undefined) this.randomizeId();
     this.active = true;
@@ -22,7 +23,6 @@ class Ob extends Serializable {
 
 
     this.parent = undefined;
-    this.children = [];
     this.appendChild(...children);
 
 
@@ -131,6 +131,9 @@ class Ob extends Serializable {
   }
   randomizeId() {
     this.id = Math.floor(Math.random() * 1000000);
+
+    for (let i = 0; i < this.children.length; i++) this.children[i].randomizeId();
+
     return this.id;
   }
   createLookupTable(table = {}) {

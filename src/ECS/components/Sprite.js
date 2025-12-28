@@ -89,10 +89,10 @@ class Sprite extends Component {
     return this;
   }
   strip() {
-    super.strip();
     delete this._texture;
     delete this.animation;
     delete this.stateMachineImg;
     delete this.ob.sprite;
+    super.strip();
   }
 }

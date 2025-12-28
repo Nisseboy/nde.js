@@ -330,12 +330,12 @@ class UIBase {
     nde.renderer.set("fill", this.style.scroll.fill);
     
     
-    if (fraction.x < 1) {
+    if (this.style.scroll.x && fraction.x < 1) {
       let max = 1 - fraction.x;
       nde.renderer.rect(new Vec(this.pos.x + scrollFraction.x * max * this.size.x, this.pos.y + this.size.y - width), new Vec(this.size.x * fraction.x, width));      
     }
     
-    if (fraction.y < 1) {
+    if (this.style.scroll.y && fraction.y < 1) {
       let max = 1 - fraction.y;
       nde.renderer.rect(new Vec(this.pos.x + this.size.x - width, this.pos.y + scrollFraction.y * max * this.size.y), new Vec(width, this.size.y * fraction.y));
       

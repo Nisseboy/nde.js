@@ -33,6 +33,7 @@ files = [
   "src/ui/buttons/UIButton.js",
   "src/ui/buttons/UIButtonText.js",
   "src/ui/buttons/UIButtonImage.js",
+  "src/ui/ScenePopup.js",
 
   "src/ui/settings/UISettingBase.js",
   "src/ui/settings/UISettingCollection.js",

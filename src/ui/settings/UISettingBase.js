@@ -4,6 +4,8 @@ class UISettingBase extends UIBase {
     this.interactable = true;
 
     this.value = props.value;
+    this.lastValue = this.value;
+    this.focused = false;
 
     this.name = props.name;
     this.displayName = props.displayName;
@@ -16,11 +18,21 @@ class UISettingBase extends UIBase {
   setValue(newValue) {
     this.value = newValue;
   }
+  setFocus(newFocus) {
+    this.focused = newFocus;
+
+    if (!newFocus) {
+      this.fireChange(false);
+    }
+  }
 
   fireInput() {
     this.fire("input", this.value);
   }
-  fireChange() {
-    this.fire("change", this.value);
+  fireChange(wasSubmitted = true) {
+    if (JSON.stringify(this.lastValue) == JSON.stringify(this.value)) return;
+    this.lastValue = this.value;
+
+    this.fire("change", this.value, wasSubmitted);
   }
 }
