@@ -1,5 +1,7 @@
-class Animation {
-  constructor(frames, dt) {
+class Animation extends EvalAsset {
+  constructor(frames = [], dt = 0.1) {
+    super();
+
     this.frames = frames;
     this.dt = dt;
     this.speed = 1;
@@ -11,5 +13,12 @@ class Animation {
 
   start(props = {}) {
     return new RunningAnimation(this, props);
+  }
+
+  eval() {
+    let ob = eval("let frame = AnimationFrame, loop = AnimationFrameLoop, event = AnimationFrameEvent;" + this.data);
+    if (!nde.tex) nde.tex = {};
+    nde.tex[this.name] = ob;
+    return ob;
   }
 }

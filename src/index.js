@@ -110,6 +110,7 @@ class NDE {
     this.assetLoaders = {
       "ob": EvalAsset,
       "component": EvalAsset,
+      "anim": Animation,
       "png": Img,
       "mp3": Aud,
     };

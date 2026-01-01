@@ -1,9 +1,9 @@
 class AnimationFrame extends AnimationFrameBase {
-  constructor(img) {
+  constructor(tex) {
     super();
     this.duration = 1;
 
-    this.img = img;
+    this.img = nde.tex[tex];
   }
 
   step(runningAnimation) {

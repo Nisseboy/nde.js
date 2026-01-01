@@ -1348,11 +1348,11 @@ class AnimationFrameBase {
 
 /* src/assets/animation/frames/AnimationFrame.js */
 class AnimationFrame extends AnimationFrameBase {
-  constructor(img) {
+  constructor(tex) {
     super();
     this.duration = 1;
 
-    this.img = img;
+    this.img = nde.tex[tex];
   }
 
   step(runningAnimation) {
@@ -1398,8 +1398,10 @@ class AnimationFrameLoop extends AnimationFrameBase {
 
 
 /* src/assets/animation/Animation.js */
-class Animation {
-  constructor(frames, dt) {
+class Animation extends EvalAsset {
+  constructor(frames = [], dt = 0.1) {
+    super();
+
     this.frames = frames;
     this.dt = dt;
     this.speed = 1;
@@ -1411,6 +1413,13 @@ class Animation {
 
   start(props = {}) {
     return new RunningAnimation(this, props);
+  }
+
+  eval() {
+    let ob = eval("let frame = AnimationFrame, loop = AnimationFrameLoop, event = AnimationFrameEvent;" + this.data);
+    if (!nde.tex) nde.tex = {};
+    nde.tex[this.name] = ob;
+    return ob;
   }
 }
 
@@ -3054,6 +3063,9 @@ class UISettingText extends UISettingBase {
     this.value = "" + this.value;
     
     this.recalculateSize();
+    
+    if (this.cursor) this.constrainCursor(this.cursor);
+    if (this.cursor2) this.constrainCursor(this.cursor2);
   }
 
   setFocus(newFocus) {
@@ -3522,6 +3534,12 @@ class UISettingText extends UISettingBase {
     
     this.constrainScroll();
     this.positionChildren();
+  }
+  constrainCursor(cursor) {
+    let lines = this.getLines();
+    if (cursor.y >= lines.length) cursor.y = lines.length - 1;
+    let line = lines[this.cursor.y];
+    if (cursor.x > line.length) cursor.x = line.length;
   }
 
   render() {        
@@ -4494,6 +4512,7 @@ class NDE {
     this.assetLoaders = {
       "ob": EvalAsset,
       "component": EvalAsset,
+      "anim": Animation,
       "png": Img,
       "mp3": Aud,
     };

@@ -7,7 +7,6 @@ let renderer = nde.renderer;
 for (let asset of assetPaths) {
   nde.loadAsset(asset);
 }
-preloadAnimations();
 
 
 let settingsName = "ndeSettings";
@@ -42,11 +41,11 @@ nde.on("keydown", e => {
 });
 
 nde.on("afterSetup", () => {
-  Object.assign(scenes, {
-    game: new SceneGame(), 
-    mainMenu: new SceneMainMenu(),
-    settings: new SceneSettings(),
-  })
+  for (let path of scenePaths) {
+    let name = path.split("Scene")[1];
+    name = name[0].toLowerCase() + name.slice(1);
+    scenes[name] = new (eval(path))();
+  }
 
   scenes.game.loadWorld(nde.assets.world);
   nde.setScene(scenes.mainMenu);
