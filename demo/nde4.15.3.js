@@ -821,6 +821,109 @@ class EventHandler {
 
 
 
+/* src/inputManagers/InputManager.js */
+class InputManager {
+  constructor() {
+    this.log = [];
+  }
+
+  init() {
+    
+  }
+
+  fire(eventName, ...args) {
+    if (nde.debug) {
+      let log = [eventName];
+      for (let i = 0; i < args.length; i++) {
+        let arg = args[i];
+        
+        if (arg instanceof Event) {      
+          if (arg instanceof MouseEvent) {          
+            log.push({
+              altKey: arg.altKey,
+              ctrlKey: arg.ctrlKey,
+              metaKey: arg.metaKey,
+              shiftKey: arg.shiftKey,
+
+              button: arg.button,
+              buttons: arg.buttons,
+              clientX: arg.clientX,
+              clientY: arg.clientY,
+
+              deltaY: arg.deltaY,
+            });
+          } else if (arg instanceof KeyboardEvent) {
+            log.push({
+              altKey: arg.altKey,
+              ctrlKey: arg.ctrlKey,
+              metaKey: arg.metaKey,
+              shiftKey: arg.shiftKey,
+
+              code: arg.code,
+              key: arg.key,
+            });
+          } else if (arg instanceof UIEvent) {
+            
+          }
+        } else {
+          log.push(arg);
+        }
+      }
+      this.log.push(log);
+    }
+    nde.fire(eventName, ...args);    
+  }
+}
+
+
+
+
+
+/* src/inputManagers/InputManagerReplay.js */
+class InputManagerReplay extends InputManager {
+  constructor(log, playbackDivisions = 1) {
+    super();
+
+    this.log = log;
+    this.playbackDivisions = playbackDivisions;
+
+    this.frame = 0;
+    this.i = 0;
+  }
+
+  init() {
+    requestAnimationFrame(() => {this.animationFrame()});
+  }
+
+  fire(eventName, ...args) {
+    
+  }
+
+  animationFrame() {
+    if (this.frame != -1) requestAnimationFrame(() => {this.animationFrame()});
+
+    this.i++;
+    if (this.i % this.playbackDivisions != 0) return;   
+    
+    while (true) {
+      let frame = this.log[this.frame];
+      if (!frame) {
+        this.frame = -1;
+        return;
+      }
+
+      nde.fire(...frame);
+      this.frame++;
+
+      if (frame[0] == "input_frame") return;
+    }
+  }
+}
+
+
+
+
+
 /* src/assets/Asset.js */
 class Asset {
   constructor() {
@@ -4548,6 +4651,10 @@ class NDE {
 
     this.setScene(new Scene());
 
+    this.inputManager = undefined;
+    this.initInputManager();
+    this.setupHandlers();
+
     let i = 0;
     let lastLength = Infinity;
     let interval = setInterval(e => {
@@ -4557,21 +4664,21 @@ class NDE {
         for (let a of unloadedEvalAssets) {
           a.eval();
         }
+        this.inputManager.init();
         
+
         this.fire("beforeSetup");
 
         this.mainElem.appendChild(this.mainImg.canvas);
-        this.resize();
-      
+        this.inputManager.fire("input_resize");
+
         this.renderer.set("font", "16px monospace");
         this.renderer.set("textAlign", ["left", "top"]);
         this.renderer.set("imageSmoothing", false);
         
         this.fire("afterSetup");
 
-        this.setupHandlers();
-
-        requestAnimationFrame(time => {this.draw(time)});
+        requestAnimationFrame(time => {this.animationFrame(time)});
       }
       if (i >= 100) {
         if (this.unloadedAssets.length < lastLength) {
@@ -4588,19 +4695,57 @@ class NDE {
 
   }
 
+  initInputManager() {
+    let log = localStorage.getItem("replay-log");
+    if (log) {
+      let parsed = JSON.parse(log);
+      this.inputManager = new InputManagerReplay(parsed.log, parsed.playbackDivisions);
+      localStorage.removeItem("replay-log");
+    } else {
+      this.inputManager = new InputManager();
+    }
+  }
+  replay(playbackDivisions = 1) {
+    localStorage.setItem("replay-log", JSON.stringify({log: this.inputManager.log, playbackDivisions: playbackDivisions}));
+    window.location.reload();
+  }
+
   setupHandlers() {
-    window.addEventListener("resize", e => {this.resize(e)});
-
+    window.addEventListener("resize", e => {
+      this.inputManager.fire("input_resize");
+    });
     document.addEventListener("keydown", e => {
-      if (!audioContext.state == "running") {
-        audioContext.resume();
-        
-        setTimeout(() => {
-          this.fire("audioContextStarted");
-        }, 0);
-      }
+      this.tryStartAudio();
 
-      
+      this.inputManager.fire("input_keydown", e);
+    });
+    document.addEventListener("keyup", e => {
+      this.inputManager.fire("input_keyup", e);
+    });
+    document.addEventListener("mousemove", e => {
+      this.inputManager.fire("input_mousemove", e, (e.clientX - this.mainElemBoundingBox.x) / this.mainImg.size.x * this.w, (e.clientY - this.mainElemBoundingBox.y) / this.mainImg.size.x * this.w);
+    });
+    document.addEventListener("mousedown", e => {
+      this.tryStartAudio();
+
+      this.inputManager.fire("input_mousedown", e);
+    });
+    document.addEventListener("mouseup", e => {
+      this.inputManager.fire("input_mouseup", e);
+    });
+    document.addEventListener("wheel", e => {
+      this.inputManager.fire("input_wheel", e);
+    });
+
+    
+    window.oncontextmenu = (e) => {
+      e.preventDefault(); 
+      e.stopPropagation(); 
+      return false;
+    };
+
+
+    this.on("input_keydown", e => {
       if (this.hoveredUIElement) {
         if (this.hoveredUIElement.fire("keydown", e) == false) return;
         if (this.hoveredUIElement.fire("inputdown", e.key.toLowerCase(), e) == false) return;
@@ -4609,16 +4754,14 @@ class NDE {
       if (!this.pressed[e.key.toLowerCase()]) {
         if (this.debug) console.log(e.key);
 
-        if (!this.fire("keydown", e)) return;
-        if (!this.fire("inputdown", e.key.toLowerCase(), e)) return;
-
         this.pressed[e.key.toLowerCase()] = true;
         this.pressedFrame.push(e.key.toLowerCase());
+        
+        if (!this.fire("keydown", e)) return;
+        if (!this.fire("inputdown", e.key.toLowerCase(), e)) return;
       }
-    
-      
     });
-    document.addEventListener("keyup", e => {
+    this.on("input_keyup", e => {
       delete this.pressed[e.key.toLowerCase()];
       this.releasedFrame.push(e.key.toLowerCase());
 
@@ -4630,11 +4773,9 @@ class NDE {
       this.fire("keyup", e);
       this.fire("inputup", e.key.toLowerCase(), e);
     });
-    
-    document.addEventListener("mousemove", e => {
-      this.mouse.x = (e.clientX - this.mainElemBoundingBox.x) / this.mainImg.size.x * this.w;
-      this.mouse.y = (e.clientY - this.mainElemBoundingBox.y) / this.mainImg.size.x * this.w;
-
+    this.on("input_mousemove", (e, x, y) => {      
+      this.mouse.x = x;
+      this.mouse.y = y;
 
       if (this.hoveredUIElement) {
         this.hoveredUIElement.fire("mousemove", e);
@@ -4642,16 +4783,7 @@ class NDE {
       
       this.fire("mousemove", e);
     });
-    document.addEventListener("mousedown", e => {
-      if (audioContext.state != "running") {
-        audioContext.resume();
-        
-        setTimeout(() => {
-          this.fire("audioContextStarted");
-        }, 0);
-      }
-
-
+    this.on("input_mousedown", e => {
       if (this.hoveredUIElement) {
         if (this.hoveredUIElement.fire("mousedown", e) == false) return;
         this.hoveredUIElement.fire("inputdown", "mouse" + e.button, e);
@@ -4662,14 +4794,15 @@ class NDE {
       if (!this.pressed["mouse" + e.button]) {
         if (this.debug) console.log("mouse" + e.button);
 
-        if (!this.fire("mousedown", e)) return;
-        if (!this.fire("inputdown", "mouse" + e.button, e)) return;
-
         this.pressed["mouse" + e.button] = true;
         this.pressedFrame.push("mouse" + e.button);
+
+        if (!this.fire("mousedown", e)) return;
+        if (!this.fire("inputdown", "mouse" + e.button, e)) return;
       }
+
     });
-    document.addEventListener("mouseup", e => {
+    this.on("input_mouseup", e => {
       delete this.pressed["mouse" + e.button];
       this.releasedFrame.push("mouse" + e.button);
 
@@ -4681,7 +4814,7 @@ class NDE {
       this.fire("mouseup", e);
       this.fire("inputup", "mouse" + e.button, e);
     });
-    document.addEventListener("wheel", e => {
+    this.on("input_wheel", e => {
       if (this.hoveredUIElement) {
         if (this.hoveredUIElement.fire("wheel", e) == false) return;
         if (this.hoveredUIRoot?.wheel(e) == false) return;
@@ -4691,12 +4824,22 @@ class NDE {
       this.fire("wheel", e);      
     });
 
+    this.on("input_resize", e => {
+      this.resize(e);  
+    });
+    this.on("input_frame", time => {
+      if (time == undefined) time = performance.now();
+      
+      let dt = Math.min(time - this.lastFrameTime, 200);
+      
+      if (this.targetFPS != undefined) {
+        if ((time + 0.1) - this.lastFrameTime < 1000 / this.targetFPS) return; 
+      }
     
-    window.oncontextmenu = (e) => {
-      e.preventDefault(); 
-      e.stopPropagation(); 
-      return false;
-    };
+      this.lastFrameTime = time;
+    
+      this.updateGame(dt);
+    });
   }
 
   setScene(newScene) {
@@ -4730,7 +4873,7 @@ class NDE {
   off(...args) {return this.e.off(...args)}
   fire(eventName, ...args) {
     if (this.e.fire(eventName, ...args) == false) return false;
-    if (this.scene[eventName](...args) == false) return false;
+    if (this.scene[eventName] && this.scene[eventName](...args) == false) return false;
     return true;
   }
 
@@ -4754,7 +4897,6 @@ class NDE {
     this.renderer.resize(new Vec(this.w, this.w * this.ar));
     
     this.scene.resize(e);
-    //this.fire("resize", e);
   }
 
   /**
@@ -4821,20 +4963,9 @@ class NDE {
 
 
 
-  draw(time) {
-    requestAnimationFrame(time => {this.draw(time)});
-  
-    if (time == undefined) time = performance.now();
-    
-    let dt = Math.min(time - this.lastFrameTime, 200);
-    
-    if (this.targetFPS != undefined) {
-      if ((time + 0.1) - this.lastFrameTime < 1000 / this.targetFPS) return; 
-    }
-  
-    this.lastFrameTime = time;
-  
-    this.updateGame(dt);
+  animationFrame(time) {
+    requestAnimationFrame(time => {this.animationFrame(time)});
+    this.inputManager.fire("input_frame", time);
   }
   updateGame(dt) {
     let t1 = performance.now();
@@ -4956,7 +5087,6 @@ class NDE {
     
     return asset;
   }
-
   getTex(texOrTexture) {
     if (typeof texOrTexture == "string") return texOrTexture;
    
@@ -4967,6 +5097,16 @@ class NDE {
     nde.tex[index] = texOrTexture;
     
     return index;
+  }
+  tryStartAudio() {
+    if (audioContext.state != "running") {
+      audioContext.resume();
+    
+      
+      setTimeout(() => {
+        this.fire("audioContextStarted");        
+      }, 0);
+    }
   }
 }
 

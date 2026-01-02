@@ -6,6 +6,9 @@ files = [
   "src/Camera.js",
   "src/Scene.js",
   "src/EventHandler.js",
+    
+  "src/inputManagers/InputManager.js",
+  "src/inputManagers/InputManagerReplay.js",
   
   "src/assets/Asset.js",
   "src/assets/EvalAsset.js",
