@@ -15,6 +15,8 @@ class Ob extends Serializable {
       this.components.unshift(this.transform);
     }
     if (props.pos) this.transform.pos.from(props.pos);
+    if (props.size) this.transform.size.from(props.size);
+    if (props.dir != undefined) this.transform.dir = props.dir;
 
     for (let c of this.components) {
       c.ob = this;

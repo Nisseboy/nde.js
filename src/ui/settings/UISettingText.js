@@ -156,7 +156,7 @@ class UISettingText extends UISettingBase {
   }
 
   keydownGlobal(e) {
-    if (["Control", "Shift", "Alt", "AltGraph"].includes(e.key)) returnfalse;
+    if (["Control", "Shift", "Alt", "AltGraph"].includes(e.key)) return false;
     this.cursorTimer.elapsedTime = this.style.editor.blinkTime;
 
     let ctrl = e.ctrlKey;

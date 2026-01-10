@@ -476,17 +476,15 @@ let vecOne = new Vec(1, 1);
 
 /* src/Camera.js */
 class Camera extends Serializable {
-  constructor(pos) {
+  constructor(pos, props = {}) {
     super();
 
     this.pos = pos || new Vec(0, 0);
 
     this.w = 16;
-    this.ar = nde.ar;
+    this.ar = props.ar || nde.ar;
 
     this.dir = 0;
-
-    this.renderW;
   }
 
   from(data) {
@@ -494,7 +492,6 @@ class Camera extends Serializable {
     if (data.pos) this.pos = new Vec().from(data.pos);
     if (data.w) this.w = data.w;
     if (data.dir) this.dir = data.dir;
-    if (data.renderW) this.renderW = data.renderW;
     
     return this;
   }
@@ -508,7 +505,7 @@ class Camera extends Serializable {
   transformVec(v) {
     v = v._subV(this.pos);
     v.addV(new Vec(this.w / 2, this.w / 2 * this.ar));
-    v.mul(this.renderW / this.w);
+    v.mul(nde.w / this.w);
 
     return v;
   }
@@ -519,7 +516,7 @@ class Camera extends Serializable {
    * @return {Vec} World space
    */
   untransformVec(v) {
-    v = v._div(this.renderW / this.w);
+    v = v._div(nde.w / this.w);
     v.subV(new Vec(this.w / 2, this.w / 2 * this.ar));
     v.addV(this.pos);
 
@@ -533,7 +530,7 @@ class Camera extends Serializable {
    * @return {number} Screen space
    */
   scale(s) {
-    return s * (this.renderW / this.w);
+    return s * (nde.w / this.w);
   }
   /**
    * Scales number from screen space to world space
@@ -542,7 +539,7 @@ class Camera extends Serializable {
    * @return {number} World space
    */
   unscale(s) {
-    return s / (this.renderW / this.w);
+    return s / (nde.w / this.w);
   }
 
   /**
@@ -552,7 +549,7 @@ class Camera extends Serializable {
    * @return {Vec} Screen space
    */
   scaleVec(v) {
-    return v._mul(this.renderW / this.w);
+    return v._mul(nde.w / this.w);
   }
   /**
    * Scales vector from screen space to world space
@@ -561,7 +558,7 @@ class Camera extends Serializable {
    * @return {Vec} World space
    */
   unscaleVec(v) {
-    return v._div(this.renderW / this.w);
+    return v._div(nde.w / this.w);
   }
 
   /**
@@ -2436,7 +2433,6 @@ class ScenePopup extends Scene {
 
     this.cam = new Camera(new Vec(800, 450));
     this.cam.w = 1600;
-    this.cam.renderW = nde.w;
 
     this.img = undefined;
 
@@ -2468,7 +2464,6 @@ class ScenePopup extends Scene {
 
   render() {
     let cam = this.cam;
-    cam.renderW = nde.w;
 
     cam._(renderer, ()=>{
       renderer.image(this.img, vecZero, new Vec(cam.w, cam.w * cam.ar));
@@ -2488,7 +2483,6 @@ class UISettingBase extends UIBase {
     this.interactable = true;
 
     this.value = props.value;
-    this.lastValue = this.value;
     this.focused = false;
 
     this.name = props.name;
@@ -2513,10 +2507,7 @@ class UISettingBase extends UIBase {
   fireInput() {
     this.fire("input", this.value);
   }
-  fireChange(wasSubmitted = true) {
-    if (JSON.stringify(this.lastValue) == JSON.stringify(this.value)) return;
-    this.lastValue = this.value;
-
+  fireChange(wasSubmitted = true) {    
     this.fire("change", this.value, wasSubmitted);
   }
 }
@@ -3215,7 +3206,7 @@ class UISettingText extends UISettingBase {
   }
 
   keydownGlobal(e) {
-    if (["Control", "Shift", "Alt", "AltGraph"].includes(e.key)) returnfalse;
+    if (["Control", "Shift", "Alt", "AltGraph"].includes(e.key)) return false;
     this.cursorTimer.elapsedTime = this.style.editor.blinkTime;
 
     let ctrl = e.ctrlKey;
@@ -4024,6 +4015,18 @@ class Transform extends Component {
 
     return this;
   }
+
+
+  render() {
+    nde.renderer._(() => {
+      nde.renderer.translate(this.transform.pos);
+      if (this.transform.dir) nde.renderer.rotate(this.transform.dir);
+
+      nde.renderer.set("fill", "rgba(0,0,0,0)");
+      nde.renderer.set("stroke", "rgba(255, 255, 255, 1)");
+      nde.renderer.rect(this.transform.size._mul(-0.5), this.transform.size);
+    });
+  }
 }
 
 
@@ -4260,6 +4263,8 @@ class Ob extends Serializable {
       this.components.unshift(this.transform);
     }
     if (props.pos) this.transform.pos.from(props.pos);
+    if (props.size) this.transform.size.from(props.size);
+    if (props.dir != undefined) this.transform.dir = props.dir;
 
     for (let c of this.components) {
       c.ob = this;

@@ -4,7 +4,6 @@ class ScenePopup extends Scene {
 
     this.cam = new Camera(new Vec(800, 450));
     this.cam.w = 1600;
-    this.cam.renderW = nde.w;
 
     this.img = undefined;
 
@@ -36,7 +35,6 @@ class ScenePopup extends Scene {
 
   render() {
     let cam = this.cam;
-    cam.renderW = nde.w;
 
     cam._(renderer, ()=>{
       renderer.image(this.img, vecZero, new Vec(cam.w, cam.w * cam.ar));

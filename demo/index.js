@@ -8,14 +8,10 @@ for (let asset of assetPaths) {
   nde.loadAsset(asset);
 }
 
-
 let settingsName = "ndeSettings";
 let settings = JSON.parse(localStorage.getItem(settingsName)) || {};
-setBackgroundCol(); //Set the background color if it was overridden by settings
-
 
 let scenes = {};
-
 nde.controls = {
   "Move Up": "w",
   "Move Down": "s",
@@ -41,11 +37,14 @@ nde.on("keydown", e => {
 });
 
 nde.on("afterSetup", () => {
+  initStyles();
+  
   for (let path of scenePaths) {
     let name = path.split("Scene")[1];
     name = name[0].toLowerCase() + name.slice(1);
     scenes[name] = new (eval(path))();
   }
+
 
   scenes.game.loadWorld(nde.assets.world);
   nde.setScene(scenes.mainMenu);
@@ -56,7 +55,7 @@ nde.on("update", dt => {
   renderer.set("imageSmoothing", false);
 });
 
-nde.on("resize", e => {
+nde.on("resize", e => {  
   return nde.w * settings.renderResolution / 100;
   //return 432; //new width
 });

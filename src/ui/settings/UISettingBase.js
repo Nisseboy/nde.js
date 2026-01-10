@@ -4,7 +4,6 @@ class UISettingBase extends UIBase {
     this.interactable = true;
 
     this.value = props.value;
-    this.lastValue = this.value;
     this.focused = false;
 
     this.name = props.name;
@@ -29,10 +28,7 @@ class UISettingBase extends UIBase {
   fireInput() {
     this.fire("input", this.value);
   }
-  fireChange(wasSubmitted = true) {
-    if (JSON.stringify(this.lastValue) == JSON.stringify(this.value)) return;
-    this.lastValue = this.value;
-
+  fireChange(wasSubmitted = true) {    
     this.fire("change", this.value, wasSubmitted);
   }
 }

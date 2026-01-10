@@ -20,4 +20,16 @@ class Transform extends Component {
 
     return this;
   }
+
+
+  render() {
+    nde.renderer._(() => {
+      nde.renderer.translate(this.transform.pos);
+      if (this.transform.dir) nde.renderer.rotate(this.transform.dir);
+
+      nde.renderer.set("fill", "rgba(0,0,0,0)");
+      nde.renderer.set("stroke", "rgba(255, 255, 255, 1)");
+      nde.renderer.rect(this.transform.size._mul(-0.5), this.transform.size);
+    });
+  }
 }

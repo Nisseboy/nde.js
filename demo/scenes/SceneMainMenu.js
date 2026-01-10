@@ -1,10 +1,6 @@
 class SceneMainMenu extends Scene {
   constructor() {
     super();
-
-    this.cam = new Camera(new Vec(800, 450));
-    this.cam.w = 1600;
-    this.cam.renderW = nde.w;
   }
 
   start() {
@@ -84,17 +80,14 @@ class SceneMainMenu extends Scene {
   }
 
   render() {
-    let cam = this.cam;
-    cam.renderW = nde.w;
-
     renderer._(()=>{
       renderer.set("fill", backgroundCol);
-      renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
+      renderer.rect(vecZero, renderer.size);
     });
 
 
 
-    cam._(renderer, ()=>{
+    uicam._(renderer, ()=>{
       this.ui.renderUI();
     });
   }

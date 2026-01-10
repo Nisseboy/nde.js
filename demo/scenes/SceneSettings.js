@@ -2,10 +2,6 @@ class SceneSettings extends Scene {
   constructor() {
     super();
 
-    this.cam = new Camera(new Vec(800, 450));
-    this.cam.w = 1600;
-    this.cam.renderW = nde.w;
-
     this.start(); //To initialize settings
   }
 
@@ -58,34 +54,6 @@ class SceneSettings extends Scene {
             style: {
               minSize: buttonStyle.minSize || new Vec(0, 0),
             },
-          }),
-
-          new UISettingCheckbox({
-            name: "overrideBackground", displayName: "Override Background",
-            value: false,
-
-            style: {...buttonStyle,}
-          }),
-          new UISettingRange({
-            name: "backgroundR", displayName: "Background R",
-            value: 19,
-            min: 0, max: 255, step: 1,
-
-            style: rangeStyle,
-          }),
-          new UISettingRange({
-            name: "backgroundG", displayName: "Background G",
-            value: 19,
-            min: 0, max: 255, step: 1,
-
-            style: rangeStyle,
-          }),
-          new UISettingRange({
-            name: "backgroundB", displayName: "Background B",
-            value: 19,
-            min: 0, max: 255, step: 1,
-
-            style: rangeStyle,
           }),
           
           new UIBase({
@@ -147,7 +115,7 @@ class SceneSettings extends Scene {
 
         events: {
           input: [function (value) {
-            setBackgroundCol();
+            
           }],
           change: [function (value) {
             localStorage.setItem(settingsName, JSON.stringify(settings));          
@@ -165,15 +133,12 @@ class SceneSettings extends Scene {
   }
 
   render() {
-    let cam = this.cam;
-    cam.renderW = nde.w;
-
     renderer._(()=>{
       renderer.set("fill", backgroundCol);
-      renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
+      renderer.rect(vecZero, renderer.size);
     });
 
-    cam._(renderer, ()=>{
+    uicam._(renderer, ()=>{
       this.ui.renderUI();
     });
   }

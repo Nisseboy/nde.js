@@ -4,7 +4,6 @@ class SceneGame extends Scene {
 
     this.cam = new Camera(new Vec(0, 0));
     this.cam.w = 16;
-    this.cam.renderW = nde.w;
   }
   loadWorld(w) {    
     this.world = w;
@@ -34,12 +33,11 @@ class SceneGame extends Scene {
 
   render() {
     let cam = this.cam;
-    cam.renderW = nde.w;
 
 
     renderer._(()=>{
       renderer.set("fill", "rgb(100, 100, 50)");
-      renderer.rect(vecZero, new Vec(nde.w, nde.w / 16 * 9));
+      renderer.rect(vecZero, renderer.size);
     });
 
 
