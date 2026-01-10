@@ -27,7 +27,7 @@ class SceneGame extends Scene {
   update(dt) {  
     this.world.update(dt);
 
-    this.cam.pos.from(this.player.transform.pos);
+    this.cam.pos.from(this.player.transform.pos);    
     moveListener(this.cam.pos);
   }
 

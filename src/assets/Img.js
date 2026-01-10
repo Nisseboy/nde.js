@@ -164,6 +164,9 @@ class Img extends Renderable {
     this.ctx.fill();
     this.ctx.stroke();
   }
+  clearRect(pos, size) {
+    this.ctx.clearRect(pos.x, pos.y, size.x, size.y);
+  }
   ellipse(pos, size) {    
     this.ctx.beginPath();    
     this.ctx.ellipse(pos.x, pos.y, size.x, size.y, 0, 0, Math.PI * 2);

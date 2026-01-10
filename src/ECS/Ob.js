@@ -1,3 +1,5 @@
+let DEFAULTTRANSFORMCOMPONENT = Transform;
+
 class Ob extends Serializable {
   constructor(props = {}, components = [], children = []) {
     super();
@@ -9,14 +11,15 @@ class Ob extends Serializable {
     this.active = true;
 
     this.components = components;
-    this.transform = this.getComponent(Transform);
+    this.transform = this.getComponent(DEFAULTTRANSFORMCOMPONENT);
     if (!this.transform) {
-      this.transform = new Transform();
+      this.transform = new DEFAULTTRANSFORMCOMPONENT({
+        pos: props.pos,
+        dir: props.dir,
+        size: props.size,
+      });
       this.components.unshift(this.transform);
     }
-    if (props.pos) this.transform.pos.from(props.pos);
-    if (props.size) this.transform.size.from(props.size);
-    if (props.dir != undefined) this.transform.dir = props.dir;
 
     for (let c of this.components) {
       c.ob = this;
@@ -200,7 +203,7 @@ class Ob extends Serializable {
 
     this.components = [];
     for (let c of data.components) this.components.push(cloneData(c));
-    this.transform = this.getComponent(Transform);
+    this.transform = this.getComponent(DEFAULTTRANSFORMCOMPONENT);
 
     for (let i = 0; i < this.components.length; i++) {
       let c = this.components[i];

@@ -475,6 +475,8 @@ class NDE {
     this.debugStats = {};
   
     this.renderer._(()=>{      
+      this.renderer.clearRect(vecZero, this.renderer.size);
+
       for (let i = 0; i < this.timers.length; i++) this.timers[i].tick(gameDt);
       
       this.scene.lastIndex = 0; 
@@ -529,6 +531,10 @@ class NDE {
     });
     
   
+    
+    this.flushRenderer();
+  }
+  flushRenderer() {
     this.mainImg.ctx.imageSmoothingEnabled = false;
     this.mainImg.image(this.renderer, vecZero, this.mainImg.size);
   }
@@ -615,3 +621,5 @@ var getDeltaAngle = function () {
     return equivalent(target - current);
   }
 }();
+let deg2rad = Math.PI / 180;
+let rad2deg = 180 / Math.PI;
